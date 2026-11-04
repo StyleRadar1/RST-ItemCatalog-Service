@@ -425,7 +425,7 @@ Las pruebas unitarias validan el dominio y los casos de uso, y las de integraci√
           <strong><font color="#5600EF" size="3">REPORTE CONSOLIDADO DE COBERTURA JACOCO (‚â• 85%)</font></strong>
         </p>
         <p>
-<em>Evidencia pendiente; el reporte se adjunta cuando el servicio tenga casos de uso implementados.</em>
+<em>Evidencia pendiente.</em>
         </p>
       </td>
     </tr>
