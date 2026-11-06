@@ -13,10 +13,10 @@ import java.util.Map;
 public interface HealthApi {
 
     @Operation(summary = "Consultar el estado del servicio",
-            description = "Indica si ms-item-catalogo está en ejecución y responde en el puerto 8085.")
+            description = "Indica si ms-item-catalogo está en ejecución y responde en el puerto 8220.")
     @ApiResponse(responseCode = "200", description = "Servicio en ejecución",
             content = @Content(mediaType = "application/json",
-                    examples = @ExampleObject(value = "{\"status\":\"UP\",\"service\":\"ms-item-catalogo\",\"port\":8085}")))
+                    examples = @ExampleObject(value = "{\"status\":\"UP\",\"service\":\"ms-item-catalogo\",\"port\":8220}")))
     @ApiResponse(responseCode = "500", description = "Error interno del servicio",
             content = @Content(mediaType = "application/problem+json"))
     ResponseEntity<Map<String, Object>> health();
