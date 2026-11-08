@@ -8,6 +8,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.util.Map;
 
@@ -59,6 +60,18 @@ class GlobalExceptionHandlerTest {
         // Assert
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getProperties()).containsEntry("errors", Map.of("nombre", "no debe estar vacío"));
+    }
+
+    @Test
+    void badRequestReturns400() {
+        // Arrange
+        MissingServletRequestParameterException ex = new MissingServletRequestParameterException("texto", "String");
+
+        // Act
+        ProblemDetail detail = handler.handleBadRequest(ex);
+
+        // Assert
+        assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     @Test
