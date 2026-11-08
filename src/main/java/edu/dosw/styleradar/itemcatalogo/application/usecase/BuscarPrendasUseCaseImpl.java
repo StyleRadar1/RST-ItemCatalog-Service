@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
@@ -8,6 +9,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 
 import java.util.Comparator;
@@ -23,21 +25,26 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
 
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
+    private final DistanciaAlmacenPort distanciaAlmacen;
 
-    public BuscarPrendasUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository) {
+    public BuscarPrendasUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository,
+                                    DistanciaAlmacenPort distanciaAlmacen) {
         this.prendaRepository = prendaRepository;
         this.almacenRepository = almacenRepository;
+        this.distanciaAlmacen = distanciaAlmacen;
     }
 
     @Override
     public List<Prenda> buscar(FiltroBusqueda filtro) {
+        if (filtro.orden() == Ordenamiento.DISTANCIA && filtro.ubicacion() == null) {
+            throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
+        }
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
-        Comparator<Prenda> orden = filtro.orden() == Ordenamiento.REPUTACION
-                ? Comparator.comparing((Prenda p) -> almacenes.get(p.getAlmacenId()).reputacion()).reversed()
-                : Comparator.comparing(Prenda::getFechaPublicacion).reversed();
-        return visibles(almacenes).stream()
+        List<Prenda> resultado = visibles(almacenes).stream()
                 .filter(p -> p.cumple(filtro))
-                .sorted(orden)
+                .toList();
+        return resultado.stream()
+                .sorted(orden(filtro, almacenes, resultado))
                 .toList();
     }
 
@@ -57,6 +64,20 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
                 .filter(Prenda::esVisible)
                 .filter(p -> almacenes.containsKey(p.getAlmacenId()))
                 .toList();
+    }
+
+    private Comparator<Prenda> orden(FiltroBusqueda filtro, Map<UUID, AlmacenResumen> almacenes, List<Prenda> resultado) {
+        if (filtro.orden() == Ordenamiento.DISTANCIA) {
+            Map<UUID, Double> kilometros = resultado.stream()
+                    .map(Prenda::getAlmacenId)
+                    .distinct()
+                    .collect(Collectors.toMap(Function.identity(), id -> distanciaAlmacen.kilometros(id, filtro.ubicacion())));
+            return Comparator.comparingDouble(p -> kilometros.get(p.getAlmacenId()));
+        }
+        if (filtro.orden() == Ordenamiento.REPUTACION) {
+            return Comparator.comparing((Prenda p) -> almacenes.get(p.getAlmacenId()).reputacion()).reversed();
+        }
+        return Comparator.comparing(Prenda::getFechaPublicacion).reversed();
     }
 
     private Map<UUID, AlmacenResumen> almacenesActivos() {

@@ -45,7 +45,7 @@ class ControllersTest {
         when(useCase.similares(prenda.getId())).thenReturn(List.of());
         BusquedaPrendaController controller = new BusquedaPrendaController(useCase);
 
-        ResponseEntity<List<PrendaResponse>> busqueda = controller.buscar("denim", null, null, null, null, null, null, null);
+        ResponseEntity<List<PrendaResponse>> busqueda = controller.buscar("denim", null, null, null, null, null, null, null, null, null);
 
         assertThat(busqueda.getBody()).extracting(PrendaResponse::nombre).containsExactly("Chaqueta denim");
         assertThat(controller.similares(prenda.getId()).getBody()).isEmpty();

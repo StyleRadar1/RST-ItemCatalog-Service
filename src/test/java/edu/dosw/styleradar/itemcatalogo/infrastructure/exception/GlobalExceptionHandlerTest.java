@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.exception;
 
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,14 @@ class GlobalExceptionHandlerTest {
         // Assert
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY.value());
         assertThat(detail.getTitle()).isEqualTo("Regla de negocio incumplida");
+    }
+
+    @Test
+    void parametroInvalidoReturns400() {
+        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException("Falta la ubicación"));
+
+        assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(detail.getDetail()).isEqualTo("Falta la ubicación");
     }
 
     @Test

@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.exception;
 
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -20,6 +21,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(ParametroInvalidoException.class)
+    public ProblemDetail handleParametroInvalido(ParametroInvalidoException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Solicitud inválida", ex.getMessage());
     }
 
     @ExceptionHandler(DomainException.class)
