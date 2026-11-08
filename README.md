@@ -227,6 +227,46 @@ El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, 
 
 Se usa PostgreSQL porque las prendas tienen atributos fijos sobre los que se filtra y ordena. La tabla `prenda` guarda los atributos de búsqueda, el precio, el estado de publicación y la disponibilidad; `fotografia_prenda` guarda las fotos de cada prenda y `moderacion_publicacion` el historial de aprobaciones y rechazos, ambas en relación uno a muchos con `prenda`. `almacen_resumen` es una copia local de los datos del almacén que necesita el catálogo (nombre, reputación y si está activo), alimentada por eventos, ya que los almacenes pertenecen a otro servicio (*Database-per-Service*). `prenda.disponible` y `almacen_resumen.activo` se actualizan con los eventos `PrendaAgotadaEvent` y `SuscripcionSuspendidaEvent`.
 
+### Diagramas de Secuencia
+
+Los diagramas muestran, para cada funcionalidad, el recorrido de la petición por las capas del servicio, tanto en el camino exitoso como en los errores. Los fragmentos `alt` separan cada caso. Los archivos editables de draw.io están junto a las imágenes en `docs/evidencias`.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-SECUENCIA-12063A?style=for-the-badge" alt="Diagrama de secuencia publicar prenda" /><br />
+          <strong><font color="#5600EF" size="3">PUBLICAR PRENDA</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-secuencia-publicar-prenda.png" width="100%" alt="Diagrama de secuencia publicar prenda" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+Al publicar una prenda, Spring valida primero el `PrendaRequest`; si falta un dato obligatorio, `GlobalExceptionHandler` responde 400 con el campo que falló. Con la solicitud válida, el controlador convierte los datos con `PrendaMapperIn` y llama al caso de uso, que verifica que el almacén exista (si no, 404) y que no esté suspendido (si lo está, 422). Cuando todo está en orden, la prenda se crea en estado `PENDIENTE`, se guarda en PostgreSQL y se responde 201 con la prenda creada (SR-RF-50).
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-SECUENCIA-12063A?style=for-the-badge" alt="Diagrama de secuencia moderar publicación" /><br />
+          <strong><font color="#5600EF" size="3">APROBAR O RECHAZAR PUBLICACIÓN</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-secuencia-moderar-publicacion.png" width="100%" alt="Diagrama de secuencia moderar publicación" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El administrador envía la decisión sobre una publicación. Si la solicitud no trae la decisión o el moderador, se responde 400. El caso de uso busca la prenda (si no existe, 404) y le pide al dominio aprobarla o rechazarla; el dominio solo lo permite cuando la prenda está pendiente y, en el rechazo, exige un motivo, de lo contrario se responde 422. La decisión queda registrada en el historial de moderación y se responde 200 con el nuevo estado (SR-RF-61).
+
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
