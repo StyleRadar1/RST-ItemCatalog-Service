@@ -10,5 +10,5 @@ RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=build --chown=app:app /build/target/ms-item-catalogo-0.0.1-SNAPSHOT.jar app.jar
 USER app
-EXPOSE 8085
+EXPOSE 8220
 ENTRYPOINT ["java", "-jar", "app.jar"]

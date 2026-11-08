@@ -23,6 +23,6 @@ class HealthControllerTest {
         assertThat(response.getBody())
                 .containsEntry("status", "UP")
                 .containsEntry("service", "ms-item-catalogo")
-                .containsEntry("port", 8085);
+                .containsEntry("port", 8220);
     }
 }
