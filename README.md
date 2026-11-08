@@ -8,7 +8,7 @@
 
   <p align="center">
     <img src="https://img.shields.io/badge/BOUNDED_CONTEXT-Catalogo_de_prendas-12063A?style=for-the-badge" alt="Context" />
-    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8085-5600EF?style=for-the-badge" alt="Port" />
+    <img src="https://img.shields.io/badge/PUERTO_OFICIAL-8220-5600EF?style=for-the-badge" alt="Port" />
     <img src="https://img.shields.io/badge/ARQUITECTURA-HEXAGONAL-16A34A?style=for-the-badge" alt="Hexagonal" />
   </p>
 
@@ -63,7 +63,7 @@
 
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
-* **Puerto de Escucha Oficial:** `8085`
+* **Puerto de Escucha Oficial:** `8220`
 * **Base de Datos Asignada:** `PostgreSQL 15.8` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Catálogo de prendas`
 
@@ -74,8 +74,8 @@ Este microservicio encapsula exclusivamente la lógica de negocio de gestión, b
 | Qué HACE este Microservicio (Alcance)                             | Qué NO HACE este Microservicio (Límites)                                          |
 | :----------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
 | • Publica, edita y retira prendas del catálogo.                   | • NO autentica usuarios.                                                           |
-| • Busca, filtra y ordena las prendas del catálogo.                | • NO calcula distancias (delegado a `ms-geolocalizacion` en `:8086`).              |
-| • Modera las publicaciones de los almacenes.                      | • NO gestiona el inventario por talla (delegado a `ms-inventario` en `:8084`).     |
+| • Busca, filtra y ordena las prendas del catálogo.                | • NO calcula distancias (delegado a `ms-geolocalizacion` en `:8240`).              |
+| • Modera las publicaciones de los almacenes.                      | • NO gestiona el inventario por talla (delegado a `ms-inventario` en `:8200`).     |
 | • Garantiza persistencia ACID e idempotencia en su base de datos. | • NO accede directamente a bases de datos de otros microservicios.                 |
 
 ### Arquetipos de Moda y Personajes de StyleRadar
@@ -276,9 +276,9 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 | Entorno | Estado | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- |
-| **Desarrollo Local (DEV)** | Local | `http://localhost:8085/api/v1` | [Swagger UI Local](http://localhost:8085/api/v1/swagger-ui.html) | [`/health`](http://localhost:8085/api/v1/health) |
+| **Desarrollo Local (DEV)** | Local | `http://localhost:8220/api/v1` | [Swagger UI Local](http://localhost:8220/api/v1/swagger-ui.html) | [`/health`](http://localhost:8220/api/v1/health) |
 
-* **Especificación OpenAPI:** `http://localhost:8085/api/v1/v3/api-docs`
+* **Especificación OpenAPI:** `http://localhost:8220/api/v1/v3/api-docs`
 
 <div align="center">
   <table width="100%" style="margin: 18px 0; border: 2px dashed #5600EF; border-radius: 8px; background-color: #FBFBFE;">
@@ -395,7 +395,7 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 
 | Variable | Descripción | Valor por Defecto |
 | :--- | :--- | :--- |
-| `SERVER_PORT` | Puerto del servicio | `8085` |
+| `SERVER_PORT` | Puerto del servicio | `8220` |
 | `DB_HOST` | Host de PostgreSQL | `localhost` |
 | `DB_PORT` | Puerto de PostgreSQL | `5432` |
 | `DB_NAME` | Nombre de la base de datos | `styleradar_item_catalog` |
