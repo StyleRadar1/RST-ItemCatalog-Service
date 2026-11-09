@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.itemcatalogo.application.mapper.out.PrendaMapperOut;
+import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.mapper.PrendaMapperOut;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.repository.AlmacenResumenJpaRepository;
@@ -27,5 +27,10 @@ public class AlmacenRepositoryAdapter implements AlmacenRepositoryPort {
     @Override
     public List<AlmacenResumen> findAll() {
         return jpaRepository.findAll().stream().map(PrendaMapperOut::toDomain).toList();
+    }
+
+    @Override
+    public AlmacenResumen save(AlmacenResumen almacen) {
+        return PrendaMapperOut.toDomain(jpaRepository.save(PrendaMapperOut.toEntity(almacen)));
     }
 }

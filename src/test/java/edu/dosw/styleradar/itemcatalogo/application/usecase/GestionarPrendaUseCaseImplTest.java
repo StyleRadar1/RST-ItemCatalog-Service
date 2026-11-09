@@ -1,5 +1,8 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
+import edu.dosw.styleradar.itemcatalogo.domain.event.NuevaPrendaCreadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaEliminadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -8,7 +11,9 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +30,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class GestionarPrendaUseCaseImplTest {
 
     private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
     private final AlmacenRepositoryPort almacenes = mock(AlmacenRepositoryPort.class);
-    private final GestionarPrendaUseCaseImpl useCase = new GestionarPrendaUseCaseImpl(prendas, almacenes);
+    private final EventPublisherPort eventos = mock(EventPublisherPort.class);
+    private final GestionarPrendaUseCaseImpl useCase = new GestionarPrendaUseCaseImpl(prendas, almacenes, eventos);
 
     private final AtributosBusqueda atributos = new AtributosBusqueda("Chaqueta", "Azul", "Levis", "Urbano");
     private final Precio precio = new Precio(new BigDecimal("190000"));
@@ -43,14 +51,14 @@ class GestionarPrendaUseCaseImplTest {
     }
 
     @Test
-    void publicaEnUnAlmacenActivo() {
+    void publicaEnUnAlmacenActivoYAvisaConUnEvento() {
         AlmacenResumen almacen = almacen("4.50", true);
         when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
 
         Prenda prenda = useCase.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos);
 
         assertThat(prenda.getEstado()).isEqualTo(EstadoPublicacion.PENDIENTE);
-        assertThat(prenda.getAlmacenId()).isEqualTo(almacen.almacenId());
+        verify(eventos).publicar(new NuevaPrendaCreadaEvent(prenda.getId(), almacen.almacenId(), prenda.getFechaPublicacion()));
     }
 
     @Test
@@ -67,15 +75,37 @@ class GestionarPrendaUseCaseImplTest {
     }
 
     @Test
-    void editaYRetiraUnaPrenda() {
+    void elDuenoEditaYRetiraLaPrendaYSeAvisaElRetiro() {
+        Prenda prenda = aprobada(UUID.randomUUID(), "Chaqueta", LocalDateTime.now());
+        Solicitante dueno = new Solicitante(prenda.getAlmacenId(), false);
+        when(prendas.findById(prenda.getId())).thenReturn(Optional.of(prenda));
+
+        assertThat(useCase.editar(prenda.getId(), dueno, "Chaqueta editada", atributos, precio, fotos).getNombre())
+                .isEqualTo("Chaqueta editada");
+        assertThat(useCase.retirar(prenda.getId(), dueno).getEstado()).isEqualTo(EstadoPublicacion.RETIRADA);
+        verify(eventos).publicar(any(PrendaEliminadaEvent.class));
+    }
+
+    @Test
+    void elAdministradorPuedeRetirarCualquierPrenda() {
         Prenda prenda = aprobada(UUID.randomUUID(), "Chaqueta", LocalDateTime.now());
         when(prendas.findById(prenda.getId())).thenReturn(Optional.of(prenda));
 
-        Prenda editada = useCase.editar(prenda.getId(), "Chaqueta editada", atributos, precio, fotos);
-        assertThat(editada.getNombre()).isEqualTo("Chaqueta editada");
+        assertThat(useCase.retirar(prenda.getId(), new Solicitante(null, true)).getEstado())
+                .isEqualTo(EstadoPublicacion.RETIRADA);
+    }
 
-        Prenda retirada = useCase.retirar(prenda.getId());
-        assertThat(retirada.getEstado()).isEqualTo(EstadoPublicacion.RETIRADA);
+    @Test
+    void otroAlmacenNoPuedeEditarNiRetirar() {
+        Prenda prenda = aprobada(UUID.randomUUID(), "Chaqueta", LocalDateTime.now());
+        Solicitante otro = new Solicitante(UUID.randomUUID(), false);
+        when(prendas.findById(prenda.getId())).thenReturn(Optional.of(prenda));
+
+        assertThatThrownBy(() -> useCase.editar(prenda.getId(), otro, "Otra", atributos, precio, fotos))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> useCase.retirar(prenda.getId(), otro))
+                .isInstanceOf(AccesoDenegadoException.class);
+        verify(eventos, never()).publicar(any(PrendaEliminadaEvent.class));
     }
 
     @Test

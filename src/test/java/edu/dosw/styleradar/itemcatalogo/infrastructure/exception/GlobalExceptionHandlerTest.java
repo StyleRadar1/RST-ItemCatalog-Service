@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.exception;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,13 @@ class GlobalExceptionHandlerTest {
         // Assert
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getProperties()).containsEntry("errors", Map.of("nombre", "no debe estar vacío"));
+    }
+
+    @Test
+    void forbiddenReturns403() {
+        ProblemDetail detail = handler.handleForbidden(new AccesoDenegadoException("No es el dueño"));
+
+        assertThat(detail.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
     }
 
     @Test

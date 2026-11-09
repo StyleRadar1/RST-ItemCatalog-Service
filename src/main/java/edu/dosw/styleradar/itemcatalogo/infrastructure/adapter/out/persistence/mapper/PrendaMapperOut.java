@@ -1,4 +1,4 @@
-package edu.dosw.styleradar.itemcatalogo.application.mapper.out;
+package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.mapper;
 
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
@@ -39,5 +39,9 @@ public final class PrendaMapperOut {
 
     public static AlmacenResumen toDomain(AlmacenResumenEntity entity) {
         return new AlmacenResumen(entity.getAlmacenId(), entity.getNombre(), entity.getReputacion(), entity.isActivo());
+    }
+
+    public static AlmacenResumenEntity toEntity(AlmacenResumen almacen) {
+        return new AlmacenResumenEntity(almacen.almacenId(), almacen.nombre(), almacen.reputacion(), almacen.activo());
     }
 }

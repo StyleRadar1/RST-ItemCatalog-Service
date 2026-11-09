@@ -9,6 +9,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
@@ -70,14 +71,14 @@ class ControllersTest {
         GestionarPrendaUseCase useCase = mock(GestionarPrendaUseCase.class);
         when(useCase.publicar(eq(almacenId), eq("Chaqueta denim"), any(), any(), any())).thenReturn(prenda);
         when(useCase.obtener(prenda.getId())).thenReturn(prenda);
-        when(useCase.editar(eq(prenda.getId()), any(), any(), any(), any())).thenReturn(prenda);
-        when(useCase.retirar(prenda.getId())).thenReturn(prenda);
+        when(useCase.editar(eq(prenda.getId()), eq(new Solicitante(almacenId, false)), any(), any(), any(), any())).thenReturn(prenda);
+        when(useCase.retirar(prenda.getId(), new Solicitante(null, true))).thenReturn(prenda);
         PrendaController controller = new PrendaController(useCase);
 
         assertThat(controller.publicar(request).getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(controller.obtener(prenda.getId()).getBody().id()).isEqualTo(prenda.getId());
-        assertThat(controller.editar(prenda.getId(), request).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.retirar(prenda.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.editar(prenda.getId(), almacenId, null, request).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.retirar(prenda.getId(), null, "admin").getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test

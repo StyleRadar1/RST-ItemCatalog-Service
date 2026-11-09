@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.domain.model;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import org.junit.jupiter.api.Test;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PrendaTest {
@@ -95,6 +97,18 @@ class PrendaTest {
         assertThat(prenda.getEstado()).isEqualTo(EstadoPublicacion.RETIRADA);
         assertThatThrownBy(prenda::retirar).isInstanceOf(DomainException.class);
         assertThatThrownBy(() -> prenda.editar("Otra", atributos, precio, fotos)).isInstanceOf(DomainException.class);
+    }
+
+    @Test
+    void soloElDuenoOElAdministradorTienenPermiso() {
+        Prenda prenda = nueva();
+
+        assertThatCode(() -> prenda.verificarPermiso(new Solicitante(almacenId, false))).doesNotThrowAnyException();
+        assertThatCode(() -> prenda.verificarPermiso(new Solicitante(null, true))).doesNotThrowAnyException();
+        assertThatThrownBy(() -> prenda.verificarPermiso(new Solicitante(UUID.randomUUID(), false)))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> prenda.verificarPermiso(new Solicitante(null, false)))
+                .isInstanceOf(AccesoDenegadoException.class);
     }
 
     @Test
