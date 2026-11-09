@@ -31,7 +31,7 @@ class PrendaTest {
 
     private FiltroBusqueda filtro(String texto, String tipo, String color, String marca, String estilo, String min, String max) {
         return new FiltroBusqueda(texto, tipo, color, marca, estilo,
-                min == null ? null : new BigDecimal(min), max == null ? null : new BigDecimal(max), null);
+                min == null ? null : new BigDecimal(min), max == null ? null : new BigDecimal(max), null, null);
     }
 
     @Test

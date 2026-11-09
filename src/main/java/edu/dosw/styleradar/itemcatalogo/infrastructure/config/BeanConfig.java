@@ -11,6 +11,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenU
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import org.springframework.context.annotation.Bean;
@@ -21,8 +22,9 @@ import org.springframework.context.annotation.Configuration;
 public class BeanConfig {
 
     @Bean
-    public BuscarPrendasUseCase buscarPrendasUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes) {
-        return new BuscarPrendasUseCaseImpl(prendas, almacenes);
+    public BuscarPrendasUseCase buscarPrendasUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes,
+                                                     DistanciaAlmacenPort distancias) {
+        return new BuscarPrendasUseCaseImpl(prendas, almacenes, distancias);
     }
 
     @Bean
@@ -42,7 +44,7 @@ public class BeanConfig {
     }
 
     @Bean
-    public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas) {
-        return new ModerarPublicacionUseCaseImpl(prendas);
+    public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes) {
+        return new ModerarPublicacionUseCaseImpl(prendas, almacenes);
     }
 }

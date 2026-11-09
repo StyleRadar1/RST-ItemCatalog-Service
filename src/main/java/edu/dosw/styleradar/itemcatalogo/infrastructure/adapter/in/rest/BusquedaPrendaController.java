@@ -4,6 +4,7 @@ import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
 import edu.dosw.styleradar.itemcatalogo.domain.model.FiltroBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Ubicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.BusquedaPrendaApi;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +37,11 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
                                                        @RequestParam(required = false) String estilo,
                                                        @RequestParam(required = false) BigDecimal precioMin,
                                                        @RequestParam(required = false) BigDecimal precioMax,
-                                                       @RequestParam(required = false) Ordenamiento orden) {
-        FiltroBusqueda filtro = new FiltroBusqueda(texto, tipo, color, marca, estilo, precioMin, precioMax, orden);
+                                                       @RequestParam(required = false) Ordenamiento orden,
+                                                       @RequestParam(required = false) Double lat,
+                                                       @RequestParam(required = false) Double lng) {
+        Ubicacion ubicacion = lat != null && lng != null ? new Ubicacion(lat, lng) : null;
+        FiltroBusqueda filtro = new FiltroBusqueda(texto, tipo, color, marca, estilo, precioMin, precioMax, orden, ubicacion);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(buscarPrendas.buscar(filtro)));
     }
 

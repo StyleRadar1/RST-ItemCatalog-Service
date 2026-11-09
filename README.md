@@ -59,7 +59,7 @@
 
 <a id="1-nombre-del-servicio-y-su-bounded-context"></a>
 
-## <img src="https://img.shields.io/badge/01-5600EF?style=for-the-badge" height="20" align="absmiddle" /> NOMBRE DEL SERVICIO Y SU BOUNDED CONTEXT
+## <img src="https://img.shields.io/badge/01-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 1. NOMBRE DEL SERVICIO Y SU BOUNDED CONTEXT
 
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
@@ -92,7 +92,7 @@ Este microservicio encapsula exclusivamente la lógica de negocio de gestión, b
 
 <a id="2-equipo-y-responsables"></a>
 
-## <img src="https://img.shields.io/badge/02-5600EF?style=for-the-badge" height="20" align="absmiddle" /> EQUIPO Y RESPONSABLES
+## <img src="https://img.shields.io/badge/02-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 2. EQUIPO Y RESPONSABLES
 
 Desarrollado y mantenido por el **Equipo `Restrepo`** (prefijo `RST`) para la asignatura DOSW 2026.
 
@@ -103,7 +103,7 @@ Desarrollado y mantenido por el **Equipo `Restrepo`** (prefijo `RST`) para la as
 | **Líder y apoyo** | `Juan Nicolás Álvarez Muñoz` | [@JUANNICOLASA](https://github.com/JUANNICOLASA) |
 | **Backend Developer** | `Daniel Mosquera` | [@Danielmmartinez](https://github.com/Danielmmartinez) |
 | **Backend Developer** | `Sebastián Camilo Granados` | [@Sebastian-Granados1456](https://github.com/Sebastian-Granados1456) |
-| **Frontend Developer** | `Carlos Sánchez` | `Pendiente` |
+| **Frontend Developer** | `Carlos Sánchez` | [@Carlossj8](https://github.com/Carlossj8) |
 
 </div>
 
@@ -111,7 +111,7 @@ Desarrollado y mantenido por el **Equipo `Restrepo`** (prefijo `RST`) para la as
 
 <a id="3-arquitectura-hexagonal-con-su-diagrama"></a>
 
-## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> ARQUITECTURA HEXAGONAL CON SU DIAGRAMA
+## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ARQUITECTURA HEXAGONAL CON SU DIAGRAMA
 
 El servicio sigue la arquitectura hexagonal acordada por el curso. Las reglas del negocio se mantienen aisladas de las herramientas externas, como la base de datos, el broker de mensajería o la API REST, de modo que estas pueden cambiar sin afectar la lógica principal.
 
@@ -227,7 +227,47 @@ El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, 
 
 Se usa PostgreSQL porque las prendas tienen atributos fijos sobre los que se filtra y ordena. La tabla `prenda` guarda los atributos de búsqueda, el precio, el estado de publicación y la disponibilidad; `fotografia_prenda` guarda las fotos de cada prenda y `moderacion_publicacion` el historial de aprobaciones y rechazos, ambas en relación uno a muchos con `prenda`. `almacen_resumen` es una copia local de los datos del almacén que necesita el catálogo (nombre, reputación y si está activo), alimentada por eventos, ya que los almacenes pertenecen a otro servicio (*Database-per-Service*). `prenda.disponible` y `almacen_resumen.activo` se actualizan con los eventos `PrendaAgotadaEvent` y `SuscripcionSuspendidaEvent`.
 
-### Estructura de Paquetes en `src/main/java/`
+### Diagramas de Secuencia
+
+Los diagramas muestran, para cada funcionalidad, el recorrido de la petición por las capas del servicio, tanto en el camino exitoso como en los errores. Los fragmentos `alt` separan cada caso. Los archivos editables de draw.io están junto a las imágenes en `docs/evidencias`.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-SECUENCIA-12063A?style=for-the-badge" alt="Diagrama de secuencia publicar prenda" /><br />
+          <strong><font color="#5600EF" size="3">PUBLICAR PRENDA</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-secuencia-publicar-prenda.png" width="100%" alt="Diagrama de secuencia publicar prenda" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+Al publicar una prenda, Spring valida primero el `PrendaRequest`; si falta un dato obligatorio, `GlobalExceptionHandler` responde 400 con el campo que falló. Con la solicitud válida, el controlador convierte los datos con `PrendaMapperIn` y llama al caso de uso, que verifica que el almacén exista (si no, 404) y que no esté suspendido (si lo está, 422). Cuando todo está en orden, la prenda se crea en estado `PENDIENTE`, se guarda en PostgreSQL y se responde 201 con la prenda creada (SR-RF-50).
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-SECUENCIA-12063A?style=for-the-badge" alt="Diagrama de secuencia moderar publicación" /><br />
+          <strong><font color="#5600EF" size="3">APROBAR O RECHAZAR PUBLICACIÓN</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-secuencia-moderar-publicacion.png" width="100%" alt="Diagrama de secuencia moderar publicación" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El administrador envía la decisión sobre una publicación. Si la solicitud no trae la decisión o el moderador, se responde 400. El caso de uso busca la prenda (si no existe, 404) y le pide al dominio aprobarla o rechazarla; el dominio solo lo permite cuando la prenda está pendiente y, en el rechazo, exige un motivo, de lo contrario se responde 422. La decisión queda registrada en el historial de moderación y se responde 200 con el nuevo estado (SR-RF-61).
+
+### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
 src/main/java/edu/dosw/styleradar/itemcatalogo/
@@ -272,11 +312,13 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 ## <img src="https://img.shields.io/badge/04-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 4. ENDPOINTS Y ENLACE A SWAGGER
 
-### Enlaces por Entorno
+### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
 
-| Entorno | Estado | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
-| :--- | :---: | :--- | :--- | :--- |
-| **Desarrollo Local (DEV)** | Local | `http://localhost:8220/api/v1` | [Swagger UI Local](http://localhost:8220/api/v1/swagger-ui.html) | [`/health`](http://localhost:8220/api/v1/health) |
+| Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| **Producción (PROD)** | Próximo Sprint | Despliegue productivo de StyleRadar | Próximo Sprint | Próximo Sprint | Próximo Sprint |
+| **Calidad / Pruebas (QA)** | Próximo Sprint | Pruebas integradas del Sprint | Próximo Sprint | Próximo Sprint | Próximo Sprint |
+| **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local | `http://localhost:8220/api/v1` | [Swagger UI Local](http://localhost:8220/api/v1/swagger-ui.html) | [`/health`](http://localhost:8220/api/v1/health) |
 
 * **Especificación OpenAPI:** `http://localhost:8220/api/v1/v3/api-docs`
 
@@ -302,18 +344,6 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 | :------: | :---------------- | :------------------ | :------------ | :----------: |
 |  `GET`   | `/api/v1/health`  | Estado del servicio | Público       |    `200`     |
 
-### Funcionalidades que Cubrirá el Servicio
-
-| Requerimiento | Funcionalidad |
-| :--- | :--- |
-| `SR-RF-07` | Buscar prendas mediante texto libre |
-| `SR-RF-08` a `SR-RF-13` | Filtrar prendas por tipo, color, talla, precio, marca y estilo |
-| `SR-RF-14` y `SR-RF-15` | Ordenar resultados por distancia y por reputación del almacén |
-| `SR-RF-16` | Consultar prendas similares cuando no exista coincidencia exacta |
-| `SR-RF-19`, `SR-RF-20` y `SR-RF-22` | Catálogo resumido, novedades semanales y catálogo de almacén |
-| `SR-RF-50`, `SR-RF-51`, `SR-RF-53` a `SR-RF-55` y `SR-RF-58` | Publicar, editar y retirar prendas |
-| `SR-RF-61` y `SR-RF-87` | Moderar publicaciones del catálogo |
-
 ---
 
 <a id="5-eventos-que-publica-y-consume"></a>
@@ -322,7 +352,7 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 La comunicación asíncrona entre microservicios se realiza a través de **RabbitMQ 3.13.7**.
 
-### Matriz de Eventos
+### Matriz de Eventos AMQP
 
 | Tipo | Evento | Emisor / Receptor | Propósito |
 | :---: | :--- | :--- | :--- |
@@ -361,12 +391,28 @@ La comunicación asíncrona entre microservicios se realiza a través de **Rabbi
 * **Apache Maven:** 3.9+
 * **Docker Engine y Docker Compose**
 
-### Ejecución con Docker
+### Ejecución Local con Maven (Perfil Dev)
 
-El servicio, junto con su base de datos y RabbitMQ, se levanta con Docker a partir de un archivo `.env` creado desde `.env.example`:
+Requiere PostgreSQL y RabbitMQ disponibles en las direcciones definidas en el archivo `.env`, creado a partir de `.env.example`.
+
+```bash
+git clone https://github.com/StyleRadar1/RST-ItemCatalog-Service.git
+cd RST-ItemCatalog-Service
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### Ejecución Contenerizada Completa con Docker
+
+El servicio, junto con su base de datos y RabbitMQ, se levanta con Docker a partir del archivo `.env`:
 
 ```bash
 docker compose up -d --build
+```
+
+### Comprobación de Salud (Health Check)
+
+```bash
+curl http://localhost:8220/api/v1/health
 ```
 
 <div align="center">
@@ -414,6 +460,14 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 
 Las pruebas unitarias validan el dominio y los casos de uso, y las de integración validan la persistencia y la mensajería. Se exige una cobertura mínima del **85 %**, verificada con **JaCoCo** en cada ejecución del pipeline.
 
+### Comandos de Ejecución de Pruebas
+
+```bash
+./mvnw clean verify
+```
+
+Este comando ejecuta las pruebas, genera el reporte de cobertura y verifica el mínimo del 85 %.
+
 * **Ruta del Reporte HTML:** `target/site/jacoco/index.html`
 
 <div align="center">
@@ -425,11 +479,14 @@ Las pruebas unitarias validan el dominio y los casos de uso, y las de integraci�
           <strong><font color="#5600EF" size="3">REPORTE CONSOLIDADO DE COBERTURA JACOCO (≥ 85%)</font></strong>
         </p>
         <p>
-<!-- <img src="docs/evidencias/cobertura-jacoco.png" width="100%" alt="Reporte JaCoCo" /><br /> -->
+<em>Evidencia pendiente.</em>
+        </p>
+      </td>
+    </tr>
   </table>
 </div>
 
-### Pirámide de Pruebas
+### Pirámide de Pruebas Implementada
 
 | Nivel de Prueba | Alcance | Tecnologías | Ubicación en el Código |
 | :--- | :--- | :--- | :--- |
@@ -446,7 +503,14 @@ Las pruebas unitarias validan el dominio y los casos de uso, y las de integraci�
 
 Cada cambio enviado a `master`, `develop` o a una rama `feature/*`, así como cada pull request, pasa por un pipeline de **GitHub Actions** que compila el proyecto, ejecuta las pruebas, verifica la cobertura, realiza el análisis estático del código y construye la imagen Docker.
 
-### Diagrama del Flujo Automatizado
+### Matriz de Pipelines por Rama Protegida
+
+| Rama | Desencadenador | Etapas |
+| :--- | :--- | :--- |
+| `develop` | Push y pull request | Compilación, pruebas, cobertura, análisis estático e imagen Docker |
+| `master` | Push y pull request | Compilación, pruebas, cobertura, análisis estático e imagen Docker |
+
+### Diagrama del Flujo Automatizado (Pipeline Stages)
 
 ```mermaid
 flowchart LR
@@ -484,7 +548,7 @@ flowchart LR
 
 ## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. RAMAS Y CÓMO CONTRIBUIR
 
-### Estructura de Ramas
+### Estructura de Ramas Oficial
 
 ```text
 master                              <-- Versiones estables
@@ -494,7 +558,17 @@ master                              <-- Versiones estables
 
 Los cambios llegan a `develop` y `master` únicamente por pull request, con revisión y el pipeline en verde.
 
-### Checklist para Pull Requests
+### Convención de Commits (*Conventional Commits*)
+
+Todo mensaje de commit sigue el estándar:
+
+```text
+<tipo>(<alcance>): <descripción en español>
+```
+
+Los tipos más usados son `feat`, `fix`, `test`, `docs`, `refactor` y `chore`.
+
+### Checklist Obligatorio para Pull Requests
 
 - [ ] La rama parte de la versión más reciente de `develop`.
 - [ ] Todas las pruebas pasan y la cobertura JaCoCo es mayor o igual al 85 %.
@@ -506,6 +580,8 @@ Los cambios llegan a `develop` y `master` únicamente por pull request, con revi
 <a id="12-enlace-a-la-épica-en-jira"></a>
 
 ## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. ENLACE A LA ÉPICA EN JIRA
+
+### Enlaces de Gestión, Repositorios y Evidencias
 
 * **Épica del Microservicio:** [RES-2 · ms-item-catalogo](https://mail-team-nyjtgqcj.atlassian.net/browse/RES-2)
 * **Tablero del Equipo:** [Restrepo-StyleRadar (RES)](https://mail-team-nyjtgqcj.atlassian.net/jira/software/projects/RES/boards/76)

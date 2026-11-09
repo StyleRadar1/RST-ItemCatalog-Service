@@ -16,9 +16,9 @@ import java.util.UUID;
 public interface BusquedaPrendaApi {
 
     @Operation(summary = "Buscar prendas",
-            description = "Busca por texto libre y filtra por tipo, color, marca, estilo y rango de precio. Ordena por recientes o por reputación del almacén (SR-RF-07 a 13 y 15).")
+            description = "Busca por texto libre y filtra por tipo, color, marca, estilo y rango de precio. Ordena por recientes, por reputación del almacén o por distancia a la ubicación indicada (SR-RF-07 a 15).")
     @ApiResponse(responseCode = "200", description = "Prendas aprobadas que cumplen el filtro")
-    @ApiResponse(responseCode = "400", description = "Algún parámetro tiene un formato inválido")
+    @ApiResponse(responseCode = "400", description = "Algún parámetro tiene un formato inválido o se pidió orden por distancia sin ubicación")
     ResponseEntity<List<PrendaResponse>> buscar(
             @Parameter(description = "Texto libre", example = "chaqueta") String texto,
             @Parameter(example = "Chaqueta") String tipo,
@@ -27,7 +27,9 @@ public interface BusquedaPrendaApi {
             @Parameter(example = "Urbano") String estilo,
             @Parameter(example = "50000") BigDecimal precioMin,
             @Parameter(example = "200000") BigDecimal precioMax,
-            @Parameter(description = "RECIENTES (por defecto) o REPUTACION") Ordenamiento orden);
+            @Parameter(description = "RECIENTES (por defecto), REPUTACION o DISTANCIA") Ordenamiento orden,
+            @Parameter(description = "Latitud del usuario, obligatoria para ordenar por distancia", example = "4.6683") Double lat,
+            @Parameter(description = "Longitud del usuario, obligatoria para ordenar por distancia", example = "-74.0546") Double lng);
 
     @Operation(summary = "Consultar prendas similares",
             description = "Prendas del mismo tipo o estilo, para cuando no hay coincidencia exacta (SR-RF-16).")

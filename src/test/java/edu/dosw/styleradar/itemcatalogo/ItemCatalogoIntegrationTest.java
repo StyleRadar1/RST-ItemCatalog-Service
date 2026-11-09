@@ -184,7 +184,7 @@ class ItemCatalogoIntegrationTest {
     void listaLasPendientesPorAlmacen() throws Exception {
         mockMvc.perform(get("/prendas/pendientes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$['a3333333-3333-3333-3333-333333333333']", hasSize(1)));
+                .andExpect(jsonPath("$.grupos[?(@.almacenId == 'a3333333-3333-3333-3333-333333333333')].pendientes", hasItem(1)));
     }
 
     @Test

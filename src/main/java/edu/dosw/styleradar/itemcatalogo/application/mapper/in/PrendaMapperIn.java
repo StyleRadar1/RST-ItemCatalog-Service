@@ -2,9 +2,12 @@ package edu.dosw.styleradar.itemcatalogo.application.mapper.in;
 
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.PrendaRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.CatalogoResumenResponse;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.GrupoPendientesResponse;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.PendientesResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
+import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 
@@ -15,6 +18,7 @@ import java.util.stream.IntStream;
 public final class PrendaMapperIn {
 
     private static final int PRENDAS_EN_RESUMEN = 4;
+    private static final String TIPO_PUBLICADOR = "TIENDA";
 
     private PrendaMapperIn() {
     }
@@ -49,5 +53,13 @@ public final class PrendaMapperIn {
     public static CatalogoResumenResponse toResumen(UUID almacenId, List<Prenda> prendas) {
         return new CatalogoResumenResponse(almacenId, prendas.size(),
                 toResponse(prendas.stream().limit(PRENDAS_EN_RESUMEN).toList()));
+    }
+
+    public static PendientesResponse toPendientes(List<GrupoPendientes> grupos) {
+        List<GrupoPendientesResponse> respuesta = grupos.stream()
+                .map(grupo -> new GrupoPendientesResponse(grupo.almacenId(), grupo.almacen(), grupo.total(),
+                        toResponse(grupo.prendas())))
+                .toList();
+        return new PendientesResponse(TIPO_PUBLICADOR, grupos.stream().mapToInt(GrupoPendientes::total).sum(), respuesta);
     }
 }

@@ -2,6 +2,7 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.exception;
 
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -26,6 +27,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccesoDenegadoException.class)
     public ProblemDetail handleForbidden(AccesoDenegadoException ex) {
         return problem(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());
+    }
+
+    @ExceptionHandler(ParametroInvalidoException.class)
+    public ProblemDetail handleParametroInvalido(ParametroInvalidoException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Solicitud inválida", ex.getMessage());
     }
 
     @ExceptionHandler(DomainException.class)
