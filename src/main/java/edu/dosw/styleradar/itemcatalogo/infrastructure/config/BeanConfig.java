@@ -33,7 +33,7 @@ public class BeanConfig {
     }
 
     @Bean
-    public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas) {
-        return new ModerarPublicacionUseCaseImpl(prendas);
+    public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes) {
+        return new ModerarPublicacionUseCaseImpl(prendas, almacenes);
     }
 }

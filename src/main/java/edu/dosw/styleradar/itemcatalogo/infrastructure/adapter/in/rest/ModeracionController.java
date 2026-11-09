@@ -1,6 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.ModeracionRequest;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.PendientesResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
@@ -14,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -31,11 +30,16 @@ public class ModeracionController implements ModeracionApi {
 
     @Override
     @GetMapping("/pendientes")
-    public ResponseEntity<Map<UUID, List<PrendaResponse>>> pendientes() {
-        Map<UUID, List<PrendaResponse>> grupos = new LinkedHashMap<>();
-        moderarPublicacion.pendientesPorAlmacen()
-                .forEach((almacenId, prendas) -> grupos.put(almacenId, PrendaMapperIn.toResponse(prendas)));
-        return ResponseEntity.ok(grupos);
+    public ResponseEntity<PendientesResponse> pendientes() {
+        return ResponseEntity.ok(PrendaMapperIn.toPendientes(moderarPublicacion.pendientesPorGrupo()));
+    }
+
+    @Override
+    @PutMapping("/pendientes/almacenes/{almacenId}/moderacion")
+    public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable UUID almacenId,
+                                                             @Valid @RequestBody ModeracionRequest request) {
+        return ResponseEntity.ok(PrendaMapperIn.toResponse(moderarPublicacion.moderarGrupo(
+                almacenId, request.decision(), request.motivo(), request.moderadorId())));
     }
 
     @Override

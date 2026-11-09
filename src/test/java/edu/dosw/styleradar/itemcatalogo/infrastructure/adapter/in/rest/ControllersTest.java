@@ -3,10 +3,12 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.ModeracionRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.PrendaRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.CatalogoResumenResponse;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.PendientesResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
+import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
@@ -18,9 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,20 +84,30 @@ class ControllersTest {
     void moderaPublicaciones() {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         UUID moderador = UUID.randomUUID();
-        when(useCase.pendientesPorAlmacen()).thenReturn(Map.of(almacenId, List.of(prenda)));
+        ModeracionRequest aprobar = new ModeracionRequest(EstadoPublicacion.APROBADA, null, moderador);
+        when(useCase.pendientesPorGrupo()).thenReturn(List.of(new GrupoPendientes(almacenId, "Calle 85 Store", List.of(prenda))));
         when(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador)).thenReturn(prenda);
+        when(useCase.moderarGrupo(almacenId, EstadoPublicacion.APROBADA, null, moderador)).thenReturn(List.of(prenda));
         ModeracionController controller = new ModeracionController(useCase);
 
-        assertThat(controller.pendientes().getBody()).containsKey(almacenId);
-        assertThat(controller.moderar(prenda.getId(), new ModeracionRequest(EstadoPublicacion.APROBADA, null, moderador))
-                .getStatusCode()).isEqualTo(HttpStatus.OK);
+        PendientesResponse pendientes = controller.pendientes().getBody();
+
+        assertThat(pendientes.tipoPublicador()).isEqualTo("TIENDA");
+        assertThat(pendientes.total()).isEqualTo(1);
+        assertThat(pendientes.grupos().get(0).almacen()).isEqualTo("Calle 85 Store");
+        assertThat(pendientes.grupos().get(0).pendientes()).isEqualTo(1);
+        assertThat(controller.moderar(prenda.getId(), aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.moderarGrupo(almacenId, aprobar).getBody()).hasSize(1);
     }
 
     @Test
-    void sinPendientesDevuelveMapaVacio() {
+    void sinPendientesDevuelveTotalCero() {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
-        when(useCase.pendientesPorAlmacen()).thenReturn(Collections.emptyMap());
+        when(useCase.pendientesPorGrupo()).thenReturn(List.of());
 
-        assertThat(new ModeracionController(useCase).pendientes().getBody()).isEmpty();
+        PendientesResponse pendientes = new ModeracionController(useCase).pendientes().getBody();
+
+        assertThat(pendientes.total()).isZero();
+        assertThat(pendientes.grupos()).isEmpty();
     }
 }
