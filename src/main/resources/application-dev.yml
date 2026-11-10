@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    show-sql: true
+  # En dev se cargan también los datos de ejemplo
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+
+logging:
+  level:
+    edu.dosw.styleradar.itemcatalogo: DEBUG

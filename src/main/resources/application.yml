@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8220}
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: ms-item-catalogo
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:styleradar_item_catalog}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:}
+
+geolocalizacion:
+  url: ${GEOLOCALIZACION_URL:http://localhost:8240/api/v1}
+
+inventario:
+  url: ${INVENTARIO_URL:http://localhost:8200/api/v1}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
