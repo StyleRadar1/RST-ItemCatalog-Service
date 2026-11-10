@@ -340,9 +340,21 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 ### Tabla de Endpoints Expuestos
 
-|  Método  | Endpoint          | Descripción         | Rol Requerido | Códigos HTTP |
-| :------: | :---------------- | :------------------ | :------------ | :----------: |
-|  `GET`   | `/api/v1/health`  | Estado del servicio | Público       |    `200`     |
+| Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
+| :---: | :--- | :--- | :--- | :---: |
+| `GET` | `/api/v1/prendas` | Buscar prendas por texto libre con filtros opcionales (tipo, color, marca, estilo, talla y rango de precio) y ordenarlas por recientes, reputación o distancia con `lat` y `lng` (SR-RF-07 a 15; la talla se consulta en `ms-inventario`) | Público | `200`, `400` |
+| `GET` | `/api/v1/prendas/{id}/similares` | Consultar prendas similares cuando no hay coincidencia exacta (SR-RF-16) | Público | `200`, `404` |
+| `GET` | `/api/v1/prendas/{id}` | Consultar el detalle de una prenda | Público | `200`, `404` |
+| `POST` | `/api/v1/prendas` | Publicar una prenda con fotografías, precio y atributos; queda pendiente de moderación (SR-RF-50, 51, 53 y 54) | `TIENDA` | `201`, `400`, `404`, `422` |
+| `PUT` | `/api/v1/prendas/{id}` | Editar una prenda y devolverla a moderación; usa las cabeceras `X-Almacen-Id` y `X-User-Role` (SR-RF-55) | `TIENDA` dueña, `ADMIN` | `200`, `400`, `403`, `404`, `422` |
+| `DELETE` | `/api/v1/prendas/{id}` | Retirar una prenda del catálogo; usa las cabeceras `X-Almacen-Id` y `X-User-Role` (SR-RF-58) | `TIENDA` dueña, `ADMIN` | `200`, `403`, `404`, `422` |
+| `PUT` | `/api/v1/prendas/{id}/moderacion` | Aprobar o rechazar una publicación; el rechazo exige motivo (SR-RF-61) | `ADMIN` | `200`, `400`, `404`, `422` |
+| `GET` | `/api/v1/prendas/pendientes` | Consultar las publicaciones pendientes agrupadas por almacén (SR-RF-87) | `ADMIN` | `200` |
+| `PUT` | `/api/v1/prendas/pendientes/almacenes/{almacenId}/moderacion` | Aprobar o rechazar todas las publicaciones pendientes de un almacén (SR-RF-87) | `ADMIN` | `200`, `400`, `404`, `422` |
+| `GET` | `/api/v1/almacenes/{almacenId}/catalogo` | Consultar el catálogo de un almacén (SR-RF-22) | Público | `200`, `404` |
+| `GET` | `/api/v1/almacenes/{almacenId}/catalogo/resumen` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
+| `GET` | `/api/v1/almacenes/{almacenId}/novedades` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
+| `GET` | `/api/v1/health` | Estado del servicio | Público | `200` |
 
 ---
 
@@ -356,9 +368,12 @@ La comunicación asíncrona entre microservicios se realiza a través de **Rabbi
 
 | Tipo | Evento | Emisor / Receptor | Propósito |
 | :---: | :--- | :--- | :--- |
-| **PUBLICA** | `NuevaPrendaCreadaEvent` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Se publicó una prenda nueva en el catálogo. |
-| **CONSUME** | `PrendaAgotadaEvent` | `ms-inventario` &rarr; `ms-item-catalogo` | Marca la prenda como no disponible en los resultados. |
-| **CONSUME** | `SuscripcionSuspendidaEvent` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Deja de mostrar el catálogo del almacén suspendido. |
+| **PUBLICA** | `catalogo.prenda.creada` (`NuevaPrendaCreadaEvent`) | `ms-item-catalogo` &rarr; `ms-notificaciones` | Se publicó una prenda nueva en el catálogo. |
+| **PUBLICA** | `catalogo.prenda.eliminada` (`PrendaEliminadaEvent`) | `ms-item-catalogo` &rarr; `ms-playlist` | Se retiró una prenda; las playlists la quitan de sus listas. |
+| **CONSUME** | `inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | Marca la prenda como no disponible en los resultados. |
+| **CONSUME** | `tienda.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Deja de mostrar el catálogo del almacén suspendido. |
+
+Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Los que publica el servicio llevan `eventId`, `eventType`, `timestamp`, `producer`, `prendaId` y `almacenId`. Los que consume se leen de las colas `q.item-catalogo.stock-agotado` y `q.item-catalogo.suscripcion`.
 
 ---
 
