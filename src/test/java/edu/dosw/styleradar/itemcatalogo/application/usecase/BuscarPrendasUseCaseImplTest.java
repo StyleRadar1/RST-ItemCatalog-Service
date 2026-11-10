@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static edu.dosw.styleradar.itemcatalogo.application.usecase.PrendasDePrueba.almacen;
@@ -25,7 +26,6 @@ import static edu.dosw.styleradar.itemcatalogo.application.usecase.PrendasDePrue
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -114,13 +114,12 @@ class BuscarPrendasUseCaseImplTest {
 
     @Test
     void filtraPorTallaSoloLasPrendasConStockEnInventario() {
-        when(tallas.hayStock(antigua.getId(), "M")).thenReturn(true);
-        when(tallas.hayStock(reciente.getId(), "M")).thenReturn(false);
+        when(tallas.prendasConStock("M")).thenReturn(Set.of(antigua.getId(), deSuspendido.getId()));
 
         List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, "M", null, null, null, null));
 
         assertThat(resultado).containsExactly(antigua);
-        verify(tallas, never()).hayStock(deSuspendido.getId(), "M");
+        verify(tallas, times(1)).prendasConStock("M");
     }
 
     @Test
