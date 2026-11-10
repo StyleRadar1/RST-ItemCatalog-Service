@@ -26,6 +26,9 @@ spring:
 geolocalizacion:
   url: ${GEOLOCALIZACION_URL:http://localhost:8240/api/v1}
 
+inventario:
+  url: ${INVENTARIO_URL:http://localhost:8200/api/v1}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

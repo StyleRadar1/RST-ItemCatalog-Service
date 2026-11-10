@@ -11,12 +11,14 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Ubicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static edu.dosw.styleradar.itemcatalogo.application.usecase.PrendasDePrueba.almacen;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class BuscarPrendasUseCaseImplTest {
@@ -33,7 +36,8 @@ class BuscarPrendasUseCaseImplTest {
     private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
     private final AlmacenRepositoryPort almacenes = mock(AlmacenRepositoryPort.class);
     private final DistanciaAlmacenPort distancias = mock(DistanciaAlmacenPort.class);
-    private final BuscarPrendasUseCaseImpl useCase = new BuscarPrendasUseCaseImpl(prendas, almacenes, distancias);
+    private final TallaDisponiblePort tallas = mock(TallaDisponiblePort.class);
+    private final BuscarPrendasUseCaseImpl useCase = new BuscarPrendasUseCaseImpl(prendas, almacenes, distancias, tallas);
     private final Ubicacion usuario = new Ubicacion(4.6683, -74.0546);
 
     private final AlmacenResumen buenaReputacion = almacen("4.80", true);
@@ -53,21 +57,21 @@ class BuscarPrendasUseCaseImplTest {
 
     @Test
     void porDefectoOrdenaPorRecientesYOcultaAlmacenesSuspendidos() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, null));
+        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, null, null));
 
         assertThat(resultado).containsExactly(reciente, antigua);
     }
 
     @Test
     void ordenaPorReputacionDelAlmacen() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, Ordenamiento.REPUTACION, null));
+        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.REPUTACION, null));
 
         assertThat(resultado).containsExactly(antigua, reciente);
     }
 
     @Test
     void aplicaElFiltro() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, "Vestido", null, null, null, null, null, null, null));
+        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, "Vestido", null, null, null, null, null, null, null, null));
 
         assertThat(resultado).isEmpty();
     }
@@ -95,7 +99,7 @@ class BuscarPrendasUseCaseImplTest {
         when(distancias.kilometros(bajaReputacion.almacenId(), usuario)).thenReturn(0.4);
 
         List<Prenda> resultado = useCase.buscar(
-                new FiltroBusqueda(null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, usuario));
+                new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, usuario));
 
         assertThat(resultado).containsExactly(reciente, otraDelAlmacenCercano, antigua);
         verify(distancias, times(1)).kilometros(bajaReputacion.almacenId(), usuario);
@@ -103,8 +107,25 @@ class BuscarPrendasUseCaseImplTest {
 
     @Test
     void ordenarPorDistanciaSinUbicacionLanzaError() {
-        FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, null);
+        FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, null);
 
         assertThatThrownBy(() -> useCase.buscar(filtro)).isInstanceOf(ParametroInvalidoException.class);
+    }
+
+    @Test
+    void filtraPorTallaSoloLasPrendasConStockEnInventario() {
+        when(tallas.prendasConStock("M")).thenReturn(Set.of(antigua.getId(), deSuspendido.getId()));
+
+        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, "M", null, null, null, null));
+
+        assertThat(resultado).containsExactly(antigua);
+        verify(tallas, times(1)).prendasConStock("M");
+    }
+
+    @Test
+    void sinTallaNoConsultaElInventario() {
+        useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, null, null));
+
+        verifyNoInteractions(tallas);
     }
 }

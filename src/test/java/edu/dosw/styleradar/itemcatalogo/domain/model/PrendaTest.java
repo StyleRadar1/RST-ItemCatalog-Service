@@ -30,7 +30,7 @@ class PrendaTest {
     }
 
     private FiltroBusqueda filtro(String texto, String tipo, String color, String marca, String estilo, String min, String max) {
-        return new FiltroBusqueda(texto, tipo, color, marca, estilo,
+        return new FiltroBusqueda(texto, tipo, color, marca, estilo, null,
                 min == null ? null : new BigDecimal(min), max == null ? null : new BigDecimal(max), null, null);
     }
 

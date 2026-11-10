@@ -11,10 +11,12 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,12 +28,14 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
     private final DistanciaAlmacenPort distanciaAlmacen;
+    private final TallaDisponiblePort tallaDisponible;
 
     public BuscarPrendasUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository,
-                                    DistanciaAlmacenPort distanciaAlmacen) {
+                                    DistanciaAlmacenPort distanciaAlmacen, TallaDisponiblePort tallaDisponible) {
         this.prendaRepository = prendaRepository;
         this.almacenRepository = almacenRepository;
         this.distanciaAlmacen = distanciaAlmacen;
+        this.tallaDisponible = tallaDisponible;
     }
 
     @Override
@@ -40,8 +44,10 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
             throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
         }
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
+        Set<UUID> conTalla = filtro.talla() == null ? null : tallaDisponible.prendasConStock(filtro.talla());
         List<Prenda> resultado = visibles(almacenes).stream()
                 .filter(p -> p.cumple(filtro))
+                .filter(p -> conTalla == null || conTalla.contains(p.getId()))
                 .toList();
         return resultado.stream()
                 .sorted(orden(filtro, almacenes, resultado))

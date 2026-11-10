@@ -16,7 +16,7 @@ import java.util.UUID;
 public interface BusquedaPrendaApi {
 
     @Operation(summary = "Buscar prendas",
-            description = "Busca por texto libre y filtra por tipo, color, marca, estilo y rango de precio. Ordena por recientes, por reputación del almacén o por distancia a la ubicación indicada (SR-RF-07 a 15).")
+            description = "Busca por texto libre y filtra por tipo, color, marca, estilo, talla disponible y rango de precio. Ordena por recientes, por reputación del almacén o por distancia a la ubicación indicada (SR-RF-07 a 15).")
     @ApiResponse(responseCode = "200", description = "Prendas aprobadas que cumplen el filtro")
     @ApiResponse(responseCode = "400", description = "Algún parámetro tiene un formato inválido o se pidió orden por distancia sin ubicación")
     ResponseEntity<List<PrendaResponse>> buscar(
@@ -25,6 +25,7 @@ public interface BusquedaPrendaApi {
             @Parameter(example = "Azul") String color,
             @Parameter(example = "Levis") String marca,
             @Parameter(example = "Urbano") String estilo,
+            @Parameter(description = "Solo prendas con unidades disponibles en esta talla, según ms-inventario", example = "M") String talla,
             @Parameter(example = "50000") BigDecimal precioMin,
             @Parameter(example = "200000") BigDecimal precioMax,
             @Parameter(description = "RECIENTES (por defecto), REPUTACION o DISTANCIA") Ordenamiento orden,
