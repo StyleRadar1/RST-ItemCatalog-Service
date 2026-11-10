@@ -1,6 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.itemcatalogo.application.mapper.out.PrendaMapperOut;
+import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.mapper.PrendaMapperOut;
 import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;

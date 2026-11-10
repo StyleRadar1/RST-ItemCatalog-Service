@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.exception;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
@@ -21,6 +22,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ProblemDetail handleForbidden(AccesoDenegadoException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());
     }
 
     @ExceptionHandler(ParametroInvalidoException.class)

@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.domain.model;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 
 import java.time.LocalDateTime;
@@ -72,6 +73,13 @@ public class Prenda {
             throw new DomainException("El rechazo debe tener un motivo");
         }
         moderar(EstadoPublicacion.RECHAZADA, motivo, moderadorId);
+    }
+
+    // Solo el almacén dueño o un administrador pueden editarla o retirarla
+    public void verificarPermiso(Solicitante solicitante) {
+        if (!solicitante.admin() && !almacenId.equals(solicitante.almacenId())) {
+            throw new AccesoDenegadoException("Solo el almacén dueño o un administrador pueden modificar la prenda");
+        }
     }
 
     public void marcarAgotada() {

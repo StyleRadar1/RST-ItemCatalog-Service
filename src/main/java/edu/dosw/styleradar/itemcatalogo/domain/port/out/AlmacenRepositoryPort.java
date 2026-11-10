@@ -11,4 +11,6 @@ public interface AlmacenRepositoryPort {
     Optional<AlmacenResumen> findById(UUID almacenId);
 
     List<AlmacenResumen> findAll();
+
+    AlmacenResumen save(AlmacenResumen almacen);
 }

@@ -72,10 +72,13 @@ class RepositoryAdaptersTest {
         AlmacenResumenEntity entity = new AlmacenResumenEntity(UUID.randomUUID(), "Calle 85", new BigDecimal("4.20"), true);
         when(jpa.findAll()).thenReturn(List.of(entity));
         when(jpa.findById(entity.getAlmacenId())).thenReturn(Optional.of(entity));
+        when(jpa.save(any())).thenAnswer(inv -> inv.getArgument(0));
         AlmacenRepositoryAdapter adapter = new AlmacenRepositoryAdapter(jpa);
 
         assertThat(adapter.findAll()).extracting(AlmacenResumen::nombre).containsExactly("Calle 85");
-        assertThat(adapter.findById(entity.getAlmacenId())).get().extracting(AlmacenResumen::activo).isEqualTo(true);
+        AlmacenResumen almacen = adapter.findById(entity.getAlmacenId()).orElseThrow();
+        assertThat(almacen.activo()).isTrue();
+        assertThat(adapter.save(almacen.suspender()).activo()).isFalse();
     }
 
     private PrendaEntity capturarEntidad(Prenda prenda) {
