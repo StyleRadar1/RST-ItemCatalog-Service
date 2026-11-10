@@ -35,13 +35,14 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
                                                        @RequestParam(required = false) String color,
                                                        @RequestParam(required = false) String marca,
                                                        @RequestParam(required = false) String estilo,
+                                                       @RequestParam(required = false) String talla,
                                                        @RequestParam(required = false) BigDecimal precioMin,
                                                        @RequestParam(required = false) BigDecimal precioMax,
                                                        @RequestParam(required = false) Ordenamiento orden,
                                                        @RequestParam(required = false) Double lat,
                                                        @RequestParam(required = false) Double lng) {
         Ubicacion ubicacion = lat != null && lng != null ? new Ubicacion(lat, lng) : null;
-        FiltroBusqueda filtro = new FiltroBusqueda(texto, tipo, color, marca, estilo, precioMin, precioMax, orden, ubicacion);
+        FiltroBusqueda filtro = new FiltroBusqueda(texto, tipo, color, marca, estilo, talla, precioMin, precioMax, orden, ubicacion);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(buscarPrendas.buscar(filtro)));
     }
 

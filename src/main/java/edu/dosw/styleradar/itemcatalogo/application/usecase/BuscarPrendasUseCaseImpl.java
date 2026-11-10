@@ -11,6 +11,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,12 +27,14 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
     private final DistanciaAlmacenPort distanciaAlmacen;
+    private final TallaDisponiblePort tallaDisponible;
 
     public BuscarPrendasUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository,
-                                    DistanciaAlmacenPort distanciaAlmacen) {
+                                    DistanciaAlmacenPort distanciaAlmacen, TallaDisponiblePort tallaDisponible) {
         this.prendaRepository = prendaRepository;
         this.almacenRepository = almacenRepository;
         this.distanciaAlmacen = distanciaAlmacen;
+        this.tallaDisponible = tallaDisponible;
     }
 
     @Override
@@ -42,6 +45,7 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
         List<Prenda> resultado = visibles(almacenes).stream()
                 .filter(p -> p.cumple(filtro))
+                .filter(p -> filtro.talla() == null || tallaDisponible.hayStock(p.getId(), filtro.talla()))
                 .toList();
         return resultado.stream()
                 .sorted(orden(filtro, almacenes, resultado))

@@ -14,6 +14,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,8 +24,8 @@ public class BeanConfig {
 
     @Bean
     public BuscarPrendasUseCase buscarPrendasUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes,
-                                                     DistanciaAlmacenPort distancias) {
-        return new BuscarPrendasUseCaseImpl(prendas, almacenes, distancias);
+                                                     DistanciaAlmacenPort distancias, TallaDisponiblePort tallas) {
+        return new BuscarPrendasUseCaseImpl(prendas, almacenes, distancias, tallas);
     }
 
     @Bean
