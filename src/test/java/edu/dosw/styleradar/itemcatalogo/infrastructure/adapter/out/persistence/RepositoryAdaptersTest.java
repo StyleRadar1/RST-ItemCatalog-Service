@@ -37,7 +37,7 @@ class RepositoryAdaptersTest {
 
     @Test
     void guardaYConvierteLaPrendaConFotosYModeraciones() {
-        // Arrange: el repositorio devuelve la misma entidad que recibe
+        // Arrange
         when(prendaJpa.save(any())).thenAnswer(inv -> inv.getArgument(0));
         Prenda prenda = moderada();
 

@@ -1,9 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.amqp;
 
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ActualizarDisponibilidadUseCase;
-import edu.dosw.styleradar.itemcatalogo.infrastructure.config.RabbitMqConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
@@ -13,39 +11,53 @@ import java.util.UUID;
 @Component
 public class CatalogoEventListener {
 
-    private static final Logger log = LoggerFactory.getLogger(CatalogoEventListener.class);
-
     private final ActualizarDisponibilidadUseCase actualizarDisponibilidad;
 
     public CatalogoEventListener(ActualizarDisponibilidadUseCase actualizarDisponibilidad) {
         this.actualizarDisponibilidad = actualizarDisponibilidad;
     }
 
-    @RabbitListener(queues = RabbitMqConfig.QUEUE_STOCK_AGOTADO)
-    public void onStockAgotado(Map<String, Object> payload) {
-        UUID prendaId = leerUuid(payload, "prendaId");
+    @RabbitListener(queues = "${styleradar.rabbitmq.queues.inventario}")
+    public void onInventarioActualizado(Map<String, Object> payload) {
+        UUID prendaId = leerUuid(payload, "prendaId", "itemId");
         if (prendaId == null) {
-            log.warn("Evento de stock agotado sin prendaId válido: {}", payload);
-            return;
+            throw new AmqpRejectAndDontRequeueException("Evento de inventario sin prendaId válido: " + payload);
         }
-        actualizarDisponibilidad.marcarAgotada(prendaId);
+        if (estaAgotada(payload)) {
+            actualizarDisponibilidad.marcarAgotada(prendaId);
+        }
     }
 
-    @RabbitListener(queues = RabbitMqConfig.QUEUE_SUSCRIPCION)
+    @RabbitListener(queues = "${styleradar.rabbitmq.queues.suscripcion}")
     public void onSuscripcionSuspendida(Map<String, Object> payload) {
-        UUID almacenId = leerUuid(payload, "almacenId");
+        UUID almacenId = leerUuid(payload, "almacenId", "tiendaId", "sedeId");
         if (almacenId == null) {
-            almacenId = leerUuid(payload, "sedeId");
-        }
-        if (almacenId == null) {
-            log.warn("Evento de suscripción suspendida sin almacenId válido: {}", payload);
-            return;
+            throw new AmqpRejectAndDontRequeueException("Evento de suscripción sin almacenId válido: " + payload);
         }
         actualizarDisponibilidad.suspenderAlmacen(almacenId);
     }
 
-    // El dato puede venir en la raíz o dentro de "data", según el servicio que lo envía
-    static UUID leerUuid(Map<String, Object> payload, String clave) {
+    static boolean estaAgotada(Map<String, Object> payload) {
+        Object estado = leer(payload, "estado");
+        Object stock = leer(payload, "stockActual");
+        return "AGOTADA".equals(String.valueOf(estado)) || (stock != null && "0".equals(stock.toString()));
+    }
+
+    static UUID leerUuid(Map<String, Object> payload, String... claves) {
+        for (String clave : claves) {
+            Object valor = leer(payload, clave);
+            if (valor != null) {
+                try {
+                    return UUID.fromString(valor.toString());
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Object leer(Map<String, Object> payload, String clave) {
         if (payload == null) {
             return null;
         }
@@ -53,10 +65,6 @@ public class CatalogoEventListener {
         if (valor == null && payload.get("data") instanceof Map<?, ?> data) {
             valor = data.get(clave);
         }
-        try {
-            return valor == null ? null : UUID.fromString(valor.toString());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
+        return valor;
     }
 }

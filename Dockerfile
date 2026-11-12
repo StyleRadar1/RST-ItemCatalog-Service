@@ -7,6 +7,8 @@ RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:21.0.5_11-jre-alpine
 RUN addgroup -S app && adduser -S app -G app
+COPY certs/ /tmp/certs/
+RUN for f in /tmp/certs/*.pem; do [ -f "$f" ] && keytool -importcert -trustcacerts -cacerts -storepass changeit -noprompt -alias "$(basename "$f" .pem)" -file "$f"; done; rm -rf /tmp/certs
 WORKDIR /app
 COPY --from=build --chown=app:app /build/target/ms-item-catalogo-0.0.1-SNAPSHOT.jar app.jar
 USER app

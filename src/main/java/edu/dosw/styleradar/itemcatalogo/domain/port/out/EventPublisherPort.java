@@ -1,11 +1,14 @@
 package edu.dosw.styleradar.itemcatalogo.domain.port.out;
 
-import edu.dosw.styleradar.itemcatalogo.domain.event.NuevaPrendaCreadaEvent;
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaEliminadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.ModeracionCambiadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 
 public interface EventPublisherPort {
 
-    void publicar(NuevaPrendaCreadaEvent evento);
+    void publicar(PrendaPublicadaEvent evento);
 
-    void publicar(PrendaEliminadaEvent evento);
+    void publicar(PrendaRetiradaEvent evento);
+
+    void publicar(ModeracionCambiadaEvent evento);
 }

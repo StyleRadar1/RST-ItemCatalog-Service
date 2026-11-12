@@ -36,7 +36,6 @@ public class Prenda {
         this.fechaPublicacion = fechaPublicacion;
     }
 
-    // Toda prenda nueva queda pendiente de moderación
     public static Prenda publicar(UUID almacenId, String nombre, AtributosBusqueda atributos, Precio precio,
                                   List<Fotografia> fotografias) {
         validar(nombre, fotografias);
@@ -44,7 +43,6 @@ public class Prenda {
                 EstadoPublicacion.PENDIENTE, true, LocalDateTime.now());
     }
 
-    // Al editarla vuelve a moderación
     public void editar(String nombre, AtributosBusqueda atributos, Precio precio, List<Fotografia> fotografias) {
         if (estado == EstadoPublicacion.RETIRADA) {
             throw new DomainException("No se puede editar una prenda retirada");
@@ -75,7 +73,6 @@ public class Prenda {
         moderar(EstadoPublicacion.RECHAZADA, motivo, moderadorId);
     }
 
-    // Solo el almacén dueño o un administrador pueden editarla o retirarla
     public void verificarPermiso(Solicitante solicitante) {
         if (!solicitante.admin() && !almacenId.equals(solicitante.almacenId())) {
             throw new AccesoDenegadoException("Solo el almacén dueño o un administrador pueden modificar la prenda");

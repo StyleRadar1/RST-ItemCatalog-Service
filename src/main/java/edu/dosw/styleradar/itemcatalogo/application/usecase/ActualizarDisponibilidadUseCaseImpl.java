@@ -6,7 +6,6 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 
 import java.util.UUID;
 
-// Si la prenda o el almacén no existen en el catálogo, el evento se ignora
 public class ActualizarDisponibilidadUseCaseImpl implements ActualizarDisponibilidadUseCase {
 
     private final PrendaRepositoryPort prendaRepository;

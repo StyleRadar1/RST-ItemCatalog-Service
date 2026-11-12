@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
+import edu.dosw.styleradar.itemcatalogo.domain.event.ModeracionCambiadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -8,6 +10,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 
 import java.util.Comparator;
@@ -20,10 +23,13 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
 
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
+    private final EventPublisherPort eventPublisher;
 
-    public ModerarPublicacionUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository) {
+    public ModerarPublicacionUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository,
+                                         EventPublisherPort eventPublisher) {
         this.prendaRepository = prendaRepository;
         this.almacenRepository = almacenRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -31,7 +37,15 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
         Prenda prenda = prendaRepository.findById(prendaId)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
         aplicar(prenda, decision, motivo, moderadorId);
-        return prendaRepository.save(prenda);
+        return avisar(prendaRepository.save(prenda), motivo);
+    }
+
+    private Prenda avisar(Prenda prenda, String motivo) {
+        eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo));
+        if (prenda.getEstado() == EstadoPublicacion.APROBADA) {
+            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda));
+        }
+        return prenda;
     }
 
     @Override
@@ -55,7 +69,7 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
             throw new ResourceNotFoundException("El almacén " + almacenId + " no tiene publicaciones pendientes");
         }
         pendientes.forEach(prenda -> aplicar(prenda, decision, motivo, moderadorId));
-        return pendientes.stream().map(prendaRepository::save).toList();
+        return pendientes.stream().map(prendaRepository::save).map(prenda -> avisar(prenda, motivo)).toList();
     }
 
     private void aplicar(Prenda prenda, EstadoPublicacion decision, String motivo, UUID moderadorId) {
