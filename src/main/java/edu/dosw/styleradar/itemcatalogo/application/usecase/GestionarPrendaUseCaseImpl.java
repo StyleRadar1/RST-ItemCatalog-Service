@@ -1,6 +1,5 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
@@ -41,10 +40,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         if (!almacen.activo()) {
             throw new DomainException("El almacén está suspendido y no puede publicar prendas");
         }
-        // Según la guía de RabbitMQ, prenda.publicada se avisa al crear o actualizar la prenda
-        Prenda prenda = prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
-        eventPublisher.publicar(PrendaPublicadaEvent.de(prenda));
-        return prenda;
+        return prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
     }
 
     @Override
@@ -59,9 +55,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         Prenda prenda = obtener(prendaId);
         prenda.verificarPermiso(solicitante);
         prenda.editar(nombre, atributos, precio, fotografias);
-        Prenda editada = prendaRepository.save(prenda);
-        eventPublisher.publicar(PrendaPublicadaEvent.de(editada));
-        return editada;
+        return prendaRepository.save(prenda);
     }
 
     @Override

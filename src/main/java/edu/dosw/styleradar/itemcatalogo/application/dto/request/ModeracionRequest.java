@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
-// decision: APROBADA o RECHAZADA; el motivo es obligatorio al rechazar
 public record ModeracionRequest(
         @NotNull(message = "La decisión es obligatoria (APROBADA o RECHAZADA)")
         EstadoPublicacion decision,

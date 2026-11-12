@@ -64,7 +64,7 @@
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
 * **Puerto de Escucha Oficial:** `8220`
-* **Base de Datos Asignada:** `PostgreSQL 16.4` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
+* **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Catálogo de prendas`
 
 ### Responsabilidades del Dominio
@@ -372,13 +372,14 @@ La comunicación asíncrona se hace por **RabbitMQ 3.13.7**, siguiendo la guía 
 | **PUBLICA** | `styleradar.catalogo.prenda.retirada` | `ms-item-catalogo` &rarr; `ms-notificaciones`, `ms-playlist` | El almacén dueño (o un administrador) retira la prenda. |
 | **PUBLICA** | `styleradar.catalogo.moderacion.cambiada` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Un administrador aprueba o rechaza una publicación. |
 | **CONSUME** | `styleradar.inventario.actualizado` | `ms-inventario` &rarr; `ms-item-catalogo` | Si el stock llega a 0, la prenda se marca como no disponible y deja de mostrarse. |
+| **CONSUME** | `styleradar.inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | La prenda se agotó: se marca como no disponible. |
 | **CONSUME** | `styleradar.pagos.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Se suspende el almacén: deja de mostrarse su catálogo y no puede publicar. |
 
 ### Colas y errores
 
 | Cola | Para qué |
 | :--- | :--- |
-| `styleradar.catalogo.inventario-actualizado.q` | Recibe los eventos de inventario. |
+| `styleradar.catalogo.inventario-actualizado.q` | Recibe los eventos de inventario (actualizado y stock agotado). |
 | `styleradar.catalogo.suscripcion-suspendida.q` | Recibe las suspensiones de suscripción. |
 | `styleradar.catalogo.dlq` | Cola de errores: por el DLX `styleradar.dlx` llegan aquí los mensajes que no se pudieron procesar (por ejemplo, sin un id válido). |
 
@@ -394,7 +395,7 @@ Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `item
 | :--- | :--- | :--- |
 | **Lenguaje Core** | Java | `21` |
 | **Framework** | Spring Boot | `3.3.4` |
-| **Base de Datos** | PostgreSQL | `16.4` |
+| **Base de Datos** | PostgreSQL | `16` |
 | **Migraciones de BD** | Flyway | Gestionada por Spring Boot |
 | **Broker de Mensajería** | RabbitMQ | `3.13.7` |
 | **Mapeo de DTOs** | MapStruct | `1.5.5.Final` |

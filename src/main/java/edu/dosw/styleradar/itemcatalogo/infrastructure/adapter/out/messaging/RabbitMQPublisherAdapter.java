@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-// Los nombres de los campos siguen los contratos de los servicios que consumen estos eventos
 @Component
 public class RabbitMQPublisherAdapter implements EventPublisherPort {
 
@@ -70,7 +69,6 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         enviar(rkModeracion, payload);
     }
 
-    // itemId y prendaId son el mismo id; tiendaId y almacenId también
     private Map<String, Object> base(UUID prendaId, UUID almacenId) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("eventoId", UUID.randomUUID().toString());
@@ -86,7 +84,6 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         try {
             rabbitTemplate.convertAndSend(exchange, routingKey, payload);
         } catch (AmqpException e) {
-            // Si el broker no responde, la operación ya quedó guardada; solo se registra
             log.warn("No se pudo publicar {} de la prenda {}: {}", routingKey, payload.get("prendaId"), e.getMessage());
         }
     }

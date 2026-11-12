@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// Exchange, colas y routing keys según la guía de RabbitMQ del curso; los nombres se cambian por ambiente
 @Configuration
 public class RabbitMqConfig {
 
@@ -38,7 +37,6 @@ public class RabbitMqConfig {
         return new DirectExchange(dlx, true, false);
     }
 
-    // Cola de errores: aquí llegan los mensajes que no se pudieron procesar
     @Bean
     public Queue deadLetterQueue() {
         return QueueBuilder.durable(dlq).build();
@@ -62,6 +60,12 @@ public class RabbitMqConfig {
     @Bean
     public Binding inventarioBinding(Queue inventarioQueue,
                                      @Value("${styleradar.rabbitmq.routing-keys.inventario-actualizado}") String routingKey) {
+        return BindingBuilder.bind(inventarioQueue).to(styleradarExchange()).with(routingKey);
+    }
+
+    @Bean
+    public Binding stockAgotadoBinding(Queue inventarioQueue,
+                                       @Value("${styleradar.rabbitmq.routing-keys.stock-agotado}") String routingKey) {
         return BindingBuilder.bind(inventarioQueue).to(styleradarExchange()).with(routingKey);
     }
 

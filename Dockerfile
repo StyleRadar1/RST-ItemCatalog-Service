@@ -7,7 +7,6 @@ RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:21.0.5_11-jre-alpine
 RUN addgroup -S app && adduser -S app -G app
-# Importa a la JVM los certificados .pem de certs/ (CA del broker RabbitMQ de StyleRadar)
 COPY certs/ /tmp/certs/
 RUN for f in /tmp/certs/*.pem; do [ -f "$f" ] && keytool -importcert -trustcacerts -cacerts -storepass changeit -noprompt -alias "$(basename "$f" .pem)" -file "$f"; done; rm -rf /tmp/certs
 WORKDIR /app

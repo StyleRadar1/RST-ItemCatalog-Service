@@ -12,7 +12,6 @@ public record Precio(BigDecimal valor) {
         }
     }
 
-    // Los límites en null no filtran
     public boolean estaEntre(BigDecimal minimo, BigDecimal maximo) {
         return (minimo == null || valor.compareTo(minimo) >= 0)
                 && (maximo == null || valor.compareTo(maximo) <= 0);

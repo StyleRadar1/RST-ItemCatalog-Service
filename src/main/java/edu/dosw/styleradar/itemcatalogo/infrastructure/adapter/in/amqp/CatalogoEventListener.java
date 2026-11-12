@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.UUID;
 
-// Los mensajes que no se pueden procesar se rechazan y RabbitMQ los manda a la cola de errores
 @Component
 public class CatalogoEventListener {
 
@@ -18,7 +17,6 @@ public class CatalogoEventListener {
         this.actualizarDisponibilidad = actualizarDisponibilidad;
     }
 
-    // Solo interesa cuando la prenda se queda sin unidades
     @RabbitListener(queues = "${styleradar.rabbitmq.queues.inventario}")
     public void onInventarioActualizado(Map<String, Object> payload) {
         UUID prendaId = leerUuid(payload, "prendaId", "itemId");
@@ -45,7 +43,6 @@ public class CatalogoEventListener {
         return "AGOTADA".equals(String.valueOf(estado)) || (stock != null && "0".equals(stock.toString()));
     }
 
-    // El dato puede venir en la raíz o dentro de "data", según el servicio que lo envía
     static UUID leerUuid(Map<String, Object> payload, String... claves) {
         for (String clave : claves) {
             Object valor = leer(payload, clave);

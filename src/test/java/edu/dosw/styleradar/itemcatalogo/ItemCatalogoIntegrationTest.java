@@ -31,8 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-// Levanta el servicio completo contra PostgreSQL y RabbitMQ reales
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
@@ -44,7 +42,7 @@ class ItemCatalogoIntegrationTest {
     private static final String ALMACEN = "X-Almacen-Id";
 
     @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16.4-alpine");
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Container
     static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13.7-management-alpine");
@@ -132,7 +130,7 @@ class ItemCatalogoIntegrationTest {
 
     @Test
     void alRetirarSePublicaLaPrendaRetirada() throws Exception {
-        // Arrange: una cola de prueba escucha la routing key de prenda retirada
+        // Arrange
         String cola = escuchar("q.test.prenda-retirada", "styleradar.catalogo.prenda.retirada");
         String id = publicar("Gorra verde");
 
@@ -148,13 +146,33 @@ class ItemCatalogoIntegrationTest {
     }
 
     @Test
-    void alCrearSePublicaLaPrendaPublicada() throws Exception {
+    void alAprobarSePublicaLaPrendaPublicada() throws Exception {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
+        assertThat(rabbitTemplate.receiveAndConvert(cola, 500)).isNull();
+
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
+                .andExpect(status().isOk());
 
         Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
         assertThat(((Map<?, ?>) mensaje).get("itemId")).isEqualTo(id);
         assertThat(((Map<?, ?>) mensaje).get("nombrePrenda")).isEqualTo("Gorra amarilla");
+    }
+
+    @Test
+    void tambienRecibeElEventoDeStockAgotado() throws Exception {
+        rabbitTemplate.convertAndSend(EXCHANGE, "styleradar.inventario.stock.agotado",
+                Map.of("data", Map.of("prendaId", "b4444444-4444-4444-4444-444444444444", "estado", "AGOTADA")));
+
+        boolean agotada = false;
+        for (int i = 0; i < 50 && !agotada; i++) {
+            Thread.sleep(100);
+            String body = mockMvc.perform(get("/prendas/b4444444-4444-4444-4444-444444444444")).andReturn().getResponse().getContentAsString();
+            agotada = !objectMapper.readTree(body).get("disponible").asBoolean();
+        }
+
+        assertThat(agotada).isTrue();
     }
 
     @Test
@@ -167,7 +185,6 @@ class ItemCatalogoIntegrationTest {
 
     @Test
     void alAgotarseEnInventarioSeOcultaDeLaBusqueda() throws Exception {
-        // Formato del evento de inventario actualizado con el stock en cero
         rabbitTemplate.convertAndSend(EXCHANGE, "styleradar.inventario.actualizado",
                 Map.of("itemId", HOODIE, "talla", "M", "stockActual", 0));
 

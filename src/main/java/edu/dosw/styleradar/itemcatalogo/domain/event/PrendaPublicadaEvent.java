@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// Se publica cuando una prenda queda aprobada y visible en el catálogo
 public record PrendaPublicadaEvent(UUID prendaId, UUID almacenId, String nombre, String tipo, String color,
                                    String marca, String estilo, BigDecimal precio, LocalDateTime fecha) {
 

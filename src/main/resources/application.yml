@@ -17,7 +17,6 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  # En QA y PROD: puerto 5671 con TLS y el usuario asignado al servicio
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -27,7 +26,6 @@ spring:
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:false}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
-    # 3 intentos con espera creciente (1 s, 2 s) y luego a la cola de errores
     listener:
       simple:
         default-requeue-rejected: false
@@ -53,6 +51,7 @@ styleradar:
       prenda-retirada: styleradar.catalogo.prenda.retirada
       moderacion-cambiada: styleradar.catalogo.moderacion.cambiada
       inventario-actualizado: styleradar.inventario.actualizado
+      stock-agotado: styleradar.inventario.stock.agotado
       suscripcion-suspendida: ${RABBITMQ_RK_SUSCRIPCION:styleradar.pagos.suscripcion.suspendida}
 
 geolocalizacion:

@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-// Al editar se ignora almacenId; los mensajes son los que ve el usuario en el formulario
 public record PrendaRequest(
         @NotNull(message = "El almacén es obligatorio")
         UUID almacenId,
