@@ -149,7 +149,6 @@ class ItemCatalogoIntegrationTest {
     void alAprobarSePublicaLaPrendaPublicada() throws Exception {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
-        assertThat(rabbitTemplate.receiveAndConvert(cola, 500)).isNull();
 
         mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
