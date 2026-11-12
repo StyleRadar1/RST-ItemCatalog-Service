@@ -17,11 +17,35 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  # En QA y PROD: puerto 5671 con TLS y el usuario asignado al servicio
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    ssl:
+      enabled: ${RABBITMQ_SSL_ENABLED:false}
+      verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+styleradar:
+  rabbitmq:
+    exchange: ${RABBITMQ_EXCHANGE:styleradar.exchange}
+    dlx: ${RABBITMQ_DLX:styleradar.dlx}
+    dlq: ${RABBITMQ_DLQ:styleradar.catalogo.dlq}
+    dlq-routing-key: ${RABBITMQ_DLQ_ROUTING_KEY:styleradar.catalogo.error}
+    queues:
+      inventario: ${RABBITMQ_QUEUE_INVENTARIO:styleradar.catalogo.inventario-actualizado.q}
+      suscripcion: ${RABBITMQ_QUEUE_SUSCRIPCION:styleradar.catalogo.suscripcion-suspendida.q}
+    routing-keys:
+      prenda-publicada: styleradar.catalogo.prenda.publicada
+      prenda-retirada: styleradar.catalogo.prenda.retirada
+      moderacion-cambiada: styleradar.catalogo.moderacion.cambiada
+      inventario-actualizado: styleradar.inventario.actualizado
+      suscripcion-suspendida: ${RABBITMQ_RK_SUSCRIPCION:styleradar.pagos.suscripcion.suspendida}
 
 geolocalizacion:
   url: ${GEOLOCALIZACION_URL:http://localhost:8240/api/v1}

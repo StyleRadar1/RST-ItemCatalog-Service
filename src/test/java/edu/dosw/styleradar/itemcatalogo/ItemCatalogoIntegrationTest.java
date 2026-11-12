@@ -38,12 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers(disabledWithoutDocker = true)
 class ItemCatalogoIntegrationTest {
 
-    private static final String CALLE_85 = "a2222222-2222-2222-2222-222222222222";
+    private static final String EXCHANGE = "styleradar.exchange";
+    private static final String CALLE_85 ="a2222222-2222-2222-2222-222222222222";
     private static final String HOODIE = "b3333333-3333-3333-3333-333333333333";
     private static final String ALMACEN = "X-Almacen-Id";
 
     @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:15.8-alpine");
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16.4-alpine");
 
     @Container
     static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13.7-management-alpine");
@@ -121,14 +122,18 @@ class ItemCatalogoIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
-    @Test
-    void alRetirarSePublicaElEventoParaPlaylist() throws Exception {
-        // Arrange: una cola de prueba escucha la misma routing key que ms-playlist
-        TopicExchange exchange = new TopicExchange("styleradar.events", true, false);
-        Queue cola = new Queue("q.test.prenda-eliminada", false, false, true);
+    private String escuchar(String cola, String routingKey) {
+        TopicExchange exchange = new TopicExchange(EXCHANGE, true, false);
         amqpAdmin.declareExchange(exchange);
-        amqpAdmin.declareQueue(cola);
-        amqpAdmin.declareBinding(BindingBuilder.bind(cola).to(exchange).with("catalogo.prenda.eliminada"));
+        amqpAdmin.declareQueue(new Queue(cola, false, false, true));
+        amqpAdmin.declareBinding(BindingBuilder.bind(new Queue(cola)).to(exchange).with(routingKey));
+        return cola;
+    }
+
+    @Test
+    void alRetirarSePublicaLaPrendaRetirada() throws Exception {
+        // Arrange: una cola de prueba escucha la routing key de prenda retirada
+        String cola = escuchar("q.test.prenda-retirada", "styleradar.catalogo.prenda.retirada");
         String id = publicar("Gorra verde");
 
         // Act
@@ -137,16 +142,38 @@ class ItemCatalogoIntegrationTest {
                 .andExpect(jsonPath("$.estado").value("RETIRADA"));
 
         // Assert
-        Object mensaje = rabbitTemplate.receiveAndConvert("q.test.prenda-eliminada", 5000);
+        Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
         assertThat(mensaje).isInstanceOf(Map.class);
         assertThat(((Map<?, ?>) mensaje).get("prendaId")).isEqualTo(id);
     }
 
     @Test
+    void alAprobarSePublicaLaPrendaPublicada() throws Exception {
+        String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
+        String id = publicar("Gorra amarilla");
+
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
+                .andExpect(status().isOk());
+
+        Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
+        assertThat(((Map<?, ?>) mensaje).get("itemId")).isEqualTo(id);
+        assertThat(((Map<?, ?>) mensaje).get("nombrePrenda")).isEqualTo("Gorra amarilla");
+    }
+
+    @Test
+    void unMensajeInvalidoTerminaEnLaColaDeErrores() {
+        rabbitTemplate.convertAndSend(EXCHANGE, "styleradar.inventario.actualizado", Map.of("itemId", "no-es-uuid"));
+
+        Object mensaje = rabbitTemplate.receiveAndConvert("styleradar.catalogo.dlq", 5000);
+        assertThat(mensaje).isInstanceOf(Map.class);
+    }
+
+    @Test
     void alAgotarseEnInventarioSeOcultaDeLaBusqueda() throws Exception {
-        // Mismo formato que publica ms-inventario
-        rabbitTemplate.convertAndSend("styleradar.events", "inventario.stock.agotado",
-                Map.of("eventType", "inventario.stock.agotado", "data", Map.of("prendaId", HOODIE, "talla", "M")));
+        // Formato del evento de inventario actualizado con el stock en cero
+        rabbitTemplate.convertAndSend(EXCHANGE, "styleradar.inventario.actualizado",
+                Map.of("itemId", HOODIE, "talla", "M", "stockActual", 0));
 
         boolean agotada = false;
         for (int i = 0; i < 50 && !agotada; i++) {

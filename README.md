@@ -64,7 +64,7 @@
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
 * **Puerto de Escucha Oficial:** `8220`
-* **Base de Datos Asignada:** `PostgreSQL 15.8` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
+* **Base de Datos Asignada:** `PostgreSQL 16.4` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Catálogo de prendas`
 
 ### Responsabilidades del Dominio
@@ -185,7 +185,7 @@ flowchart TD
   </table>
 </div>
 
-El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan desde el API Gateway a los controllers REST (adaptadores de entrada), que usan un mapper de entrada para convertir la petición al modelo de dominio y solo conocen la interfaz del caso de uso (puerto de entrada); los eventos de otros servicios llegan por RabbitMQ al `CatalogoEventListener`. Las implementaciones de los casos de uso (`<Nombre>Impl`) usan los puertos de salida: `PrendaRepositoryPort` para la base de datos (con un mapper de salida hacia la entidad JPA), `EventPublisherPort` para publicar `NuevaPrendaCreadaEvent` y `GeolocalizacionClientPort` para obtener distancias de `ms-geolocalizacion` al ordenar resultados (SR-RF-14) y `TallaDisponiblePort` para obtener de `ms-inventario` las prendas con unidades en la talla buscada (SR-RF-10). Los flujos cubren búsqueda y filtros (SR-RF-07 a 16), catálogo de almacén (SR-RF-19, 20 y 22), gestión de prendas (SR-RF-50 a 58), moderación (SR-RF-61 y 87) y la actualización de disponibilidad por eventos.
+El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan desde el API Gateway a los controllers REST (adaptadores de entrada), que usan un mapper de entrada para convertir la petición al modelo de dominio y solo conocen la interfaz del caso de uso (puerto de entrada); los eventos de otros servicios llegan por RabbitMQ al `CatalogoEventListener`. Las implementaciones de los casos de uso (`<Nombre>Impl`) usan los puertos de salida: `PrendaRepositoryPort` para la base de datos (con un mapper de salida hacia la entidad JPA), `EventPublisherPort` para publicar `PrendaPublicadaEvent`, `PrendaRetiradaEvent` y `ModeracionCambiadaEvent` y `GeolocalizacionClientPort` para obtener distancias de `ms-geolocalizacion` al ordenar resultados (SR-RF-14) y `TallaDisponiblePort` para obtener de `ms-inventario` las prendas con unidades en la talla buscada (SR-RF-10). Los flujos cubren búsqueda y filtros (SR-RF-07 a 16), catálogo de almacén (SR-RF-19, 20 y 22), gestión de prendas (SR-RF-50 a 58), moderación (SR-RF-61 y 87) y la actualización de disponibilidad por eventos.
 
 ### Diagrama de Clases
 
@@ -205,7 +205,7 @@ El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan
   </table>
 </div>
 
-El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, color, marca y estilo), su `Precio`, sus `Fotografia` y su `EstadoPublicacion`. Los métodos del agregado cubren editar, retirar, aprobar, rechazar y marcar como agotada; cada aprobación o rechazo queda como una `Moderacion` con su motivo (SR-RF-61 y 87). `AlmacenResumen` guarda la reputación y el estado del almacén para ordenar por reputación (SR-RF-15) y ocultar los almacenes suspendidos. `FiltroBusqueda` reúne los criterios de búsqueda, incluida la talla, y el `Ordenamiento` (por distancia o reputación). Al publicar una prenda se genera el evento de dominio `NuevaPrendaCreadaEvent`.
+El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, color, marca y estilo), su `Precio`, sus `Fotografia` y su `EstadoPublicacion`. Los métodos del agregado cubren editar, retirar, aprobar, rechazar y marcar como agotada; cada aprobación o rechazo queda como una `Moderacion` con su motivo (SR-RF-61 y 87). `AlmacenResumen` guarda la reputación y el estado del almacén para ordenar por reputación (SR-RF-15) y ocultar los almacenes suspendidos. `FiltroBusqueda` reúne los criterios de búsqueda, incluida la talla, y el `Ordenamiento` (por distancia o reputación). Los eventos de dominio son `PrendaPublicadaEvent` (al aprobarse), `PrendaRetiradaEvent` (al retirarla) y `ModeracionCambiadaEvent` (en cada aprobación o rechazo).
 
 ### Diagrama de Base de Datos
 
@@ -362,18 +362,27 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 ## <img src="https://img.shields.io/badge/05-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 5. EVENTOS QUE PUBLICA Y CONSUME
 
-La comunicación asíncrona entre microservicios se realiza a través de **RabbitMQ 3.13.7**.
+La comunicación asíncrona se hace por **RabbitMQ 3.13.7**, siguiendo la guía de mensajería del curso: exchange compartido `styleradar.exchange` (topic, durable) y, en QA y PROD, conexión por el puerto **5671 con TLS** y el usuario asignado al servicio.
 
 ### Matriz de Eventos AMQP
 
-| Tipo | Evento | Emisor / Receptor | Propósito |
+| Tipo | Routing key | Emisor / Receptor | Cuándo |
 | :---: | :--- | :--- | :--- |
-| **PUBLICA** | `catalogo.prenda.creada` (`NuevaPrendaCreadaEvent`) | `ms-item-catalogo` &rarr; `ms-notificaciones` | Se publicó una prenda nueva en el catálogo. |
-| **PUBLICA** | `catalogo.prenda.eliminada` (`PrendaEliminadaEvent`) | `ms-item-catalogo` &rarr; `ms-playlist` | Se retiró una prenda; las playlists la quitan de sus listas. |
-| **CONSUME** | `inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | Marca la prenda como no disponible en los resultados. |
-| **CONSUME** | `tienda.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Deja de mostrar el catálogo del almacén suspendido. |
+| **PUBLICA** | `styleradar.catalogo.prenda.publicada` | `ms-item-catalogo` &rarr; `ms-notificaciones`, `ms-probador` | Un administrador aprueba la prenda y queda visible en el catálogo. |
+| **PUBLICA** | `styleradar.catalogo.prenda.retirada` | `ms-item-catalogo` &rarr; `ms-notificaciones`, `ms-playlist` | El almacén dueño (o un administrador) retira la prenda. |
+| **PUBLICA** | `styleradar.catalogo.moderacion.cambiada` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Un administrador aprueba o rechaza una publicación. |
+| **CONSUME** | `styleradar.inventario.actualizado` | `ms-inventario` &rarr; `ms-item-catalogo` | Si el stock llega a 0, la prenda se marca como no disponible y deja de mostrarse. |
+| **CONSUME** | `styleradar.pagos.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Se suspende el almacén: deja de mostrarse su catálogo y no puede publicar. |
 
-Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Los que publica el servicio llevan `eventId`, `eventType`, `timestamp`, `producer`, `prendaId` y `almacenId`. Los que consume se leen de las colas `q.item-catalogo.stock-agotado` y `q.item-catalogo.suscripcion`.
+### Colas y errores
+
+| Cola | Para qué |
+| :--- | :--- |
+| `styleradar.catalogo.inventario-actualizado.q` | Recibe los eventos de inventario. |
+| `styleradar.catalogo.suscripcion-suspendida.q` | Recibe las suspensiones de suscripción. |
+| `styleradar.catalogo.dlq` | Cola de errores: por el DLX `styleradar.dlx` llegan aquí los mensajes que no se pudieron procesar (por ejemplo, sin un id válido). |
+
+Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno.
 
 ---
 
@@ -385,7 +394,7 @@ Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Lo
 | :--- | :--- | :--- |
 | **Lenguaje Core** | Java | `21` |
 | **Framework** | Spring Boot | `3.3.4` |
-| **Base de Datos** | PostgreSQL | `15.8` |
+| **Base de Datos** | PostgreSQL | `16.4` |
 | **Migraciones de BD** | Flyway | Gestionada por Spring Boot |
 | **Broker de Mensajería** | RabbitMQ | `3.13.7` |
 | **Mapeo de DTOs** | MapStruct | `1.5.5.Final` |
@@ -466,6 +475,11 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 | `RABBITMQ_PORT` | Puerto de RabbitMQ | `5672` |
 | `RABBITMQ_USER` | Usuario de RabbitMQ | `styleradar` |
 | `RABBITMQ_PASSWORD` | Contraseña de RabbitMQ | — |
+| `RABBITMQ_VHOST` | Virtual host de RabbitMQ | `/` |
+| `RABBITMQ_SSL_ENABLED` | Conexión TLS (en QA y PROD `true`, puerto `5671`) | `false` |
+| `RABBITMQ_EXCHANGE` | Exchange compartido | `styleradar.exchange` |
+| `RABBITMQ_DLX` | Exchange de errores | `styleradar.dlx` |
+| `RABBITMQ_DLQ` | Cola de errores del servicio | `styleradar.catalogo.dlq` |
 
 ---
 

@@ -2,56 +2,84 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// Exchange y routing keys acordados con ms-inventario, ms-playlist y ms-pagos-suscripciones
+// Exchange, colas y routing keys según la guía de RabbitMQ del curso; los nombres se cambian por ambiente
 @Configuration
 public class RabbitMqConfig {
 
-    public static final String EXCHANGE = "styleradar.events";
+    @Value("${styleradar.rabbitmq.exchange}")
+    private String exchange;
 
-    public static final String RK_PRENDA_CREADA = "catalogo.prenda.creada";
-    public static final String RK_PRENDA_ELIMINADA = "catalogo.prenda.eliminada";
-    public static final String RK_STOCK_AGOTADO = "inventario.stock.agotado";
-    public static final String RK_SUSCRIPCION_SUSPENDIDA = "tienda.suscripcion.suspendida";
+    @Value("${styleradar.rabbitmq.dlx}")
+    private String dlx;
 
-    public static final String QUEUE_STOCK_AGOTADO = "q.item-catalogo.stock-agotado";
-    public static final String QUEUE_SUSCRIPCION = "q.item-catalogo.suscripcion";
+    @Value("${styleradar.rabbitmq.dlq}")
+    private String dlq;
+
+    @Value("${styleradar.rabbitmq.dlq-routing-key}")
+    private String dlqRoutingKey;
 
     @Bean
     public TopicExchange styleradarExchange() {
-        return new TopicExchange(EXCHANGE, true, false);
+        return new TopicExchange(exchange, true, false);
     }
 
     @Bean
-    public Queue stockAgotadoQueue() {
-        return QueueBuilder.durable(QUEUE_STOCK_AGOTADO).build();
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(dlx, true, false);
+    }
+
+    // Cola de errores: aquí llegan los mensajes que no se pudieron procesar
+    @Bean
+    public Queue deadLetterQueue() {
+        return QueueBuilder.durable(dlq).build();
     }
 
     @Bean
-    public Queue suscripcionQueue() {
-        return QueueBuilder.durable(QUEUE_SUSCRIPCION).build();
+    public Binding deadLetterBinding() {
+        return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(dlqRoutingKey);
     }
 
     @Bean
-    public Binding stockAgotadoBinding(Queue stockAgotadoQueue, TopicExchange styleradarExchange) {
-        return BindingBuilder.bind(stockAgotadoQueue).to(styleradarExchange).with(RK_STOCK_AGOTADO);
+    public Queue inventarioQueue(@Value("${styleradar.rabbitmq.queues.inventario}") String nombre) {
+        return colaConErrores(nombre);
     }
 
     @Bean
-    public Binding suscripcionBinding(Queue suscripcionQueue, TopicExchange styleradarExchange) {
-        return BindingBuilder.bind(suscripcionQueue).to(styleradarExchange).with(RK_SUSCRIPCION_SUSPENDIDA);
+    public Queue suscripcionQueue(@Value("${styleradar.rabbitmq.queues.suscripcion}") String nombre) {
+        return colaConErrores(nombre);
     }
 
-    // Mensajes en JSON, igual que los demás servicios
+    @Bean
+    public Binding inventarioBinding(Queue inventarioQueue,
+                                     @Value("${styleradar.rabbitmq.routing-keys.inventario-actualizado}") String routingKey) {
+        return BindingBuilder.bind(inventarioQueue).to(styleradarExchange()).with(routingKey);
+    }
+
+    @Bean
+    public Binding suscripcionBinding(Queue suscripcionQueue,
+                                      @Value("${styleradar.rabbitmq.routing-keys.suscripcion-suspendida}") String routingKey) {
+        return BindingBuilder.bind(suscripcionQueue).to(styleradarExchange()).with(routingKey);
+    }
+
     @Bean
     public MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    private Queue colaConErrores(String nombre) {
+        return QueueBuilder.durable(nombre)
+                .deadLetterExchange(dlx)
+                .deadLetterRoutingKey(dlqRoutingKey)
+                .build();
     }
 }

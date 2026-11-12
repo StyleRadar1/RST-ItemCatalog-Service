@@ -1,0 +1,93 @@
+name: CD / QA - ms-item-catalogo
+
+# develop -> QA: pruebas, imagen en Docker Hub y despliegue en Azure App Service
+on:
+  push:
+    branches: [ "develop" ]
+  workflow_dispatch:
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE || secrets.DOCKERHUB_USERNAME }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME_QA }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Pruebas y cobertura JaCoCo (>= 85 %)
+        run: mvn -B -ntp verify
+
+      - name: Iniciar sesión en Docker Hub
+        if: env.DOCKERHUB_USERNAME != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construir y publicar la imagen
+        if: env.DOCKERHUB_USERNAME != ''
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_NAMESPACE }}/ms-item-catalogo:qa
+            ${{ env.DOCKERHUB_NAMESPACE }}/ms-item-catalogo:qa-${{ github.sha }}
+
+      - name: Iniciar sesión en Azure
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME != ''
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configurar y desplegar en Azure App Service
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME != ''
+        uses: azure/cli@v2
+        env:
+          DB_HOST: ${{ secrets.DB_HOST_QA }}
+          DB_PORT: ${{ secrets.DB_PORT_QA }}
+          DB_NAME: ${{ secrets.DB_NAME_QA }}
+          DB_USER: ${{ secrets.DB_USER_QA }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD_QA }}
+          RABBITMQ_HOST: ${{ secrets.RABBITMQ_HOST_QA }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER_QA }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD_QA }}
+          RABBITMQ_VHOST: ${{ secrets.RABBITMQ_VHOST_QA }}
+          RABBITMQ_EXCHANGE: ${{ secrets.RABBITMQ_EXCHANGE_QA }}
+          GEOLOCALIZACION_URL: ${{ secrets.GEOLOCALIZACION_URL_QA }}
+          INVENTARIO_URL: ${{ secrets.INVENTARIO_URL_QA }}
+        with:
+          inlineScript: |
+            RG=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME}'].resourceGroup | [0]" -o tsv)
+            az webapp config appsettings set --name "$AZURE_WEBAPP_NAME" --resource-group "$RG" --output none --settings \
+              WEBSITES_PORT=8220 SERVER_PORT=8220 SPRING_PROFILES_ACTIVE=qa \
+              SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT:-5432}/${DB_NAME}?sslmode=require" \
+              DB_USER="$DB_USER" DB_PASSWORD="$DB_PASSWORD" \
+              RABBITMQ_HOST="$RABBITMQ_HOST" RABBITMQ_PORT=5671 RABBITMQ_SSL_ENABLED=true \
+              RABBITMQ_USER="$RABBITMQ_USER" RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD" RABBITMQ_VHOST="${RABBITMQ_VHOST:-/}" \
+              RABBITMQ_EXCHANGE="${RABBITMQ_EXCHANGE:-styleradar.exchange}" \
+              GEOLOCALIZACION_URL="$GEOLOCALIZACION_URL" INVENTARIO_URL="$INVENTARIO_URL"
+            az webapp config container set --name "$AZURE_WEBAPP_NAME" --resource-group "$RG" --output none \
+              --container-image-name "${DOCKERHUB_NAMESPACE}/ms-item-catalogo:qa-${GITHUB_SHA}" \
+              --container-registry-url "https://index.docker.io/v1"
+            az webapp restart --name "$AZURE_WEBAPP_NAME" --resource-group "$RG"
+
+      - name: Verificar que el servicio responde
+        if: env.AZURE_CREDENTIALS != '' && env.AZURE_WEBAPP_NAME != ''
+        run: |
+          URL="https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api/v1/health"
+          for i in $(seq 1 30); do
+            if curl -fsS "$URL"; then echo; exit 0; fi
+            sleep 15
+          done
+          echo "El servicio no respondió en $URL"
+          exit 1
