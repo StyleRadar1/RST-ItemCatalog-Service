@@ -27,11 +27,19 @@ spring:
     ssl:
       enabled: ${RABBITMQ_SSL_ENABLED:false}
       verify-hostname: ${RABBITMQ_SSL_VERIFY_HOSTNAME:true}
+    # 3 intentos con espera creciente (1 s, 2 s) y luego a la cola de errores
     listener:
       simple:
         default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2
 
 styleradar:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   rabbitmq:
     exchange: ${RABBITMQ_EXCHANGE:styleradar.exchange}
     dlx: ${RABBITMQ_DLX:styleradar.dlx}

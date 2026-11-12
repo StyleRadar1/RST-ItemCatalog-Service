@@ -1,7 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
 import edu.dosw.styleradar.itemcatalogo.domain.event.ModeracionCambiadaEvent;
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -44,23 +43,21 @@ class ModerarPublicacionUseCaseImplTest {
     }
 
     @Test
-    void apruebaUnaPublicacionYAvisaQueQuedoPublicada() {
+    void apruebaUnaPublicacionYAvisaLaModeracion() {
         Prenda prenda = pendienteGuardada();
 
         assertThat(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador).getEstado())
                 .isEqualTo(EstadoPublicacion.APROBADA);
         verify(eventos).publicar(any(ModeracionCambiadaEvent.class));
-        verify(eventos).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test
-    void rechazaUnaPublicacionConMotivoSinPublicarla() {
+    void rechazaUnaPublicacionConMotivoYAvisaLaModeracion() {
         Prenda prenda = pendienteGuardada();
 
         assertThat(useCase.moderar(prenda.getId(), EstadoPublicacion.RECHAZADA, "Foto borrosa", moderador).getEstado())
                 .isEqualTo(EstadoPublicacion.RECHAZADA);
         verify(eventos).publicar(any(ModeracionCambiadaEvent.class));
-        verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test

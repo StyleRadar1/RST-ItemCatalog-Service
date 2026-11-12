@@ -148,13 +148,9 @@ class ItemCatalogoIntegrationTest {
     }
 
     @Test
-    void alAprobarSePublicaLaPrendaPublicada() throws Exception {
+    void alCrearSePublicaLaPrendaPublicada() throws Exception {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
-
-        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
-                .andExpect(status().isOk());
 
         Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
         assertThat(((Map<?, ?>) mensaje).get("itemId")).isEqualTo(id);

@@ -51,14 +51,14 @@ class GestionarPrendaUseCaseImplTest {
     }
 
     @Test
-    void publicaEnUnAlmacenActivoSinAvisarHastaQueSeApruebe() {
+    void publicaEnUnAlmacenActivoYAvisaLaPrendaPublicada() {
         AlmacenResumen almacen = almacen("4.50", true);
         when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
 
         Prenda prenda = useCase.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos);
 
         assertThat(prenda.getEstado()).isEqualTo(EstadoPublicacion.PENDIENTE);
-        verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
+        verify(eventos).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test
@@ -82,6 +82,7 @@ class GestionarPrendaUseCaseImplTest {
 
         assertThat(useCase.editar(prenda.getId(), dueno, "Chaqueta editada", atributos, precio, fotos).getNombre())
                 .isEqualTo("Chaqueta editada");
+        verify(eventos).publicar(any(PrendaPublicadaEvent.class));
         assertThat(useCase.retirar(prenda.getId(), dueno).getEstado()).isEqualTo(EstadoPublicacion.RETIRADA);
         verify(eventos).publicar(any(PrendaRetiradaEvent.class));
     }

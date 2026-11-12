@@ -1,7 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
 import edu.dosw.styleradar.itemcatalogo.domain.event.ModeracionCambiadaEvent;
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -40,12 +39,9 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
         return avisar(prendaRepository.save(prenda), motivo);
     }
 
-    // Avisa la decisión y, si quedó aprobada, que ya está publicada en el catálogo
+    // Avisa la decisión del administrador (aprobada o rechazada)
     private Prenda avisar(Prenda prenda, String motivo) {
         eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo));
-        if (prenda.getEstado() == EstadoPublicacion.APROBADA) {
-            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda));
-        }
         return prenda;
     }
 
