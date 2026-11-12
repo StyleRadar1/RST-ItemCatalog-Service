@@ -64,7 +64,7 @@
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
 * **Puerto de Escucha Oficial:** `8220`
-* **Base de Datos Asignada:** `PostgreSQL 15.8` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
+* **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Catálogo de prendas`
 
 ### Responsabilidades del Dominio
@@ -385,7 +385,7 @@ Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Lo
 | :--- | :--- | :--- |
 | **Lenguaje Core** | Java | `21` |
 | **Framework** | Spring Boot | `3.3.4` |
-| **Base de Datos** | PostgreSQL | `15.8` |
+| **Base de Datos** | PostgreSQL | `16` |
 | **Migraciones de BD** | Flyway | Gestionada por Spring Boot |
 | **Broker de Mensajería** | RabbitMQ | `3.13.7` |
 | **Mapeo de DTOs** | MapStruct | `1.5.5.Final` |
