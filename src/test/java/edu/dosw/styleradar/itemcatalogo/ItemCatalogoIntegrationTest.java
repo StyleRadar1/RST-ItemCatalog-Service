@@ -234,6 +234,14 @@ class ItemCatalogoIntegrationTest {
         mockMvc.perform(get("/prendas/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
 
+        mockMvc.perform(get("/prendas").param("precioMin", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.precioMin").value("El precio mínimo no puede ser negativo"));
+
+        mockMvc.perform(get("/prendas").param("precioMin", "200000").param("precioMax", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("El precio mínimo no puede ser mayor que el precio máximo"));
+
         mockMvc.perform(put("/prendas/b1111111-1111-1111-1111-111111111111/moderacion").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isUnprocessableEntity());

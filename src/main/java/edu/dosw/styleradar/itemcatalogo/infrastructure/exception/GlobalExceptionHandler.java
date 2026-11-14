@@ -31,7 +31,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ParametroInvalidoException.class)
     public ProblemDetail handleParametroInvalido(ParametroInvalidoException ex) {
-        return problem(HttpStatus.BAD_REQUEST, "Solicitud inválida", ex.getMessage());
+        ProblemDetail detail = problem(HttpStatus.BAD_REQUEST, "Solicitud inválida", ex.getMessage());
+        if (!ex.getErrores().isEmpty()) {
+            detail.setProperty("errors", ex.getErrores());
+        }
+        return detail;
     }
 
     @ExceptionHandler(DomainException.class)

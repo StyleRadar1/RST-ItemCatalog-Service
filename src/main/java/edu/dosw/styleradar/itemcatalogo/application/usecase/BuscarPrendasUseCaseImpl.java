@@ -13,7 +13,9 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +45,7 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
         if (filtro.orden() == Ordenamiento.DISTANCIA && filtro.ubicacion() == null) {
             throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
         }
+        validarRangoPrecio(filtro.precioMin(), filtro.precioMax());
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
         Set<UUID> conTalla = filtro.talla() == null ? null : tallaDisponible.prendasConStock(filtro.talla());
         List<Prenda> resultado = visibles(almacenes).stream()
@@ -52,6 +55,22 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
         return resultado.stream()
                 .sorted(orden(filtro, almacenes, resultado))
                 .toList();
+    }
+
+    private static void validarRangoPrecio(BigDecimal precioMin, BigDecimal precioMax) {
+        Map<String, String> errores = new LinkedHashMap<>();
+        if (precioMin != null && precioMin.signum() < 0) {
+            errores.put("precioMin", "El precio mínimo no puede ser negativo");
+        }
+        if (precioMax != null && precioMax.signum() < 0) {
+            errores.put("precioMax", "El precio máximo no puede ser negativo");
+        }
+        if (!errores.isEmpty()) {
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", errores);
+        }
+        if (precioMin != null && precioMax != null && precioMin.compareTo(precioMax) > 0) {
+            throw new ParametroInvalidoException("El precio mínimo no puede ser mayor que el precio máximo");
+        }
     }
 
     @Override
