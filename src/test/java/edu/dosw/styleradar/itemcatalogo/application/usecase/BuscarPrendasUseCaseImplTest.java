@@ -15,6 +15,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -110,6 +111,29 @@ class BuscarPrendasUseCaseImplTest {
         FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, null);
 
         assertThatThrownBy(() -> useCase.buscar(filtro)).isInstanceOf(ParametroInvalidoException.class);
+    }
+
+    @Test
+    void unPrecioNegativoLanzaErrorConElCampo() {
+        FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null,
+                new BigDecimal("-1"), new BigDecimal("-5"), null, null);
+
+        assertThatThrownBy(() -> useCase.buscar(filtro))
+                .isInstanceOf(ParametroInvalidoException.class)
+                .satisfies(ex -> assertThat(((ParametroInvalidoException) ex).getErrores())
+                        .containsEntry("precioMin", "El precio mínimo no puede ser negativo")
+                        .containsEntry("precioMax", "El precio máximo no puede ser negativo"));
+        verifyNoInteractions(prendas);
+    }
+
+    @Test
+    void unMinimoMayorQueElMaximoLanzaError() {
+        FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null,
+                new BigDecimal("200000"), new BigDecimal("100000"), null, null);
+
+        assertThatThrownBy(() -> useCase.buscar(filtro))
+                .isInstanceOf(ParametroInvalidoException.class)
+                .hasMessage("El precio mínimo no puede ser mayor que el precio máximo");
     }
 
     @Test
