@@ -64,7 +64,7 @@
 * **Identificador de Servicio:** `ms-item-catalogo`
 * **Paquete Arquitectónico:** `Paquete 2: Catálogo`
 * **Puerto de Escucha Oficial:** `8220`
-* **Base de Datos Asignada:** `PostgreSQL 15.8` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
+* **Base de Datos Asignada:** `PostgreSQL 16` (`styleradar_item_catalog`), aislada bajo el patrón *Database-per-Service*.
 * **Bounded Context:** `Catálogo de prendas`
 
 ### Responsabilidades del Dominio
@@ -167,6 +167,46 @@ flowchart TD
     class INFRA_IN,INFRA_OUT,REST,AMQP_IN,JPA_REPO,RABBIT_PUB infra;
 ```
 
+### Diagrama de Componentes General del Paquete
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-COMPONENTES%20GENERAL-12063A?style=for-the-badge" alt="Diagrama de componentes general" /><br />
+          <strong><font color="#5600EF" size="3">DIAGRAMA DE COMPONENTES GENERAL · PAQUETE 2 CATÁLOGO</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-componentes-general-paquete.png" width="100%" alt="Diagrama de componentes general del paquete" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El diagrama muestra los cuatro microservicios del paquete Catálogo y cómo se relacionan. El front entra por el API Gateway con HTTPS bajo `/api/v1`. `ms-item-catalogo` consulta por Feign a `ms-inventario` las prendas con unidades en una talla y a `ms-geolocalizacion` la distancia a cada almacén. Los eventos viajan por el exchange `styleradar.exchange` de RabbitMQ: ítem-catálogo publica `styleradar.catalogo.prenda.publicada`, `styleradar.catalogo.prenda.retirada` y `styleradar.catalogo.moderacion.cambiada` y consume `styleradar.inventario.actualizado` y `styleradar.inventario.stock.agotado`; inventario publica `styleradar.inventario.actualizado`, `styleradar.inventario.stock.agotado` y `styleradar.inventario.stock.ultimas-unidades`; y playlist consume `styleradar.catalogo.prenda.retirada`. Cada servicio tiene su propia base PostgreSQL. El archivo editable está en `docs/evidencias/diagrama-componentes-general-paquete.drawio`.
+
+### Diagrama de Despliegue
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-DESPLIEGUE-12063A?style=for-the-badge" alt="Diagrama de despliegue" /><br />
+          <strong><font color="#5600EF" size="3">DIAGRAMA DE DESPLIEGUE · PAQUETE 2 CATÁLOGO</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-despliegue-paquete.png" width="100%" alt="Diagrama de despliegue del paquete" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El diagrama muestra dónde se ejecuta cada parte del paquete. Con cada push a `develop` o `master`, GitHub Actions construye la imagen del servicio, la publica en GitHub Container Registry y la despliega en Azure Container Apps (entorno `styleradar-cae-prod`, región northcentralus): `develop` va al ambiente QA y `master` al ambiente PROD, cada uno con un contenedor por servicio. El front llega a los contenedores a través del API Gateway por HTTPS. Los servicios guardan sus datos en Azure Database for PostgreSQL 16 (`styleradar-postgres-prod`), con una base por servicio y por ambiente, y se comunican por eventos con el broker RabbitMQ del curso. El archivo editable está en `docs/evidencias/diagrama-despliegue-paquete.drawio`.
+
 ### Diagrama de Componentes Específico
 
 <div align="center">
@@ -185,7 +225,7 @@ flowchart TD
   </table>
 </div>
 
-El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan desde el API Gateway a los controllers REST (adaptadores de entrada), que usan un mapper de entrada para convertir la petición al modelo de dominio y solo conocen la interfaz del caso de uso (puerto de entrada); los eventos de otros servicios llegan por RabbitMQ al `CatalogoEventListener`. Las implementaciones de los casos de uso (`<Nombre>Impl`) usan los puertos de salida: `PrendaRepositoryPort` para la base de datos (con un mapper de salida hacia la entidad JPA), `EventPublisherPort` para publicar `NuevaPrendaCreadaEvent` y `GeolocalizacionClientPort` para obtener distancias de `ms-geolocalizacion` al ordenar resultados (SR-RF-14) y `TallaDisponiblePort` para obtener de `ms-inventario` las prendas con unidades en la talla buscada (SR-RF-10). Los flujos cubren búsqueda y filtros (SR-RF-07 a 16), catálogo de almacén (SR-RF-19, 20 y 22), gestión de prendas (SR-RF-50 a 58), moderación (SR-RF-61 y 87) y la actualización de disponibilidad por eventos.
+El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan desde el API Gateway a los controllers REST (adaptadores de entrada), que usan un mapper de entrada para convertir la petición al modelo de dominio y solo conocen la interfaz del caso de uso (puerto de entrada); los eventos de otros servicios llegan por RabbitMQ al `CatalogoEventListener`. Las implementaciones de los casos de uso (`<Nombre>Impl`) usan los puertos de salida: `PrendaRepositoryPort` para la base de datos (con un mapper de salida hacia la entidad JPA), `EventPublisherPort` para publicar `PrendaPublicadaEvent`, `PrendaRetiradaEvent` y `ModeracionCambiadaEvent` y `GeolocalizacionClientPort` para obtener distancias de `ms-geolocalizacion` al ordenar resultados (SR-RF-14) y `TallaDisponiblePort` para obtener de `ms-inventario` las prendas con unidades en la talla buscada (SR-RF-10). Los flujos cubren búsqueda y filtros (SR-RF-07 a 16), catálogo de almacén (SR-RF-19, 20 y 22), gestión de prendas (SR-RF-50 a 58), moderación (SR-RF-61 y 87) y la actualización de disponibilidad por eventos.
 
 ### Diagrama de Clases
 
@@ -205,7 +245,7 @@ El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan
   </table>
 </div>
 
-El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, color, marca y estilo), su `Precio`, sus `Fotografia` y su `EstadoPublicacion`. Los métodos del agregado cubren editar, retirar, aprobar, rechazar y marcar como agotada; cada aprobación o rechazo queda como una `Moderacion` con su motivo (SR-RF-61 y 87). `AlmacenResumen` guarda la reputación y el estado del almacén para ordenar por reputación (SR-RF-15) y ocultar los almacenes suspendidos. `FiltroBusqueda` reúne los criterios de búsqueda, incluida la talla, y el `Ordenamiento` (por distancia o reputación). Al publicar una prenda se genera el evento de dominio `NuevaPrendaCreadaEvent`.
+El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, color, marca y estilo), su `Precio`, sus `Fotografia` y su `EstadoPublicacion`. Los métodos del agregado cubren editar, retirar, aprobar, rechazar y marcar como agotada; cada aprobación o rechazo queda como una `Moderacion` con su motivo (SR-RF-61 y 87). `AlmacenResumen` guarda la reputación y el estado del almacén para ordenar por reputación (SR-RF-15) y ocultar los almacenes suspendidos. `FiltroBusqueda` reúne los criterios de búsqueda, incluida la talla, y el `Ordenamiento` (por distancia o reputación). Los eventos de dominio son `PrendaPublicadaEvent` (al aprobarse), `PrendaRetiradaEvent` (al retirarla) y `ModeracionCambiadaEvent` (en cada aprobación o rechazo).
 
 ### Diagrama de Base de Datos
 
@@ -267,6 +307,81 @@ Al publicar una prenda, Spring valida primero el `PrendaRequest`; si falta un da
 
 El administrador envía la decisión sobre una publicación. Si la solicitud no trae la decisión o el moderador, se responde 400. El caso de uso busca la prenda (si no existe, 404) y le pide al dominio aprobarla o rechazarla; el dominio solo lo permite cuando la prenda está pendiente y, en el rechazo, exige un motivo, de lo contrario se responde 422. La decisión queda registrada en el historial de moderación y se responde 200 con el nuevo estado (SR-RF-61).
 
+### Diagramas de Flujo
+
+Los diagramas de flujo muestran el recorrido del usuario por las pantallas de StyleRadar y los microservicios del paquete que intervienen en cada paso. Los archivos editables de Excalidraw están junto a las imágenes en `docs/evidencias`.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de publicación y moderación de una prenda" /><br />
+          <strong><font color="#5600EF" size="3">PUBLICACIÓN Y MODERACIÓN DE UNA PRENDA</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/flujo-publicacion-moderacion.png" width="100%" alt="Diagrama de flujo de publicación y moderación de una prenda" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El almacén publica la prenda desde Mi tienda con sus fotos, precio, atributos y tallas. La prenda queda pendiente en ms-item-catalogo y sus unidades por talla se registran en ms-inventario. El administrador revisa las publicaciones pendientes agrupadas por almacén y las aprueba o rechaza; con la aprobación, la prenda aparece en el catálogo. Si una talla se agota, ms-inventario publica `inventario.stock.agotado` y la prenda deja de mostrarse.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de búsqueda de prendas y playlists" /><br />
+          <strong><font color="#5600EF" size="3">BÚSQUEDA DE PRENDAS Y PLAYLISTS</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/flujo-busqueda-playlists.png" width="100%" alt="Diagrama de flujo de búsqueda de prendas y playlists" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El usuario busca y filtra prendas por tipo, color, talla o precio, y puede ordenar los resultados por distancia. ms-item-catalogo consulta a ms-inventario las prendas con unidades en la talla pedida y a ms-geolocalizacion la distancia a cada almacén. El usuario guarda una prenda en su playlist y, si la tienda la retira, ms-item-catalogo publica `styleradar.catalogo.prenda.retirada` y ms-playlist la marca como no disponible en las playlists.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo del mapa al catálogo de un almacén" /><br />
+          <strong><font color="#5600EF" size="3">DEL MAPA AL CATÁLOGO DE UN ALMACÉN</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/flujo-mapa-catalogo.png" width="100%" alt="Diagrama de flujo del mapa al catálogo de un almacén" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+En el mapa, el usuario ve los almacenes aliados y las fundaciones cercanas con su distancia, calculada por ms-geolocalizacion, y puede filtrar por categoría. Al tocar un almacén se muestra el resumen de su catálogo y, desde Tiendas, el catálogo completo con sus novedades de la semana, que entrega ms-item-catalogo. Las tallas disponibles de cada prenda vienen de ms-inventario.
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de las playlists de estilo" /><br />
+          <strong><font color="#5600EF" size="3">PLAYLISTS DE ESTILO</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/flujo-playlists.png" width="100%" alt="Diagrama de flujo de las playlists de estilo" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El usuario explora las playlists destacadas y las más populares, y crea la suya con nombre, estilo y visibilidad. Dentro de una playlist puede dar me gusta o guardarla en su perfil, y desde el catálogo agrega prendas con un máximo de 15. Al agregar una prenda, ms-playlist publica `playlist.prenda.asociada`; cuando el administrador destaca una playlist, con un máximo de tres, publica `playlist.destacada.actualizada`.
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
@@ -362,18 +477,28 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 ## <img src="https://img.shields.io/badge/05-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 5. EVENTOS QUE PUBLICA Y CONSUME
 
-La comunicación asíncrona entre microservicios se realiza a través de **RabbitMQ 3.13.7**.
+La comunicación asíncrona se hace por **RabbitMQ 3.13.7**, siguiendo la guía de mensajería del curso: exchange compartido `styleradar.exchange` (topic, durable) y, en QA y PROD, conexión por el puerto **5671 con TLS** y el usuario asignado al servicio.
 
 ### Matriz de Eventos AMQP
 
-| Tipo | Evento | Emisor / Receptor | Propósito |
+| Tipo | Routing key | Emisor / Receptor | Cuándo |
 | :---: | :--- | :--- | :--- |
-| **PUBLICA** | `catalogo.prenda.creada` (`NuevaPrendaCreadaEvent`) | `ms-item-catalogo` &rarr; `ms-notificaciones` | Se publicó una prenda nueva en el catálogo. |
-| **PUBLICA** | `catalogo.prenda.eliminada` (`PrendaEliminadaEvent`) | `ms-item-catalogo` &rarr; `ms-playlist` | Se retiró una prenda; las playlists la quitan de sus listas. |
-| **CONSUME** | `inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | Marca la prenda como no disponible en los resultados. |
-| **CONSUME** | `tienda.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Deja de mostrar el catálogo del almacén suspendido. |
+| **PUBLICA** | `styleradar.catalogo.prenda.publicada` | `ms-item-catalogo` &rarr; `ms-notificaciones`, `ms-probador` | Un administrador aprueba la prenda y queda visible en el catálogo. |
+| **PUBLICA** | `styleradar.catalogo.prenda.retirada` | `ms-item-catalogo` &rarr; `ms-notificaciones`, `ms-playlist` | El almacén dueño (o un administrador) retira la prenda. |
+| **PUBLICA** | `styleradar.catalogo.moderacion.cambiada` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Un administrador aprueba o rechaza una publicación. |
+| **CONSUME** | `styleradar.inventario.actualizado` | `ms-inventario` &rarr; `ms-item-catalogo` | Si el stock llega a 0, la prenda se marca como no disponible y deja de mostrarse. |
+| **CONSUME** | `styleradar.inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | La prenda se agotó: se marca como no disponible. |
+| **CONSUME** | `styleradar.pagos.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Se suspende el almacén: deja de mostrarse su catálogo y no puede publicar. |
 
-Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Los que publica el servicio llevan `eventId`, `eventType`, `timestamp`, `producer`, `prendaId` y `almacenId`. Los que consume se leen de las colas `q.item-catalogo.stock-agotado` y `q.item-catalogo.suscripcion`.
+### Colas y errores
+
+| Cola | Para qué |
+| :--- | :--- |
+| `styleradar.catalogo.inventario-actualizado.q` | Recibe los eventos de inventario (actualizado y stock agotado). |
+| `styleradar.catalogo.suscripcion-suspendida.q` | Recibe las suspensiones de suscripción. |
+| `styleradar.catalogo.dlq` | Cola de errores: por el DLX `styleradar.dlx` llegan aquí los mensajes que no se pudieron procesar (por ejemplo, sin un id válido). |
+
+Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno.
 
 ---
 
@@ -385,7 +510,7 @@ Todos los eventos viajan por el exchange `styleradar.events` en formato JSON. Lo
 | :--- | :--- | :--- |
 | **Lenguaje Core** | Java | `21` |
 | **Framework** | Spring Boot | `3.3.4` |
-| **Base de Datos** | PostgreSQL | `15.8` |
+| **Base de Datos** | PostgreSQL | `16` |
 | **Migraciones de BD** | Flyway | Gestionada por Spring Boot |
 | **Broker de Mensajería** | RabbitMQ | `3.13.7` |
 | **Mapeo de DTOs** | MapStruct | `1.5.5.Final` |
@@ -466,6 +591,11 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 | `RABBITMQ_PORT` | Puerto de RabbitMQ | `5672` |
 | `RABBITMQ_USER` | Usuario de RabbitMQ | `styleradar` |
 | `RABBITMQ_PASSWORD` | Contraseña de RabbitMQ | — |
+| `RABBITMQ_VHOST` | Virtual host de RabbitMQ | `/` |
+| `RABBITMQ_SSL_ENABLED` | Conexión TLS (en QA y PROD `true`, puerto `5671`) | `false` |
+| `RABBITMQ_EXCHANGE` | Exchange compartido | `styleradar.exchange` |
+| `RABBITMQ_DLX` | Exchange de errores | `styleradar.dlx` |
+| `RABBITMQ_DLQ` | Cola de errores del servicio | `styleradar.catalogo.dlq` |
 
 ---
 

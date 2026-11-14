@@ -1,5 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
+import edu.dosw.styleradar.itemcatalogo.domain.event.ModeracionCambiadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -7,6 +9,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +32,8 @@ class ModerarPublicacionUseCaseImplTest {
 
     private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
     private final AlmacenRepositoryPort almacenes = mock(AlmacenRepositoryPort.class);
-    private final ModerarPublicacionUseCaseImpl useCase = new ModerarPublicacionUseCaseImpl(prendas, almacenes);
+    private final EventPublisherPort eventos = mock(EventPublisherPort.class);
+    private final ModerarPublicacionUseCaseImpl useCase = new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos);
     private final UUID moderador = UUID.randomUUID();
 
     private Prenda pendienteGuardada() {
@@ -40,19 +44,23 @@ class ModerarPublicacionUseCaseImplTest {
     }
 
     @Test
-    void apruebaUnaPublicacion() {
+    void apruebaUnaPublicacionYAvisaLaModeracionYLaPrendaPublicada() {
         Prenda prenda = pendienteGuardada();
 
         assertThat(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador).getEstado())
                 .isEqualTo(EstadoPublicacion.APROBADA);
+        verify(eventos).publicar(any(ModeracionCambiadaEvent.class));
+        verify(eventos).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test
-    void rechazaUnaPublicacionConMotivo() {
+    void rechazaUnaPublicacionConMotivoYAvisaLaModeracion() {
         Prenda prenda = pendienteGuardada();
 
         assertThat(useCase.moderar(prenda.getId(), EstadoPublicacion.RECHAZADA, "Foto borrosa", moderador).getEstado())
                 .isEqualTo(EstadoPublicacion.RECHAZADA);
+        verify(eventos).publicar(any(ModeracionCambiadaEvent.class));
+        verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test

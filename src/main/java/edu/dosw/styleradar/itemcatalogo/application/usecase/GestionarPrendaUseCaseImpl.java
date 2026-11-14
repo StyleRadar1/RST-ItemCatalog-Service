@@ -1,7 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
-import edu.dosw.styleradar.itemcatalogo.domain.event.NuevaPrendaCreadaEvent;
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaEliminadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
@@ -21,6 +20,8 @@ import java.util.UUID;
 
 public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
 
+    private static final String MOTIVO_RETIRO = "Retirada por el almacén";
+
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
     private final EventPublisherPort eventPublisher;
@@ -39,9 +40,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         if (!almacen.activo()) {
             throw new DomainException("El almacén está suspendido y no puede publicar prendas");
         }
-        Prenda prenda = prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
-        eventPublisher.publicar(new NuevaPrendaCreadaEvent(prenda.getId(), almacenId, prenda.getFechaPublicacion()));
-        return prenda;
+        return prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
     }
 
     @Override
@@ -65,7 +64,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         prenda.verificarPermiso(solicitante);
         prenda.retirar();
         Prenda retirada = prendaRepository.save(prenda);
-        eventPublisher.publicar(new PrendaEliminadaEvent(prendaId, prenda.getAlmacenId(), LocalDateTime.now()));
+        eventPublisher.publicar(new PrendaRetiradaEvent(prendaId, prenda.getAlmacenId(), MOTIVO_RETIRO, LocalDateTime.now()));
         return retirada;
     }
 }

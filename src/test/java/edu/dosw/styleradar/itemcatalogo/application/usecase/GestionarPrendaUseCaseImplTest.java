@@ -1,7 +1,7 @@
 package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
-import edu.dosw.styleradar.itemcatalogo.domain.event.NuevaPrendaCreadaEvent;
-import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaEliminadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
+import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
@@ -51,14 +51,14 @@ class GestionarPrendaUseCaseImplTest {
     }
 
     @Test
-    void publicaEnUnAlmacenActivoYAvisaConUnEvento() {
+    void publicaEnUnAlmacenActivoComoPendienteSinAvisarTodavia() {
         AlmacenResumen almacen = almacen("4.50", true);
         when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
 
         Prenda prenda = useCase.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos);
 
         assertThat(prenda.getEstado()).isEqualTo(EstadoPublicacion.PENDIENTE);
-        verify(eventos).publicar(new NuevaPrendaCreadaEvent(prenda.getId(), almacen.almacenId(), prenda.getFechaPublicacion()));
+        verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
     }
 
     @Test
@@ -82,8 +82,9 @@ class GestionarPrendaUseCaseImplTest {
 
         assertThat(useCase.editar(prenda.getId(), dueno, "Chaqueta editada", atributos, precio, fotos).getNombre())
                 .isEqualTo("Chaqueta editada");
+        verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
         assertThat(useCase.retirar(prenda.getId(), dueno).getEstado()).isEqualTo(EstadoPublicacion.RETIRADA);
-        verify(eventos).publicar(any(PrendaEliminadaEvent.class));
+        verify(eventos).publicar(any(PrendaRetiradaEvent.class));
     }
 
     @Test
@@ -105,7 +106,7 @@ class GestionarPrendaUseCaseImplTest {
                 .isInstanceOf(AccesoDenegadoException.class);
         assertThatThrownBy(() -> useCase.retirar(prenda.getId(), otro))
                 .isInstanceOf(AccesoDenegadoException.class);
-        verify(eventos, never()).publicar(any(PrendaEliminadaEvent.class));
+        verify(eventos, never()).publicar(any(PrendaRetiradaEvent.class));
     }
 
     @Test

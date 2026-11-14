@@ -68,7 +68,6 @@ public class PrendaController implements PrendaApi {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.retirar(id, solicitante(almacenId, rol))));
     }
 
-    // Las cabeceras las pone el API Gateway a partir del token
     private static Solicitante solicitante(UUID almacenId, String rol) {
         return new Solicitante(almacenId, ROL_ADMIN.equalsIgnoreCase(rol));
     }

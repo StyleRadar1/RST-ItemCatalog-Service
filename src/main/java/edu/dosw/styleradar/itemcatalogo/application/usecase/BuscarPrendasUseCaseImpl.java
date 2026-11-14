@@ -64,7 +64,6 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
                 .toList();
     }
 
-    // Solo se muestran prendas aprobadas, disponibles y de almacenes activos
     private List<Prenda> visibles(Map<UUID, AlmacenResumen> almacenes) {
         return prendaRepository.findByEstado(EstadoPublicacion.APROBADA).stream()
                 .filter(Prenda::esVisible)

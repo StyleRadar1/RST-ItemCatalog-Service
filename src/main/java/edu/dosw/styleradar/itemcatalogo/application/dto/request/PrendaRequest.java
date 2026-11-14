@@ -10,14 +10,25 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-// Al editar se ignora almacenId
 public record PrendaRequest(
-        @NotNull UUID almacenId,
-        @NotBlank @Size(max = 120) String nombre,
-        @NotBlank @Size(max = 60) String tipo,
-        @Size(max = 40) String color,
-        @Size(max = 60) String marca,
-        @Size(max = 60) String estilo,
-        @NotNull @Positive BigDecimal precio,
-        @NotEmpty List<@NotBlank @Size(max = 500) String> fotografias) {
+        @NotNull(message = "El almacén es obligatorio")
+        UUID almacenId,
+        @NotBlank(message = "El nombre es obligatorio")
+        @Size(max = 120, message = "El nombre no puede superar los 120 caracteres")
+        String nombre,
+        @NotBlank(message = "El tipo de prenda es obligatorio")
+        @Size(max = 60, message = "El tipo no puede superar los 60 caracteres")
+        String tipo,
+        @Size(max = 40, message = "El color no puede superar los 40 caracteres")
+        String color,
+        @Size(max = 60, message = "La marca no puede superar los 60 caracteres")
+        String marca,
+        @Size(max = 60, message = "El estilo no puede superar los 60 caracteres")
+        String estilo,
+        @NotNull(message = "El precio es obligatorio")
+        @Positive(message = "El precio debe ser mayor a cero")
+        BigDecimal precio,
+        @NotEmpty(message = "La prenda debe tener al menos una fotografía")
+        List<@NotBlank(message = "La URL de la fotografía es obligatoria")
+             @Size(max = 500, message = "La URL de la fotografía no puede superar los 500 caracteres") String> fotografias) {
 }

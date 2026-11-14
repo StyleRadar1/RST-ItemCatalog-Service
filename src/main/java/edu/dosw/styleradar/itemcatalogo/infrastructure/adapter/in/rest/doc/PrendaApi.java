@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface PrendaApi {
 
     @Operation(summary = "Publicar prenda",
-            description = "Registra la prenda con sus fotografías, precio y atributos. Queda PENDIENTE de moderación y publica catalogo.prenda.creada (SR-RF-50, 51, 53 y 54).")
+            description = "Registra la prenda con sus fotografías, precio y atributos. Queda PENDIENTE de moderación; al aprobarse se publica styleradar.catalogo.prenda.publicada (SR-RF-50, 51, 53 y 54).")
     @ApiResponse(responseCode = "201", description = "Prenda publicada")
     @ApiResponse(responseCode = "400", description = "Campos inválidos")
     @ApiResponse(responseCode = "404", description = "El almacén no existe")
@@ -39,7 +39,7 @@ public interface PrendaApi {
                                           PrendaRequest request);
 
     @Operation(summary = "Retirar prenda",
-            description = "Solo el almacén dueño o un administrador. La prenda deja de mostrarse y se publica catalogo.prenda.eliminada (SR-RF-58).")
+            description = "Solo el almacén dueño o un administrador. La prenda deja de mostrarse y se publica styleradar.catalogo.prenda.retirada (SR-RF-58).")
     @ApiResponse(responseCode = "200", description = "Prenda retirada")
     @ApiResponse(responseCode = "403", description = "No es el almacén dueño ni un administrador")
     @ApiResponse(responseCode = "404", description = "La prenda no existe")

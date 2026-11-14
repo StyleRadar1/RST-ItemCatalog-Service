@@ -6,9 +6,11 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
-// decision: APROBADA o RECHAZADA; el motivo es obligatorio al rechazar
 public record ModeracionRequest(
-        @NotNull EstadoPublicacion decision,
-        @Size(max = 300) String motivo,
-        @NotNull UUID moderadorId) {
+        @NotNull(message = "La decisión es obligatoria (APROBADA o RECHAZADA)")
+        EstadoPublicacion decision,
+        @Size(max = 300, message = "El motivo no puede superar los 300 caracteres")
+        String motivo,
+        @NotNull(message = "El moderador es obligatorio")
+        UUID moderadorId) {
 }

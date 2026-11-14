@@ -58,7 +58,6 @@ public class PrendaEntity {
     @Column(name = "fecha_publicacion", nullable = false)
     private LocalDateTime fechaPublicacion;
 
-    // SUBSELECT evita duplicados al cargar las dos listas
     @OneToMany(mappedBy = "prenda", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @OrderBy("orden")

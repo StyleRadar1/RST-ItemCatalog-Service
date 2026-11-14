@@ -31,7 +31,6 @@ public final class PrendaMapperIn {
         return new Precio(request.precio());
     }
 
-    // El orden de la lista es el orden de las fotos
     public static List<Fotografia> toFotografias(PrendaRequest request) {
         return IntStream.range(0, request.fotografias().size())
                 .mapToObj(i -> new Fotografia(request.fotografias().get(i), i + 1))

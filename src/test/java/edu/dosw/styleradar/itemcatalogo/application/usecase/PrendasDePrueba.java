@@ -11,8 +11,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-// Datos de apoyo para las pruebas de casos de uso
 final class PrendasDePrueba {
 
     private PrendasDePrueba() {
