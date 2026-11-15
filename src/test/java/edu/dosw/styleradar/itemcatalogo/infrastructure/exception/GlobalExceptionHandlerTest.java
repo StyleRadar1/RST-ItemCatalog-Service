@@ -54,6 +54,17 @@ class GlobalExceptionHandlerTest {
 
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getDetail()).isEqualTo("Falta la ubicación");
+        assertThat(detail.getProperties()).isNull();
+    }
+
+    @Test
+    void parametroInvalidoConCamposReturns400WithErrors() {
+        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException(
+                "La solicitud tiene campos inválidos", Map.of("precioMin", "El precio mínimo no puede ser negativo")));
+
+        assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        assertThat(detail.getProperties()).containsEntry("errors",
+                Map.of("precioMin", "El precio mínimo no puede ser negativo"));
     }
 
     @Test
