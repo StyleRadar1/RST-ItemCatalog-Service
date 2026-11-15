@@ -19,6 +19,7 @@ env:
   RESOURCE_GROUP: STYLE_RADAR_PROD_RG
   CONTAINERAPP_ENV: styleradar-cae-prod
   DB_SERVER: styleradar-postgres-prod
+  RABBITMQ_HOST: styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com
 
 permissions:
   contents: read
@@ -95,7 +96,12 @@ jobs:
               DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               SPRING_PROFILES_ACTIVE="$AMBIENTE" \
               INVENTARIO_URL="https://rst-inventory-service-$AMBIENTE.$DOMINIO/api/v1" \
-              GEOLOCALIZACION_URL="https://rst-geolocation-service-$AMBIENTE.$DOMINIO/api/v1"
+              GEOLOCALIZACION_URL="https://rst-geolocation-service-$AMBIENTE.$DOMINIO/api/v1" \
+              RABBITMQ_HOST="$RABBITMQ_HOST" \
+              RABBITMQ_PORT=5671 \
+              RABBITMQ_SSL_ENABLED=true \
+              RABBITMQ_USER=ms_catalogo \
+              RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
 
       - name: Verificar el health
         run: |
