@@ -167,7 +167,7 @@ flowchart TD
     class INFRA_IN,INFRA_OUT,REST,AMQP_IN,JPA_REPO,RABBIT_PUB infra;
 ```
 
-### Diagrama de Componentes General del Paquete
+### Diagrama de Componentes General
 
 <div align="center">
   <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
@@ -175,17 +175,17 @@ flowchart TD
       <td align="center" style="padding: 20px;">
         <p>
           <img src="https://img.shields.io/badge/DIAGRAMA-COMPONENTES%20GENERAL-12063A?style=for-the-badge" alt="Diagrama de componentes general" /><br />
-          <strong><font color="#5600EF" size="3">DIAGRAMA DE COMPONENTES GENERAL · PAQUETE 2 CATÁLOGO</font></strong>
+          <strong><font color="#5600EF" size="3">DIAGRAMA DE COMPONENTES GENERAL · STYLERADAR</font></strong>
         </p>
         <p>
-          <img src="docs/evidencias/diagrama-componentes-general-paquete.png" width="100%" alt="Diagrama de componentes general del paquete" /><br />
+          <img src="docs/evidencias/diagrama-componentes-general.png" width="100%" alt="Diagrama de componentes general de StyleRadar" /><br />
         </p>
       </td>
     </tr>
   </table>
 </div>
 
-El diagrama muestra los cuatro microservicios del paquete Catálogo y cómo se relacionan. El front entra por el API Gateway con HTTPS bajo `/api/v1`. `ms-item-catalogo` consulta por Feign a `ms-inventario` las prendas con unidades en una talla y a `ms-geolocalizacion` la distancia a cada almacén. Los eventos viajan por el exchange `styleradar.exchange` de RabbitMQ: ítem-catálogo publica `styleradar.catalogo.prenda.publicada`, `styleradar.catalogo.prenda.retirada` y `styleradar.catalogo.moderacion.cambiada` y consume `styleradar.inventario.actualizado` y `styleradar.inventario.stock.agotado`; inventario publica `styleradar.inventario.actualizado`, `styleradar.inventario.stock.agotado` y `styleradar.inventario.stock.ultimas-unidades`; y playlist consume `styleradar.catalogo.prenda.retirada`. Cada servicio tiene su propia base PostgreSQL. El archivo editable está en `docs/evidencias/diagrama-componentes-general-paquete.drawio`.
+El diagrama muestra el back completo de StyleRadar. El cliente web entra por el API Gateway, que enruta a cada microservicio, y cada microservicio tiene su propia base de datos. También aparecen los brokers de RabbitMQ, Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-itemcatalogo` consulta por Feign a `ms-inventario` y a `ms-geolocalizacion`, guarda sus datos en `catalogo_db` y se comunica por eventos de RabbitMQ con el resto del ecosistema. `ms-geolocalizacion` atiende las consultas del mapa y de distancia y guarda sus datos en `geo_db`. El archivo editable está en `docs/evidencias/diagrama-componentes-general.drawio`.
 
 ### Diagrama de Despliegue
 
@@ -195,17 +195,17 @@ El diagrama muestra los cuatro microservicios del paquete Catálogo y cómo se r
       <td align="center" style="padding: 20px;">
         <p>
           <img src="https://img.shields.io/badge/DIAGRAMA-DESPLIEGUE-12063A?style=for-the-badge" alt="Diagrama de despliegue" /><br />
-          <strong><font color="#5600EF" size="3">DIAGRAMA DE DESPLIEGUE · PAQUETE 2 CATÁLOGO</font></strong>
+          <strong><font color="#5600EF" size="3">DIAGRAMA DE DESPLIEGUE · STYLERADAR</font></strong>
         </p>
         <p>
-          <img src="docs/evidencias/diagrama-despliegue-paquete.png" width="100%" alt="Diagrama de despliegue del paquete" /><br />
+          <img src="docs/evidencias/diagrama-despliegue-general.png" width="100%" alt="Diagrama de despliegue de StyleRadar" /><br />
         </p>
       </td>
     </tr>
   </table>
 </div>
 
-El diagrama muestra dónde se ejecuta cada parte del paquete. Con cada push a `develop` o `master`, GitHub Actions construye la imagen del servicio, la publica en GitHub Container Registry y la despliega en Azure Container Apps (entorno `styleradar-cae-prod`, región northcentralus): `develop` va al ambiente QA y `master` al ambiente PROD, cada uno con un contenedor por servicio. El front llega a los contenedores a través del API Gateway por HTTPS. Los servicios guardan sus datos en Azure Database for PostgreSQL 16 (`styleradar-postgres-prod`), con una base por servicio y por ambiente, y se comunican por eventos con el broker RabbitMQ del curso. El archivo editable está en `docs/evidencias/diagrama-despliegue-paquete.drawio`.
+El diagrama muestra el despliegue de todo StyleRadar. La aplicación web llega al API Gateway (puerto 8080), que enruta a un Container App por microservicio; ítem-catálogo corre en el puerto 8220 y geolocalización en el 8240. Cada servicio tiene su base en el servidor de PostgreSQL, algunos usan Redis y los que se comunican por eventos se conectan al broker de RabbitMQ. Con cada push a `develop` o `master`, GitHub Actions construye la imagen del servicio, la publica en GitHub Container Registry y la despliega en Azure Container Apps: `develop` va al ambiente QA y `master` al ambiente PROD. El archivo editable está en `docs/evidencias/diagrama-despliegue-general.drawio`.
 
 ### Diagrama de Componentes Específico
 
