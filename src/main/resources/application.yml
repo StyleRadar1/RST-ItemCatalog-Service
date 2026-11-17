@@ -3,6 +3,9 @@ server:
   forward-headers-strategy: framework
   servlet:
     context-path: /api/v1
+    encoding:
+      charset: UTF-8
+      force: true
 
 spring:
   application:
