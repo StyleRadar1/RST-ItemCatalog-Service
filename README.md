@@ -424,7 +424,7 @@ La comunicación asíncrona se hace por **RabbitMQ 3.13.7**, siguiendo la guía 
 | `styleradar.catalogo.suscripcion-suspendida.q` | Recibe las suspensiones de suscripción. |
 | `styleradar.catalogo.dlq` | Cola de errores: por el DLX `styleradar.dlx` llegan aquí los mensajes que no se pudieron procesar (por ejemplo, sin un id válido). |
 
-Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno.
+Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `imagenUrl` con la primera foto, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno.
 
 ---
 

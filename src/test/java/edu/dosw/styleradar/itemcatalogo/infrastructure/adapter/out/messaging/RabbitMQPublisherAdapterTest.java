@@ -45,13 +45,14 @@ class RabbitMQPublisherAdapterTest {
     @Test
     void publicaLaPrendaPublicadaConLosDatosDeLaPrenda() {
         adapter.publicar(new PrendaPublicadaEvent(prendaId, almacenId, "Chaqueta denim", "Chaqueta", "Azul", "Levis",
-                "Urbano", new BigDecimal("190000"), LocalDateTime.now()));
+                "Urbano", new BigDecimal("190000"), "https://foto/1.jpg", LocalDateTime.now()));
 
         Map<String, Object> payload = enviado("styleradar.catalogo.prenda.publicada");
         assertThat(payload).containsEntry("itemId", prendaId.toString())
                 .containsEntry("tiendaId", almacenId.toString())
                 .containsEntry("nombrePrenda", "Chaqueta denim")
-                .containsEntry("categoria", "Chaqueta");
+                .containsEntry("categoria", "Chaqueta")
+                .containsEntry("imagenUrl", "https://foto/1.jpg");
     }
 
     @Test

@@ -157,6 +157,7 @@ class ItemCatalogoIntegrationTest {
         Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
         assertThat(((Map<?, ?>) mensaje).get("itemId")).isEqualTo(id);
         assertThat(((Map<?, ?>) mensaje).get("nombrePrenda")).isEqualTo("Gorra amarilla");
+        assertThat(((Map<?, ?>) mensaje).get("imagenUrl")).isEqualTo("https://foto/gorra.jpg");
     }
 
     @Test
