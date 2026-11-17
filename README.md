@@ -185,7 +185,7 @@ flowchart TD
   </table>
 </div>
 
-El diagrama muestra el back completo de StyleRadar. El cliente web entra por el API Gateway, que enruta a cada microservicio, y cada microservicio tiene su propia base de datos. También aparecen los brokers de RabbitMQ, Redis y los sistemas externos (Google OAuth, MercadoPago, Azure Blob Storage y FASHN AI). `ms-itemcatalogo` consulta por Feign a `ms-inventario` y a `ms-geolocalizacion`, guarda sus datos en `catalogo_db` y se comunica por eventos de RabbitMQ con el resto del ecosistema. `ms-geolocalizacion` atiende las consultas del mapa y de distancia y guarda sus datos en `geo_db`. El archivo editable está en `docs/evidencias/diagrama-componentes-general.drawio`.
+Diagrama de componentes general de StyleRadar, el mismo para todos los microservicios. El archivo editable está en `docs/evidencias/DespligueYComponentesGeneral.drawio` (página DiagramaComponentesGeneral).
 
 ### Diagrama de Despliegue
 
@@ -205,7 +205,7 @@ El diagrama muestra el back completo de StyleRadar. El cliente web entra por el 
   </table>
 </div>
 
-El diagrama muestra el despliegue de todo StyleRadar. La aplicación web llega al API Gateway (puerto 8080), que enruta a un Container App por microservicio; ítem-catálogo corre en el puerto 8220 y geolocalización en el 8240. Cada servicio tiene su base en el servidor de PostgreSQL, algunos usan Redis y los que se comunican por eventos se conectan al broker de RabbitMQ. Con cada push a `develop` o `master`, GitHub Actions construye la imagen del servicio, la publica en GitHub Container Registry y la despliega en Azure Container Apps: `develop` va al ambiente QA y `master` al ambiente PROD. El archivo editable está en `docs/evidencias/diagrama-despliegue-general.drawio`.
+Diagrama de despliegue general de StyleRadar, el mismo para todos los microservicios. El archivo editable está en `docs/evidencias/DespligueYComponentesGeneral.drawio` (página DiagramaDespliegue).
 
 ### Diagrama de Componentes Específico
 
@@ -307,81 +307,6 @@ Al publicar una prenda, Spring valida primero el `PrendaRequest`; si falta un da
 
 El administrador envía la decisión sobre una publicación. Si la solicitud no trae la decisión o el moderador, se responde 400. El caso de uso busca la prenda (si no existe, 404) y le pide al dominio aprobarla o rechazarla; el dominio solo lo permite cuando la prenda está pendiente y, en el rechazo, exige un motivo, de lo contrario se responde 422. La decisión queda registrada en el historial de moderación y se responde 200 con el nuevo estado (SR-RF-61).
 
-### Diagramas de Flujo
-
-Los diagramas de flujo muestran el recorrido del usuario por las pantallas de StyleRadar y los microservicios del paquete que intervienen en cada paso. Los archivos editables de Excalidraw están junto a las imágenes en `docs/evidencias`.
-
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de publicación y moderación de una prenda" /><br />
-          <strong><font color="#5600EF" size="3">PUBLICACIÓN Y MODERACIÓN DE UNA PRENDA</font></strong>
-        </p>
-        <p>
-          <img src="docs/evidencias/flujo-publicacion-moderacion.png" width="100%" alt="Diagrama de flujo de publicación y moderación de una prenda" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-El almacén publica la prenda desde Mi tienda con sus fotos, precio, atributos y tallas. La prenda queda pendiente en ms-item-catalogo y sus unidades por talla se registran en ms-inventario. El administrador revisa las publicaciones pendientes agrupadas por almacén y las aprueba o rechaza; con la aprobación, la prenda aparece en el catálogo. Si una talla se agota, ms-inventario publica `inventario.stock.agotado` y la prenda deja de mostrarse.
-
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de búsqueda de prendas y playlists" /><br />
-          <strong><font color="#5600EF" size="3">BÚSQUEDA DE PRENDAS Y PLAYLISTS</font></strong>
-        </p>
-        <p>
-          <img src="docs/evidencias/flujo-busqueda-playlists.png" width="100%" alt="Diagrama de flujo de búsqueda de prendas y playlists" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-El usuario busca y filtra prendas por tipo, color, talla o precio, y puede ordenar los resultados por distancia. ms-item-catalogo consulta a ms-inventario las prendas con unidades en la talla pedida y a ms-geolocalizacion la distancia a cada almacén. El usuario guarda una prenda en su playlist y, si la tienda la retira, ms-item-catalogo publica `styleradar.catalogo.prenda.retirada` y ms-playlist la marca como no disponible en las playlists.
-
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo del mapa al catálogo de un almacén" /><br />
-          <strong><font color="#5600EF" size="3">DEL MAPA AL CATÁLOGO DE UN ALMACÉN</font></strong>
-        </p>
-        <p>
-          <img src="docs/evidencias/flujo-mapa-catalogo.png" width="100%" alt="Diagrama de flujo del mapa al catálogo de un almacén" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-En el mapa, el usuario ve los almacenes aliados y las fundaciones cercanas con su distancia, calculada por ms-geolocalizacion, y puede filtrar por categoría. Al tocar un almacén se muestra el resumen de su catálogo y, desde Tiendas, el catálogo completo con sus novedades de la semana, que entrega ms-item-catalogo. Las tallas disponibles de cada prenda vienen de ms-inventario.
-
-<div align="center">
-  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
-    <tr>
-      <td align="center" style="padding: 20px;">
-        <p>
-          <img src="https://img.shields.io/badge/DIAGRAMA-FLUJO-12063A?style=for-the-badge" alt="Diagrama de flujo de las playlists de estilo" /><br />
-          <strong><font color="#5600EF" size="3">PLAYLISTS DE ESTILO</font></strong>
-        </p>
-        <p>
-          <img src="docs/evidencias/flujo-playlists.png" width="100%" alt="Diagrama de flujo de las playlists de estilo" /><br />
-        </p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-El usuario explora las playlists destacadas y las más populares, y crea la suya con nombre, estilo y visibilidad. Dentro de una playlist puede dar me gusta o guardarla en su perfil, y desde el catálogo agrega prendas con un máximo de 15. Al agregar una prenda, ms-playlist publica `playlist.prenda.asociada`; cuando el administrador destaca una playlist, con un máximo de tres, publica `playlist.destacada.actualizada`.
 ### Estructura Oficial de Paquetes en `src/main/java/`
 
 ```text
@@ -431,10 +356,11 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 | Entorno | Estado | Propósito | URL Base del Servicio | Swagger OpenAPI UI | Health Check |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Producción (PROD)** | Próximo Sprint | Despliegue productivo de StyleRadar | Próximo Sprint | Próximo Sprint | Próximo Sprint |
-| **Calidad / Pruebas (QA)** | Próximo Sprint | Pruebas integradas del Sprint | Próximo Sprint | Próximo Sprint | Próximo Sprint |
+| **Producción (PROD)** | Desplegado | Despliegue productivo de StyleRadar | `https://rst-itemcatalog-service-prod.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1` | [Swagger UI PROD](https://rst-itemcatalog-service-prod.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1/swagger-ui/index.html) | [`/health`](https://rst-itemcatalog-service-prod.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1/health) |
+| **Calidad / Pruebas (QA)** | Desplegado | Pruebas integradas del Sprint | `https://rst-itemcatalog-service-qa.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1` | [Swagger UI QA](https://rst-itemcatalog-service-qa.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1/swagger-ui/index.html) | [`/health`](https://rst-itemcatalog-service-qa.redwave-74d6e30f.northcentralus.azurecontainerapps.io/api/v1/health) |
 | **Desarrollo Local (DEV)** | Local | Entorno de desarrollo local | `http://localhost:8220/api/v1` | [Swagger UI Local](http://localhost:8220/api/v1/swagger-ui.html) | [`/health`](http://localhost:8220/api/v1/health) |
 
+* **Nota:** en QA y PROD el servicio se apaga por inactividad (Azure Container Apps), así que la primera petición puede tardar cerca de un minuto.
 * **Especificación OpenAPI:** `http://localhost:8220/api/v1/v3/api-docs`
 
 <div align="center">
