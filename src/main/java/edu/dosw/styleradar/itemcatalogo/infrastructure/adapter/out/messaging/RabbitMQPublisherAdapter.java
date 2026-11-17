@@ -47,6 +47,7 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         payload.put("marca", evento.marca());
         payload.put("estilo", evento.estilo());
         payload.put("precio", evento.precio());
+        payload.put("imagenUrl", evento.imagenUrl());
         payload.put("fechaPublicacion", evento.fecha().toString());
         enviar(rkPublicada, payload);
     }
