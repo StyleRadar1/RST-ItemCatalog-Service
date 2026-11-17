@@ -11,6 +11,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
@@ -42,13 +43,14 @@ class ControllersTest {
     @Test
     void buscaYConsultaSimilares() {
         BuscarPrendasUseCase useCase = mock(BuscarPrendasUseCase.class);
-        when(useCase.buscar(any())).thenReturn(List.of(prenda));
+        when(useCase.buscar(any())).thenReturn(List.of(new PrendaEncontrada(prenda, 1.5)));
         when(useCase.similares(prenda.getId())).thenReturn(List.of());
         BusquedaPrendaController controller = new BusquedaPrendaController(useCase);
 
         ResponseEntity<List<PrendaResponse>> busqueda = controller.buscar("denim", null, null, null, null, null, null, null, null, null, null);
 
         assertThat(busqueda.getBody()).extracting(PrendaResponse::nombre).containsExactly("Chaqueta denim");
+        assertThat(busqueda.getBody()).extracting(PrendaResponse::distanciaKm).containsExactly(1.5);
         assertThat(controller.similares(prenda.getId()).getBody()).isEmpty();
     }
 

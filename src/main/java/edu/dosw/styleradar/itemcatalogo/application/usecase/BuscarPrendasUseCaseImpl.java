@@ -7,6 +7,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.FiltroBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
@@ -41,7 +42,7 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
     }
 
     @Override
-    public List<Prenda> buscar(FiltroBusqueda filtro) {
+    public List<PrendaEncontrada> buscar(FiltroBusqueda filtro) {
         if (filtro.orden() == Ordenamiento.DISTANCIA && filtro.ubicacion() == null) {
             throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
         }
@@ -52,9 +53,21 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
                 .filter(p -> p.cumple(filtro))
                 .filter(p -> conTalla == null || conTalla.contains(p.getId()))
                 .toList();
+        Map<UUID, Double> kilometros = distancias(filtro, resultado);
         return resultado.stream()
-                .sorted(orden(filtro, almacenes, resultado))
+                .sorted(orden(filtro, almacenes, kilometros))
+                .map(p -> new PrendaEncontrada(p, kilometros.get(p.getAlmacenId())))
                 .toList();
+    }
+
+    private Map<UUID, Double> distancias(FiltroBusqueda filtro, List<Prenda> resultado) {
+        if (filtro.ubicacion() == null) {
+            return Map.of();
+        }
+        return resultado.stream()
+                .map(Prenda::getAlmacenId)
+                .distinct()
+                .collect(Collectors.toMap(Function.identity(), id -> distanciaAlmacen.kilometros(id, filtro.ubicacion())));
     }
 
     private static void validarRangoPrecio(BigDecimal precioMin, BigDecimal precioMax) {
@@ -90,12 +103,8 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
                 .toList();
     }
 
-    private Comparator<Prenda> orden(FiltroBusqueda filtro, Map<UUID, AlmacenResumen> almacenes, List<Prenda> resultado) {
+    private Comparator<Prenda> orden(FiltroBusqueda filtro, Map<UUID, AlmacenResumen> almacenes, Map<UUID, Double> kilometros) {
         if (filtro.orden() == Ordenamiento.DISTANCIA) {
-            Map<UUID, Double> kilometros = resultado.stream()
-                    .map(Prenda::getAlmacenId)
-                    .distinct()
-                    .collect(Collectors.toMap(Function.identity(), id -> distanciaAlmacen.kilometros(id, filtro.ubicacion())));
             return Comparator.comparingDouble(p -> kilometros.get(p.getAlmacenId()));
         }
         if (filtro.orden() == Ordenamiento.REPUTACION) {

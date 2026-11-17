@@ -7,6 +7,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.FiltroBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ubicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
@@ -58,21 +59,21 @@ class BuscarPrendasUseCaseImplTest {
 
     @Test
     void porDefectoOrdenaPorRecientesYOcultaAlmacenesSuspendidos() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, null, null));
+        List<Prenda> resultado = buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, null, null));
 
         assertThat(resultado).containsExactly(reciente, antigua);
     }
 
     @Test
     void ordenaPorReputacionDelAlmacen() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.REPUTACION, null));
+        List<Prenda> resultado = buscar(new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.REPUTACION, null));
 
         assertThat(resultado).containsExactly(antigua, reciente);
     }
 
     @Test
     void aplicaElFiltro() {
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, "Vestido", null, null, null, null, null, null, null, null));
+        List<Prenda> resultado = buscar(new FiltroBusqueda(null, "Vestido", null, null, null, null, null, null, null, null));
 
         assertThat(resultado).isEmpty();
     }
@@ -99,11 +100,32 @@ class BuscarPrendasUseCaseImplTest {
         when(distancias.kilometros(buenaReputacion.almacenId(), usuario)).thenReturn(3.5);
         when(distancias.kilometros(bajaReputacion.almacenId(), usuario)).thenReturn(0.4);
 
-        List<Prenda> resultado = useCase.buscar(
+        List<Prenda> resultado = buscar(
                 new FiltroBusqueda(null, null, null, null, null, null, null, null, Ordenamiento.DISTANCIA, usuario));
 
         assertThat(resultado).containsExactly(reciente, otraDelAlmacenCercano, antigua);
         verify(distancias, times(1)).kilometros(bajaReputacion.almacenId(), usuario);
+    }
+
+    @Test
+    void conUbicacionDevuelveLaDistanciaDeCadaPrenda() {
+        when(distancias.kilometros(buenaReputacion.almacenId(), usuario)).thenReturn(3.5);
+        when(distancias.kilometros(bajaReputacion.almacenId(), usuario)).thenReturn(0.4);
+
+        List<PrendaEncontrada> resultado = useCase.buscar(
+                new FiltroBusqueda(null, null, null, null, null, null, null, null, null, usuario));
+
+        assertThat(resultado).extracting(PrendaEncontrada::prenda).containsExactly(reciente, antigua);
+        assertThat(resultado).extracting(PrendaEncontrada::distanciaKm).containsExactly(0.4, 3.5);
+    }
+
+    @Test
+    void sinUbicacionNoConsultaDistancias() {
+        List<PrendaEncontrada> resultado = useCase.buscar(
+                new FiltroBusqueda(null, null, null, null, null, null, null, null, null, null));
+
+        assertThat(resultado).extracting(PrendaEncontrada::distanciaKm).containsOnlyNulls();
+        verifyNoInteractions(distancias);
     }
 
     @Test
@@ -140,10 +162,14 @@ class BuscarPrendasUseCaseImplTest {
     void filtraPorTallaSoloLasPrendasConStockEnInventario() {
         when(tallas.prendasConStock("M")).thenReturn(Set.of(antigua.getId(), deSuspendido.getId()));
 
-        List<Prenda> resultado = useCase.buscar(new FiltroBusqueda(null, null, null, null, null, "M", null, null, null, null));
+        List<Prenda> resultado = buscar(new FiltroBusqueda(null, null, null, null, null, "M", null, null, null, null));
 
         assertThat(resultado).containsExactly(antigua);
         verify(tallas, times(1)).prendasConStock("M");
+    }
+
+    private List<Prenda> buscar(FiltroBusqueda filtro) {
+        return useCase.buscar(filtro).stream().map(PrendaEncontrada::prenda).toList();
     }
 
     @Test
