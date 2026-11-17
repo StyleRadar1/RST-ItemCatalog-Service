@@ -19,7 +19,7 @@ env:
   RESOURCE_GROUP: STYLE_RADAR_PROD_RG
   CONTAINERAPP_ENV: styleradar-cae-prod
   DB_SERVER: styleradar-postgres-prod
-  RABBITMQ_HOST: styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com
+  RABBITMQ_HOST_QA: styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com
 
 permissions:
   contents: read
@@ -76,6 +76,18 @@ jobs:
         run: |
           DOMINIO=$(az containerapp env show --name "$CONTAINERAPP_ENV" --resource-group "$RESOURCE_GROUP" --query properties.defaultDomain -o tsv)
           AMBIENTE=${{ steps.vars.outputs.ambiente }}
+          BROKER=()
+          if [ "$AMBIENTE" = "qa" ]; then
+            BROKER=(
+              RABBITMQ_HOST="$RABBITMQ_HOST_QA"
+              RABBITMQ_PORT=5671
+              RABBITMQ_VHOST=/
+              RABBITMQ_USER=ms_catalogo
+              RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
+              RABBITMQ_SSL_ENABLED=true
+              RABBITMQ_SSL_VERIFY_HOSTNAME=false
+            )
+          fi
           az containerapp up \
             --name "${{ steps.vars.outputs.app }}" \
             --resource-group "$RESOURCE_GROUP" \
@@ -97,11 +109,7 @@ jobs:
               SPRING_PROFILES_ACTIVE="$AMBIENTE" \
               INVENTARIO_URL="https://rst-inventory-service-$AMBIENTE.$DOMINIO/api/v1" \
               GEOLOCALIZACION_URL="https://rst-geolocation-service-$AMBIENTE.$DOMINIO/api/v1" \
-              RABBITMQ_HOST="$RABBITMQ_HOST" \
-              RABBITMQ_PORT=5671 \
-              RABBITMQ_SSL_ENABLED=true \
-              RABBITMQ_USER=ms_catalogo \
-              RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
+              "${BROKER[@]}"
 
       - name: Verificar el health
         run: |
