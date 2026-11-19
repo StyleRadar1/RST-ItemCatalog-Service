@@ -10,41 +10,41 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
-@Tag(name = "Prendas", description = "Publicación y gestión de prendas del almacén")
+@Tag(name = "Garments", description = "Publishing and managing store garments")
 public interface PrendaApi {
 
-    @Operation(summary = "Publicar prenda",
-            description = "Registra la prenda con sus fotografías, precio y atributos. Queda PENDIENTE de moderación; al aprobarse se publica styleradar.catalogo.prenda.publicada (SR-RF-50, 51, 53 y 54).")
-    @ApiResponse(responseCode = "201", description = "Prenda publicada")
-    @ApiResponse(responseCode = "400", description = "Campos inválidos")
-    @ApiResponse(responseCode = "404", description = "El almacén no existe")
-    @ApiResponse(responseCode = "422", description = "El almacén está suspendido")
+    @Operation(summary = "Publish garment",
+            description = "Registers the garment with its photos, price and attributes. It stays PENDIENTE until moderated; once approved, styleradar.catalogo.prenda.publicada is published (SR-RF-50, 51, 53 and 54).")
+    @ApiResponse(responseCode = "201", description = "Garment published")
+    @ApiResponse(responseCode = "400", description = "Invalid fields")
+    @ApiResponse(responseCode = "404", description = "The store does not exist")
+    @ApiResponse(responseCode = "422", description = "The store is suspended")
     ResponseEntity<PrendaResponse> publicar(PrendaRequest request);
 
-    @Operation(summary = "Consultar prenda")
-    @ApiResponse(responseCode = "200", description = "Detalle de la prenda")
-    @ApiResponse(responseCode = "404", description = "La prenda no existe")
+    @Operation(summary = "Get garment")
+    @ApiResponse(responseCode = "200", description = "Garment detail")
+    @ApiResponse(responseCode = "404", description = "The garment does not exist")
     ResponseEntity<PrendaResponse> obtener(UUID id);
 
-    @Operation(summary = "Editar prenda",
-            description = "Solo el almacén dueño o un administrador. Actualiza la prenda y la devuelve a moderación (SR-RF-55).")
-    @ApiResponse(responseCode = "200", description = "Prenda editada")
-    @ApiResponse(responseCode = "400", description = "Campos inválidos")
-    @ApiResponse(responseCode = "403", description = "No es el almacén dueño ni un administrador")
-    @ApiResponse(responseCode = "404", description = "La prenda no existe")
-    @ApiResponse(responseCode = "422", description = "La prenda está retirada")
+    @Operation(summary = "Edit garment",
+            description = "Only the owner store or an administrator. Updates the garment and sends it back to moderation (SR-RF-55).")
+    @ApiResponse(responseCode = "200", description = "Garment edited")
+    @ApiResponse(responseCode = "400", description = "Invalid fields")
+    @ApiResponse(responseCode = "403", description = "Not the owner store nor an administrator")
+    @ApiResponse(responseCode = "404", description = "The garment does not exist")
+    @ApiResponse(responseCode = "422", description = "The garment is withdrawn")
     ResponseEntity<PrendaResponse> editar(UUID id,
-                                          @Parameter(description = "Almacén que hace la petición") UUID almacenId,
-                                          @Parameter(description = "Rol del usuario; ADMIN puede editar cualquier prenda") String rol,
+                                          @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
+                                          @Parameter(description = "User role sent by the API Gateway; ADMIN can edit any garment") String rol,
                                           PrendaRequest request);
 
-    @Operation(summary = "Retirar prenda",
-            description = "Solo el almacén dueño o un administrador. La prenda deja de mostrarse y se publica styleradar.catalogo.prenda.retirada (SR-RF-58).")
-    @ApiResponse(responseCode = "200", description = "Prenda retirada")
-    @ApiResponse(responseCode = "403", description = "No es el almacén dueño ni un administrador")
-    @ApiResponse(responseCode = "404", description = "La prenda no existe")
-    @ApiResponse(responseCode = "422", description = "La prenda ya estaba retirada")
+    @Operation(summary = "Withdraw garment",
+            description = "Only the owner store or an administrator. The garment is no longer shown and styleradar.catalogo.prenda.retirada is published (SR-RF-58).")
+    @ApiResponse(responseCode = "200", description = "Garment withdrawn")
+    @ApiResponse(responseCode = "403", description = "Not the owner store nor an administrator")
+    @ApiResponse(responseCode = "404", description = "The garment does not exist")
+    @ApiResponse(responseCode = "422", description = "The garment was already withdrawn")
     ResponseEntity<PrendaResponse> retirar(UUID id,
-                                           @Parameter(description = "Almacén que hace la petición") UUID almacenId,
-                                           @Parameter(description = "Rol del usuario; ADMIN puede retirar cualquier prenda") String rol);
+                                           @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
+                                           @Parameter(description = "User role sent by the API Gateway; ADMIN can withdraw any garment") String rol);
 }

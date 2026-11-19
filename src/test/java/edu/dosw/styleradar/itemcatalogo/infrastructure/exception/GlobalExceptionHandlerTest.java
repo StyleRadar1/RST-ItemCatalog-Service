@@ -56,7 +56,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getDetail()).isEqualTo("Falta la ubicación");
-        assertThat(detail.getProperties()).isNull();
+        assertThat(detail.getProperties()).containsOnlyKeys("code");
     }
 
     @Test
@@ -123,5 +123,12 @@ class GlobalExceptionHandlerTest {
         ProblemDetail detail = handler.handleRouteNotFound(ex);
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
         assertThat(detail.getTitle()).isEqualTo("Ruta no encontrada");
+    }
+
+    @Test
+    void everyErrorHasItsCode() {
+        assertThat(handler.handleNotFound(new ResourceNotFoundException("x")).getProperties()).containsEntry("code", "RECURSO_NO_ENCONTRADO");
+        assertThat(handler.handleDomain(new DomainException("x")).getProperties()).containsEntry("code", "REGLA_DE_NEGOCIO");
+        assertThat(handler.handleUnexpected(new RuntimeException("x")).getProperties()).containsEntry("code", "ERROR_INTERNO");
     }
 }

@@ -9,15 +9,15 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
-@Tag(name = "Estado", description = "Verificación del estado de ms-item-catalogo")
+@Tag(name = "Health", description = "ms-item-catalogo health check")
 public interface HealthApi {
 
-    @Operation(summary = "Consultar el estado del servicio",
-            description = "Indica si ms-item-catalogo está en ejecución y responde en el puerto 8220.")
-    @ApiResponse(responseCode = "200", description = "Servicio en ejecución",
+    @Operation(summary = "Get service status",
+            description = "Shows whether ms-item-catalogo is running and answering on port 8220.")
+    @ApiResponse(responseCode = "200", description = "Service running",
             content = @Content(mediaType = "application/json",
                     examples = @ExampleObject(value = "{\"status\":\"UP\",\"service\":\"ms-item-catalogo\",\"port\":8220}")))
-    @ApiResponse(responseCode = "500", description = "Error interno del servicio",
+    @ApiResponse(responseCode = "500", description = "Internal service error",
             content = @Content(mediaType = "application/problem+json"))
     ResponseEntity<Map<String, Object>> health();
 }
