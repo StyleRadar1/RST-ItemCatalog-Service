@@ -41,9 +41,9 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
     public Prenda publicar(UUID almacenId, String nombre, AtributosBusqueda atributos, Precio precio, List<Fotografia> fotografias) {
         validarAtributos(atributos);
         AlmacenResumen almacen = almacenRepository.findById(almacenId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId, "ALMACEN_NO_ENCONTRADO"));
         if (!almacen.activo()) {
-            throw new DomainException("El almacén está suspendido y no puede publicar prendas");
+            throw new DomainException("El almacén está suspendido y no puede publicar prendas", "ALMACEN_SUSPENDIDO");
         }
         return prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
     }
@@ -51,7 +51,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
     @Override
     public Prenda obtener(UUID prendaId) {
         return prendaRepository.findById(prendaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA"));
     }
 
     @Override
@@ -89,7 +89,7 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
             errores.put("estilo", ValoresUnificados.MENSAJE_ESTILO);
         }
         if (!errores.isEmpty()) {
-            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", errores);
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS", errores);
         }
     }
 }

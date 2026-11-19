@@ -28,7 +28,7 @@ public class ConsultarCatalogoAlmacenUseCaseImpl implements ConsultarCatalogoAlm
     @Override
     public List<Prenda> catalogo(UUID almacenId) {
         AlmacenResumen almacen = almacenRepository.findById(almacenId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId, "ALMACEN_NO_ENCONTRADO"));
         if (!almacen.activo()) {
             return List.of();
         }

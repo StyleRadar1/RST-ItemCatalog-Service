@@ -363,17 +363,26 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 * **Nota:** en QA y PROD el servicio se apaga por inactividad (Azure Container Apps), así que la primera petición puede tardar cerca de un minuto.
 ### Formato de los errores
 
-Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `title`, `status`, `detail`, `instance` y `code`; en los 400 de validación se agrega `errors` con el mensaje de cada campo.
+Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `title`, `status`, `detail`, `instance`, `code` y `timestamp` (ISO-8601); en los 400 de validación se agrega `errors` con el mensaje de cada campo.
 
 | HTTP | `code` | Cuándo |
 | :---: | :--- | :--- |
-| 400 | `SOLICITUD_INVALIDA` | Un campo no cumple su validación o un valor no está en su lista |
-| 400 | `FORMATO_INVALIDO` | Falta un parámetro o tiene un formato inválido |
+| 400 | `PARAMETRO_INVALIDO` | Falta un parámetro o tiene un formato inválido (por ejemplo un UUID mal escrito u `orden` inexistente) |
+| 400 | `DATOS_INVALIDOS` | Un campo no cumple su validación o un valor no está en su lista; `errors` trae el mensaje de cada campo |
+| 400 | `FOTOGRAFIAS_EXCEDIDAS` | Se envían más de 5 fotografías |
+| 400 | `RANGO_PRECIO_INVALIDO` | `precioMin` es mayor que `precioMax` |
+| 400 | `UBICACION_REQUERIDA` | Se pide `orden=DISTANCIA` sin `lat` o sin `lng` |
 | 403 | `ACCESO_DENEGADO` | No es el almacén dueño ni un administrador |
-| 404 | `RECURSO_NO_ENCONTRADO` | El recurso no existe |
+| 404 | `PRENDA_NO_ENCONTRADA` | La prenda no existe |
+| 404 | `ALMACEN_NO_ENCONTRADO` | El almacén no existe |
+| 404 | `ALMACEN_SIN_PENDIENTES` | El almacén no tiene publicaciones pendientes (moderación por grupos) |
 | 404 | `RUTA_NO_ENCONTRADA` | La ruta no existe |
-| 422 | `REGLA_DE_NEGOCIO` | Se incumple una regla de negocio |
-| 500 | `ERROR_INTERNO` | Error inesperado |
+| 422 | `ALMACEN_SUSPENDIDO` | El almacén está suspendido y no puede publicar |
+| 422 | `PRENDA_RETIRADA` | Se intenta editar una prenda retirada |
+| 422 | `PRENDA_YA_RETIRADA` | Se intenta retirar dos veces |
+| 422 | `PRENDA_NO_PENDIENTE` | Se intenta moderar una prenda que no está pendiente |
+| 422 | `MOTIVO_REQUERIDO` | Se rechaza sin motivo |
+| 500 | `ERROR_INTERNO` | Error inesperado o falla de ms-inventario o ms-geolocalizacion |
 
 * **Especificación OpenAPI:** `http://localhost:8220/api/v1/v3/api-docs`
 

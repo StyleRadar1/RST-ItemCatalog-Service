@@ -6,12 +6,12 @@ public class ParametroInvalidoException extends DomainException {
 
     private final Map<String, String> errores;
 
-    public ParametroInvalidoException(String message) {
-        this(message, Map.of());
+    public ParametroInvalidoException(String message, String codigo) {
+        this(message, codigo, Map.of());
     }
 
-    public ParametroInvalidoException(String message, Map<String, String> errores) {
-        super(message);
+    public ParametroInvalidoException(String message, String codigo, Map<String, String> errores) {
+        super(message, codigo);
         this.errores = Map.copyOf(errores);
     }
 

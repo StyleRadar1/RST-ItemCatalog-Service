@@ -35,7 +35,7 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
     @Override
     public Prenda moderar(UUID prendaId, EstadoPublicacion decision, String motivo, UUID moderadorId) {
         Prenda prenda = prendaRepository.findById(prendaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA"));
         aplicar(prenda, decision, motivo, moderadorId);
         return avisar(prendaRepository.save(prenda), motivo);
     }
@@ -66,7 +66,7 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
                 .filter(prenda -> prenda.getEstado() == EstadoPublicacion.PENDIENTE)
                 .toList();
         if (pendientes.isEmpty()) {
-            throw new ResourceNotFoundException("El almacén " + almacenId + " no tiene publicaciones pendientes");
+            throw new ResourceNotFoundException("El almacén " + almacenId + " no tiene publicaciones pendientes", "ALMACEN_SIN_PENDIENTES");
         }
         pendientes.forEach(prenda -> aplicar(prenda, decision, motivo, moderadorId));
         return pendientes.stream().map(prendaRepository::save).map(prenda -> avisar(prenda, motivo)).toList();
