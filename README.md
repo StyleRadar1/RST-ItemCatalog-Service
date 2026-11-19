@@ -167,6 +167,26 @@ flowchart TD
     class INFRA_IN,INFRA_OUT,REST,AMQP_IN,JPA_REPO,RABBIT_PUB infra;
 ```
 
+### Diagrama de Casos de Uso
+
+<div align="center">
+  <table width="100%" style="margin: 18px 0; border: 2px dashed #C4B5FD; border-radius: 8px; background-color: #FBFBFE;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <p>
+          <img src="https://img.shields.io/badge/DIAGRAMA-CASOS%20DE%20USO-12063A?style=for-the-badge" alt="Diagrama de casos de uso" /><br />
+          <strong><font color="#5600EF" size="3">DIAGRAMA DE CASOS DE USO · MS-ITEM-CATALOGO</font></strong>
+        </p>
+        <p>
+          <img src="docs/evidencias/diagrama-casos-uso.png" width="100%" alt="Diagrama de casos de uso de ms-item-catalogo" /><br />
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+
+El usuario comprador busca prendas con texto libre (SR-RF-07). Los filtros por tipo, color, talla, precio, marca y estilo (SR-RF-08 a SR-RF-13) y los ordenamientos por distancia y por reputación (SR-RF-14 y SR-RF-15) extienden la búsqueda, porque se aplican de forma opcional sobre ella. También consulta prendas similares, el catálogo resumido desde el mapa, las novedades y el catálogo de un almacén (SR-RF-16, SR-RF-19, SR-RF-20 y SR-RF-22). El administrador de almacén publica prendas (SR-RF-50), lo que siempre incluye registrar sus fotografías, su precio y sus atributos de búsqueda (SR-RF-51, SR-RF-53 y SR-RF-54), y además edita y retira sus prendas (SR-RF-55 y SR-RF-58). El administrador StyleRadar aprueba o rechaza las publicaciones (SR-RF-61). `ms-geolocalizacion` participa como sistema externo para calcular la distancia a cada almacén y `ms-inventario` para consultar tallas y unidades. Cada caso de uso lleva el código de su requerimiento en el análisis de requerimientos, los actores usan los nombres oficiales del análisis y el rectángulo marca el límite del microservicio. El archivo editable está en `docs/evidencias/diagrama-casos-uso.drawio`.
+
 ### Diagrama de Componentes General
 
 <div align="center">
