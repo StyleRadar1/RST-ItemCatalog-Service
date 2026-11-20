@@ -50,6 +50,17 @@ class ConsultarCatalogoAlmacenUseCaseImplTest {
     }
 
     @Test
+    void muestraMaximoTresNovedadesDeLaMasReciente() {
+        Prenda ayer = aprobada(almacen.almacenId(), "Camisa", hoy.minusDays(1));
+        Prenda antier = aprobada(almacen.almacenId(), "Falda", hoy.minusDays(2));
+        Prenda haceTres = aprobada(almacen.almacenId(), "Saco", hoy.minusDays(3));
+        when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
+        when(prendas.findByAlmacenId(almacen.almacenId())).thenReturn(List.of(haceTres, antier, nueva, ayer));
+
+        assertThat(useCase.novedades(almacen.almacenId())).containsExactly(nueva, ayer, antier);
+    }
+
+    @Test
     void unAlmacenSuspendidoNoMuestraCatalogo() {
         AlmacenResumen suspendido = almacen("4.00", false);
         when(almacenes.findById(suspendido.almacenId())).thenReturn(Optional.of(suspendido));

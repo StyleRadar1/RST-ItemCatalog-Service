@@ -149,6 +149,35 @@ class BuscarPrendasUseCaseImplTest {
     }
 
     @Test
+    void losFiltrosDebenUsarLosValoresUnificados() {
+        FiltroBusqueda filtro = new FiltroBusqueda(null, "Gorra", "Rojo", "m".repeat(61), "Elegante", "XXXL",
+                null, null, null, new Ubicacion(95, -200));
+
+        assertThatThrownBy(() -> useCase.buscar(filtro))
+                .isInstanceOf(ParametroInvalidoException.class)
+                .satisfies(ex -> assertThat(((ParametroInvalidoException) ex).getErrores())
+                        .containsOnlyKeys("tipo", "color", "marca", "estilo", "talla", "lat", "lng"));
+        verifyNoInteractions(prendas);
+    }
+
+    @Test
+    void unColorMuyLargoAvisaElLimite() {
+        FiltroBusqueda filtro = new FiltroBusqueda(null, null, "a".repeat(41), null, null, null, null, null, null, null);
+
+        assertThatThrownBy(() -> useCase.buscar(filtro))
+                .satisfies(ex -> assertThat(((ParametroInvalidoException) ex).getErrores())
+                        .containsEntry("color", "El color no puede superar los 40 caracteres"));
+    }
+
+    @Test
+    void aceptaLosValoresSinImportarMayusculasNiTildes() {
+        when(tallas.prendasConStock("42")).thenReturn(Set.of());
+
+        assertThat(useCase.buscar(new FiltroBusqueda(null, "sueter", "cafe", "luna store", "urbano", "42",
+                null, null, null, null))).isEmpty();
+    }
+
+    @Test
     void unMinimoMayorQueElMaximoLanzaError() {
         FiltroBusqueda filtro = new FiltroBusqueda(null, null, null, null, null, null,
                 new BigDecimal("200000"), new BigDecimal("100000"), null, null);
