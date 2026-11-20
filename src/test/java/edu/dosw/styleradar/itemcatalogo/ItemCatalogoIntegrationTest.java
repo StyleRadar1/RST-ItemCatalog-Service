@@ -73,7 +73,7 @@ class ItemCatalogoIntegrationTest {
 
     private String prendaJson(String nombre) {
         return """
-                {"almacenId":"%s","nombre":"%s","tipo":"Gorra","color":"Rojo","marca":"Calle 85",
+                {"almacenId":"%s","nombre":"%s","tipo":"Accesorio","color":"Negro","marca":"Calle 85 Store",
                  "estilo":"Urbano","precio":45000,"fotografias":["https://foto/gorra.jpg"]}
                 """.formatted(CALLE_85, nombre);
     }
@@ -234,6 +234,12 @@ class ItemCatalogoIntegrationTest {
 
         mockMvc.perform(get("/prendas/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/prendas").param("tipo", "Gorra").param("estilo", "Elegante").param("lat", "95").param("lng", "-74"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.tipo").exists())
+                .andExpect(jsonPath("$.errors.estilo").exists())
+                .andExpect(jsonPath("$.errors.lat").value("La latitud debe estar entre -90 y 90"));
 
         mockMvc.perform(get("/prendas").param("precioMin", "-1"))
                 .andExpect(status().isBadRequest())
