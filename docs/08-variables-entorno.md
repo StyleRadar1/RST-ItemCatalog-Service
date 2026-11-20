@@ -1,0 +1,25 @@
+## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. VARIABLES DE ENTORNO
+
+Las variables se definen en `.env`, que no se versiona. La plantilla `.env.example` indica cuáles se requieren.
+
+| Variable | Descripción | Valor por Defecto |
+| :--- | :--- | :--- |
+| `SERVER_PORT` | Puerto del servicio | `8220` |
+| `DB_HOST` | Host de PostgreSQL | `localhost` |
+| `DB_PORT` | Puerto de PostgreSQL | `5432` |
+| `DB_NAME` | Nombre de la base de datos | `styleradar_item_catalog` |
+| `DB_USER` | Usuario de PostgreSQL | `postgres` |
+| `DB_PASSWORD` | Contraseña de PostgreSQL | — |
+| `RABBITMQ_HOST` | Host de RabbitMQ | `localhost` |
+| `RABBITMQ_PORT` | Puerto de RabbitMQ | `5672` |
+| `RABBITMQ_USER` | Usuario de RabbitMQ | `styleradar` |
+| `RABBITMQ_PASSWORD` | Contraseña de RabbitMQ | — |
+| `RABBITMQ_VHOST` | Virtual host de RabbitMQ | `/` |
+| `RABBITMQ_SSL_ENABLED` | Conexión TLS (en QA y PROD `true`, puerto `5671`) | `false` |
+| `RABBITMQ_EXCHANGE` | Exchange compartido | `styleradar.exchange` |
+| `RABBITMQ_DLX` | Exchange de errores | `styleradar.dlx` |
+| `RABBITMQ_DLQ` | Cola de errores del servicio | `styleradar.catalogo.dlq` |
+
+---
+
+<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>

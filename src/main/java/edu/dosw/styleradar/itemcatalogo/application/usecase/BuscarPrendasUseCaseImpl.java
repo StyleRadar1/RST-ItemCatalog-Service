@@ -47,7 +47,7 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
     @Override
     public List<PrendaEncontrada> buscar(FiltroBusqueda filtro) {
         if (filtro.orden() == Ordenamiento.DISTANCIA && filtro.ubicacion() == null) {
-            throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
+            throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)", "UBICACION_REQUERIDA");
         }
         validarFiltro(filtro);
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
@@ -126,17 +126,17 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
             errores.put("precioMax", "El precio máximo no puede ser negativo");
         }
         if (!errores.isEmpty()) {
-            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", errores);
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS", errores);
         }
         if (precioMin != null && precioMax != null && precioMin.compareTo(precioMax) > 0) {
-            throw new ParametroInvalidoException("El precio mínimo no puede ser mayor que el precio máximo");
+            throw new ParametroInvalidoException("El precio mínimo no puede ser mayor que el precio máximo", "RANGO_PRECIO_INVALIDO");
         }
     }
 
     @Override
     public List<Prenda> similares(UUID prendaId) {
         Prenda prenda = prendaRepository.findById(prendaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA"));
         return visibles(almacenesActivos()).stream()
                 .filter(p -> p.esSimilarA(prenda))
                 .limit(MAX_SIMILARES)

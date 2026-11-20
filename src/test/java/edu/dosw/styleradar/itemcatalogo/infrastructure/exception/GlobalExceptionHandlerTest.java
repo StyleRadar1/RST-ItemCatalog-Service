@@ -27,7 +27,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void notFoundReturns404() {
         // Arrange
-        ResourceNotFoundException ex = new ResourceNotFoundException("No existe");
+        ResourceNotFoundException ex = new ResourceNotFoundException("No existe", "PRENDA_NO_ENCONTRADA");
 
         // Act
         ProblemDetail detail = handler.handleNotFound(ex);
@@ -52,17 +52,16 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void parametroInvalidoReturns400() {
-        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException("Falta la ubicación"));
+        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException("Falta la ubicación", "UBICACION_REQUERIDA"));
 
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getDetail()).isEqualTo("Falta la ubicación");
-        assertThat(detail.getProperties()).isNull();
+        assertThat(detail.getProperties()).containsOnlyKeys("code", "timestamp");
     }
 
     @Test
     void parametroInvalidoConCamposReturns400WithErrors() {
-        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException(
-                "La solicitud tiene campos inválidos", Map.of("precioMin", "El precio mínimo no puede ser negativo")));
+        ProblemDetail detail = handler.handleParametroInvalido(new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS", Map.of("precioMin", "El precio mínimo no puede ser negativo")));
 
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
         assertThat(detail.getProperties()).containsEntry("errors",
@@ -123,5 +122,30 @@ class GlobalExceptionHandlerTest {
         ProblemDetail detail = handler.handleRouteNotFound(ex);
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
         assertThat(detail.getTitle()).isEqualTo("Ruta no encontrada");
+    }
+
+    @Test
+    void everyErrorHasItsCode() {
+        assertThat(handler.handleNotFound(new ResourceNotFoundException("x", "PRENDA_NO_ENCONTRADA")).getProperties()).containsEntry("code", "PRENDA_NO_ENCONTRADA");
+        assertThat(handler.handleDomain(new DomainException("x", "MOTIVO_REQUERIDO")).getProperties()).containsEntry("code", "MOTIVO_REQUERIDO");
+        assertThat(handler.handleUnexpected(new RuntimeException("x")).getProperties()).containsEntry("code", "ERROR_INTERNO");
+    }
+
+    @Test
+    void errorsIncludeTimestamp() {
+        assertThat(handler.handleUnexpected(new RuntimeException("x")).getProperties()).containsKeys("code", "timestamp");
+    }
+
+    @Test
+    void tooManyPhotosHasItsOwnCode() {
+        BeanPropertyBindingResult result = new BeanPropertyBindingResult(new Object(), "request");
+        result.addError(new FieldError("request", "fotografias", "La prenda puede tener máximo 5 fotografías"));
+        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+        when(ex.getBindingResult()).thenReturn(result);
+
+        ProblemDetail detail = handler.handleValidation(ex);
+
+        assertThat(detail.getProperties()).containsEntry("code", "FOTOGRAFIAS_EXCEDIDAS");
+        assertThat(detail.getDetail()).isEqualTo("La prenda puede tener máximo 5 fotografías");
     }
 }

@@ -11,27 +11,27 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Moderación", description = "Revisión de publicaciones por el administrador")
+@Tag(name = "Moderation", description = "Publication review by the administrator")
 public interface ModeracionApi {
 
-    @Operation(summary = "Revisar publicaciones pendientes por grupos",
-            description = "Número de publicaciones pendientes de las tiendas, agrupadas por almacén, de mayor a menor (SR-RF-87). "
-                    + "Las publicaciones de usuarios son de segunda mano y se moderan en ms-segunda-vida-donaciones.")
-    @ApiResponse(responseCode = "200", description = "Pendientes agrupadas por almacén")
+    @Operation(summary = "Review pending publications by group",
+            description = "Pending store publications grouped by store, from most to least (SR-RF-87). "
+                    + "User publications are second-hand and are moderated in ms-segunda-vida-donaciones.")
+    @ApiResponse(responseCode = "200", description = "Pending publications grouped by store")
     ResponseEntity<PendientesResponse> pendientes();
 
-    @Operation(summary = "Aprobar o rechazar las publicaciones de un grupo",
-            description = "Aplica la misma decisión a todas las publicaciones pendientes del almacén; el rechazo exige motivo (SR-RF-87).")
-    @ApiResponse(responseCode = "200", description = "Publicaciones del grupo moderadas")
-    @ApiResponse(responseCode = "400", description = "Campos inválidos")
-    @ApiResponse(responseCode = "404", description = "El almacén no tiene publicaciones pendientes")
-    @ApiResponse(responseCode = "422", description = "Falta el motivo del rechazo o la decisión no es válida")
+    @Operation(summary = "Approve or reject a group of publications",
+            description = "Applies the same decision to every pending publication of the store; a rejection requires a reason (SR-RF-87).")
+    @ApiResponse(responseCode = "200", description = "Group publications moderated")
+    @ApiResponse(responseCode = "400", description = "Invalid fields")
+    @ApiResponse(responseCode = "404", description = "The store has no pending publications")
+    @ApiResponse(responseCode = "422", description = "The rejection reason is missing or the decision is not valid")
     ResponseEntity<List<PrendaResponse>> moderarGrupo(UUID almacenId, ModeracionRequest request);
 
-    @Operation(summary = "Aprobar o rechazar publicación", description = "decision APROBADA o RECHAZADA; el rechazo exige motivo (SR-RF-61).")
-    @ApiResponse(responseCode = "200", description = "Publicación moderada")
-    @ApiResponse(responseCode = "400", description = "Campos inválidos")
-    @ApiResponse(responseCode = "404", description = "La prenda no existe")
-    @ApiResponse(responseCode = "422", description = "La prenda no está pendiente o falta el motivo")
+    @Operation(summary = "Approve or reject a publication", description = "decision APROBADA or RECHAZADA; a rejection requires a reason (SR-RF-61).")
+    @ApiResponse(responseCode = "200", description = "Publication moderated")
+    @ApiResponse(responseCode = "400", description = "Invalid fields")
+    @ApiResponse(responseCode = "404", description = "The garment does not exist")
+    @ApiResponse(responseCode = "422", description = "The garment is not pending or the reason is missing")
     ResponseEntity<PrendaResponse> moderar(UUID id, ModeracionRequest request);
 }
