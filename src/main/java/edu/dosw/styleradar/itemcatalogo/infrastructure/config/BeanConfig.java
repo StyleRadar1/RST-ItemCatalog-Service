@@ -10,11 +10,14 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
+import edu.dosw.styleradar.itemcatalogo.application.usecase.SincronizarAlmacenesUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.TiendasPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,5 +50,10 @@ public class BeanConfig {
     public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes,
                                                                EventPublisherPort eventos) {
         return new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos);
+    }
+
+    @Bean
+    public SincronizarAlmacenesUseCase sincronizarAlmacenesUseCase(AlmacenRepositoryPort almacenes, TiendasPort tiendas) {
+        return new SincronizarAlmacenesUseCaseImpl(almacenes, tiendas);
     }
 }

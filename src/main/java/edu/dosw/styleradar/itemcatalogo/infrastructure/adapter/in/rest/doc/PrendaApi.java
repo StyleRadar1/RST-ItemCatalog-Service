@@ -14,12 +14,13 @@ import java.util.UUID;
 public interface PrendaApi {
 
     @Operation(summary = "Publish garment",
-            description = "Registers the garment with its photos, price and attributes. It stays PENDIENTE until moderated; once approved, styleradar.catalogo.prenda.publicada is published (SR-RF-50, 51, 53 and 54).")
+            description = "Registers the garment with its photos, price and attributes. When the API Gateway sends X-User-Id, the store is the one the user manages in ms-tiendas; otherwise almacenId from the body is used. It stays PENDIENTE until moderated; once approved, styleradar.catalogo.prenda.publicada is published (SR-RF-50, 51, 53 and 54).")
     @ApiResponse(responseCode = "201", description = "Garment published")
     @ApiResponse(responseCode = "400", description = "Invalid fields")
     @ApiResponse(responseCode = "404", description = "The store does not exist")
     @ApiResponse(responseCode = "422", description = "The store is suspended")
-    ResponseEntity<PrendaResponse> publicar(PrendaRequest request);
+    ResponseEntity<PrendaResponse> publicar(PrendaRequest request,
+                                            @Parameter(description = "User id sent by the API Gateway; used to find the user store in ms-tiendas") String usuarioId);
 
     @Operation(summary = "Get garment")
     @ApiResponse(responseCode = "200", description = "Garment detail")
@@ -27,7 +28,7 @@ public interface PrendaApi {
     ResponseEntity<PrendaResponse> obtener(UUID id);
 
     @Operation(summary = "Edit garment",
-            description = "Only the owner store or an administrator. Updates the garment and sends it back to moderation (SR-RF-55).")
+            description = "Only the owner store (X-Almacen-Id or the user store in ms-tiendas) or an administrator. Updates the garment and sends it back to moderation (SR-RF-55).")
     @ApiResponse(responseCode = "200", description = "Garment edited")
     @ApiResponse(responseCode = "400", description = "Invalid fields")
     @ApiResponse(responseCode = "403", description = "Not the owner store nor an administrator")
@@ -35,16 +36,20 @@ public interface PrendaApi {
     @ApiResponse(responseCode = "422", description = "The garment is withdrawn")
     ResponseEntity<PrendaResponse> editar(UUID id,
                                           @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
-                                          @Parameter(description = "User role sent by the API Gateway; ADMIN can edit any garment") String rol,
+                                          @Parameter(description = "Role sent by the API Gateway; ADMIN or ADMIN_STYLERADAR") String rol,
+                                          @Parameter(description = "All the user roles sent by the API Gateway") String roles,
+                                          @Parameter(description = "User id sent by the API Gateway; used to find the user store in ms-tiendas") String usuarioId,
                                           PrendaRequest request);
 
     @Operation(summary = "Withdraw garment",
-            description = "Only the owner store or an administrator. The garment is no longer shown and styleradar.catalogo.prenda.retirada is published (SR-RF-58).")
+            description = "Only the owner store (X-Almacen-Id or the user store in ms-tiendas) or an administrator. The garment is no longer shown and styleradar.catalogo.prenda.retirada is published (SR-RF-58).")
     @ApiResponse(responseCode = "200", description = "Garment withdrawn")
     @ApiResponse(responseCode = "403", description = "Not the owner store nor an administrator")
     @ApiResponse(responseCode = "404", description = "The garment does not exist")
     @ApiResponse(responseCode = "422", description = "The garment was already withdrawn")
     ResponseEntity<PrendaResponse> retirar(UUID id,
                                            @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
-                                           @Parameter(description = "User role sent by the API Gateway; ADMIN can withdraw any garment") String rol);
+                                           @Parameter(description = "Role sent by the API Gateway; ADMIN or ADMIN_STYLERADAR") String rol,
+                                           @Parameter(description = "All the user roles sent by the API Gateway") String roles,
+                                           @Parameter(description = "User id sent by the API Gateway; used to find the user store in ms-tiendas") String usuarioId);
 }

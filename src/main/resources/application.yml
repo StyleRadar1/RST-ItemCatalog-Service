@@ -61,6 +61,12 @@ styleradar:
 geolocalizacion:
   url: ${GEOLOCALIZACION_URL:http://localhost:8240/api/v1}
 
+tiendas:
+  url: ${TIENDAS_URL:http://localhost:8140/api/v1}
+  carga:
+    habilitada: ${TIENDAS_CARGA_HABILITADA:true}
+    intervalo: ${TIENDAS_CARGA_INTERVALO:PT30M}
+
 inventario:
   url: ${INVENTARIO_URL:http://localhost:8200/api/v1}
 

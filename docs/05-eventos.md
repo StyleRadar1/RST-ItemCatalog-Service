@@ -2,6 +2,17 @@
 
 La comunicación asíncrona se hace por **RabbitMQ 3.13.7**, siguiendo la guía de mensajería del curso: exchange compartido `styleradar.exchange` (topic, durable) y, en QA y PROD, conexión por el puerto **5671 con TLS** y el usuario asignado al servicio.
 
+### Carga desde ms-tiendas por Feign
+
+`ms-tiendas` no publica eventos de almacenes, así que el servicio los consulta por HTTP con `TiendasClient` (Feign):
+
+| Endpoint de ms-tiendas | Para qué |
+| :--- | :--- |
+| `GET /api/v1/stores?page&size` | Cargar los almacenes aprobados (NIT, nombre y reputación) 20 segundos después de arrancar y luego cada 30 minutos. |
+| `GET /api/v1/users/{userId}/store` | Saber qué almacén administra el usuario que publica, edita o retira una prenda. Se reenvían el JWT y las cabeceras `X-User-*`. |
+
+El id de cada almacén es un UUID fijo calculado desde su NIT, el mismo que usa `ms-geolocalizacion`, para que la distancia y el catálogo de un almacén apunten al mismo registro. Si un almacén fue suspendido por `ms-pagos`, la carga conserva la suspensión.
+
 ### Matriz de Eventos AMQP
 
 | Tipo | Routing key | Emisor / Receptor | Cuándo |
