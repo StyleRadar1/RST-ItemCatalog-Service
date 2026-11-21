@@ -51,8 +51,8 @@ public class BeanConfig {
 
     @Bean
     public ModerarPublicacionUseCase moderarPublicacionUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes,
-                                                               EventPublisherPort eventos) {
-        return new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos);
+                                                               EventPublisherPort eventos, StockPrendaPort stock) {
+        return new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos, stock);
     }
 
     @Bean

@@ -30,6 +30,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.DisponibilidadResponse;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.TallasMedidasResponse;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,5 +153,18 @@ class ControllersTest {
         DisponibilidadResponse respuesta = new DisponibilidadController(useCase).disponibilidad(prenda.getId()).getBody();
 
         assertThat(respuesta).isEqualTo(new DisponibilidadResponse(prenda.getId().toString(), 5, List.of("M")));
+    }
+
+    @Test
+    void devuelveLasTallasYMedidasParaElProbador() {
+        ConsultarDisponibilidadUseCase useCase = mock(ConsultarDisponibilidadUseCase.class);
+        when(useCase.tallasOfertadas(prenda.getId())).thenReturn(Optional.of(List.of("S", "M")));
+        UUID otra = UUID.randomUUID();
+        when(useCase.tallasOfertadas(otra)).thenReturn(Optional.empty());
+        DisponibilidadController controller = new DisponibilidadController(useCase);
+
+        assertThat(controller.tallasMedidas(prenda.getId()).getBody())
+                .isEqualTo(new TallasMedidasResponse(List.of("S", "M"), List.of()));
+        assertThat(controller.tallasMedidas(otra).getBody().availableSizes()).isNull();
     }
 }

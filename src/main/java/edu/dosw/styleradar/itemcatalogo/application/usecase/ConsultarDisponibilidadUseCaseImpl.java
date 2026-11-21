@@ -6,6 +6,8 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUs
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ConsultarDisponibilidadUseCaseImpl implements ConsultarDisponibilidadUseCase {
@@ -20,9 +22,19 @@ public class ConsultarDisponibilidadUseCaseImpl implements ConsultarDisponibilid
 
     @Override
     public Disponibilidad consultar(UUID prendaId) {
+        verificarPrenda(prendaId);
+        return stock.disponibilidad(prendaId).orElse(Disponibilidad.sinStock());
+    }
+
+    @Override
+    public Optional<List<String>> tallasOfertadas(UUID prendaId) {
+        verificarPrenda(prendaId);
+        return stock.disponibilidad(prendaId).map(Disponibilidad::tallasConStock);
+    }
+
+    private void verificarPrenda(UUID prendaId) {
         if (prendaRepository.findById(prendaId).isEmpty()) {
             throw new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA");
         }
-        return stock.disponibilidad(prendaId).orElse(Disponibilidad.sinStock());
     }
 }
