@@ -29,6 +29,9 @@ import java.util.UUID;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
+import edu.dosw.styleradar.itemcatalogo.application.dto.response.DisponibilidadResponse;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -139,5 +142,15 @@ class ControllersTest {
 
         assertThat(pendientes.total()).isZero();
         assertThat(pendientes.grupos()).isEmpty();
+    }
+
+    @Test
+    void consultaLaDisponibilidadDeUnaPrenda() {
+        ConsultarDisponibilidadUseCase useCase = mock(ConsultarDisponibilidadUseCase.class);
+        when(useCase.consultar(prenda.getId())).thenReturn(new Disponibilidad(5, List.of("M")));
+
+        DisponibilidadResponse respuesta = new DisponibilidadController(useCase).disponibilidad(prenda.getId()).getBody();
+
+        assertThat(respuesta).isEqualTo(new DisponibilidadResponse(prenda.getId().toString(), 5, List.of("M")));
     }
 }

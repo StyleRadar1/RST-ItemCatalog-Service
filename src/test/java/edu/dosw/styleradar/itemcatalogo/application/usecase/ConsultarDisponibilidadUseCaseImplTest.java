@@ -1,0 +1,50 @@
+package edu.dosw.styleradar.itemcatalogo.application.usecase;
+
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+class ConsultarDisponibilidadUseCaseImplTest {
+
+    private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
+    private final StockPrendaPort stock = mock(StockPrendaPort.class);
+    private final ConsultarDisponibilidadUseCaseImpl useCase = new ConsultarDisponibilidadUseCaseImpl(prendas, stock);
+    private final UUID prendaId = UUID.randomUUID();
+
+    @Test
+    void devuelveLaDisponibilidadDeInventario() {
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.of(new Disponibilidad(18, List.of("M", "S"))));
+
+        assertThat(useCase.consultar(prendaId)).isEqualTo(new Disponibilidad(18, List.of("M", "S")));
+    }
+
+    @Test
+    void sinInventarioDevuelveCero() {
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.empty());
+
+        assertThat(useCase.consultar(prendaId)).isEqualTo(Disponibilidad.sinStock());
+    }
+
+    @Test
+    void laPrendaDebeExistir() {
+        when(prendas.findById(prendaId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.consultar(prendaId)).isInstanceOf(ResourceNotFoundException.class);
+        verifyNoInteractions(stock);
+    }
+}
