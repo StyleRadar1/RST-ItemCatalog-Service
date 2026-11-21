@@ -40,6 +40,8 @@ class ItemCatalogoIntegrationTest {
     private static final String CALLE_85 ="a2222222-2222-2222-2222-222222222222";
     private static final String HOODIE = "b3333333-3333-3333-3333-333333333333";
     private static final String ALMACEN = "X-Almacen-Id";
+    private static final String ROL = "X-User-Role";
+    private static final String ADMIN = "ADMIN_STYLERADAR";
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -57,6 +59,7 @@ class ItemCatalogoIntegrationTest {
         registry.add("spring.rabbitmq.port", RABBIT::getAmqpPort);
         registry.add("spring.rabbitmq.username", RABBIT::getAdminUsername);
         registry.add("spring.rabbitmq.password", RABBIT::getAdminPassword);
+        registry.add("tiendas.carga.habilitada", () -> "false");
     }
 
     @Autowired
@@ -93,7 +96,7 @@ class ItemCatalogoIntegrationTest {
         mockMvc.perform(get("/prendas").param("texto", "gorra roja"))
                 .andExpect(jsonPath("$[*].id", not(hasItem(id))));
 
-        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
@@ -150,7 +153,7 @@ class ItemCatalogoIntegrationTest {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
 
-        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk());
 
@@ -222,7 +225,7 @@ class ItemCatalogoIntegrationTest {
 
     @Test
     void listaLasPendientesPorAlmacen() throws Exception {
-        mockMvc.perform(get("/prendas/pendientes"))
+        mockMvc.perform(get("/prendas/pendientes").header(ROL, ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.grupos[?(@.almacenId == 'a3333333-3333-3333-3333-333333333333')].pendientes", hasItem(1)));
     }
@@ -249,8 +252,12 @@ class ItemCatalogoIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("El precio mínimo no puede ser mayor que el precio máximo"));
 
-        mockMvc.perform(put("/prendas/b1111111-1111-1111-1111-111111111111/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/prendas/b1111111-1111-1111-1111-111111111111/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isUnprocessableEntity());
+
+        mockMvc.perform(get("/prendas/pendientes").header(ROL, "COMPRADOR"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESO_DENEGADO"));
     }
 }

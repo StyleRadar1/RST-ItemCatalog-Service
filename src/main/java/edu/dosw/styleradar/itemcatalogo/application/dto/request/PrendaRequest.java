@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record PrendaRequest(
-        @NotNull(message = "El almacén es obligatorio")
         UUID almacenId,
         @NotBlank(message = "El nombre es obligatorio")
         @Size(min = 3, max = 60, message = "El nombre debe tener entre 3 y 60 caracteres")

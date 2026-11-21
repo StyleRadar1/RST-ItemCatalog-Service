@@ -19,6 +19,9 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 | `RABBITMQ_EXCHANGE` | Exchange compartido | `styleradar.exchange` |
 | `RABBITMQ_DLX` | Exchange de errores | `styleradar.dlx` |
 | `RABBITMQ_DLQ` | Cola de errores del servicio | `styleradar.catalogo.dlq` |
+| `TIENDAS_URL` | URL de `ms-tiendas` con `/api/v1` | `http://localhost:8140/api/v1` (QA y PROD: `styleradar-tiendas-<ambiente>.azurewebsites.net/api/v1`) |
+| `TIENDAS_CARGA_HABILITADA` | Activa la carga periódica de almacenes desde `ms-tiendas` | `true` |
+| `TIENDAS_CARGA_INTERVALO` | Cada cuánto se cargan los almacenes | `PT30M` |
 
 ---
 
