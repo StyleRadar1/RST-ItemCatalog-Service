@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.tiendas;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.TiendasPort;
 import feign.FeignException;
 import org.slf4j.Logger;
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,10 +56,7 @@ public class TiendasAdapter implements TiendasPort {
     }
 
     public static UUID idAlmacen(String nit) {
-        if (nit == null || nit.isBlank()) {
-            return null;
-        }
-        return UUID.nameUUIDFromBytes(("ms-tiendas:almacen:" + nit.trim()).getBytes(StandardCharsets.UTF_8));
+        return IdAlmacen.desdeNit(nit);
     }
 
     static BigDecimal reputacion(Double valor) {

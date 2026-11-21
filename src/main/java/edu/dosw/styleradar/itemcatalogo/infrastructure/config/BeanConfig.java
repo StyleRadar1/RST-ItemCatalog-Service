@@ -10,6 +10,9 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
+import edu.dosw.styleradar.itemcatalogo.application.usecase.ConsultarDisponibilidadUseCaseImpl;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.SincronizarAlmacenesUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
@@ -55,5 +58,10 @@ public class BeanConfig {
     @Bean
     public SincronizarAlmacenesUseCase sincronizarAlmacenesUseCase(AlmacenRepositoryPort almacenes, TiendasPort tiendas) {
         return new SincronizarAlmacenesUseCaseImpl(almacenes, tiendas);
+    }
+
+    @Bean
+    public ConsultarDisponibilidadUseCase consultarDisponibilidadUseCase(PrendaRepositoryPort prendas, StockPrendaPort stock) {
+        return new ConsultarDisponibilidadUseCaseImpl(prendas, stock);
     }
 }

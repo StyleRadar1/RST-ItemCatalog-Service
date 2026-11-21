@@ -22,7 +22,7 @@ El id de cada almacén es un UUID fijo calculado desde su NIT, el mismo que usa 
 | **PUBLICA** | `styleradar.catalogo.moderacion.cambiada` | `ms-item-catalogo` &rarr; `ms-notificaciones` | Un administrador aprueba o rechaza una publicación. |
 | **CONSUME** | `styleradar.inventario.actualizado` | `ms-inventario` &rarr; `ms-item-catalogo` | Si el stock llega a 0, la prenda se marca como no disponible y deja de mostrarse. |
 | **CONSUME** | `styleradar.inventario.stock.agotado` | `ms-inventario` &rarr; `ms-item-catalogo` | La prenda se agotó: se marca como no disponible. |
-| **CONSUME** | `styleradar.pagos.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Se suspende el almacén: deja de mostrarse su catálogo y no puede publicar. |
+| **CONSUME** | `styleradar.pagos.suscripcion.suspendida` | `ms-pagos-suscripciones` &rarr; `ms-item-catalogo` | Se suspende el almacén: deja de mostrarse su catálogo y no puede publicar. El almacén se identifica por el `nit` del evento (con la misma regla de UUID); si no viene, se usa `almacenId`. |
 
 ### Colas y errores
 

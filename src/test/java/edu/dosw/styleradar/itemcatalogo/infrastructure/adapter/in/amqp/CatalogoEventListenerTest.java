@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.amqp;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ActualizarDisponibilidadUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -69,5 +70,12 @@ class CatalogoEventListenerTest {
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
         assertThatThrownBy(() -> listener.onSuscripcionSuspendida(sinAlmacen))
                 .isInstanceOf(AmqpRejectAndDontRequeueException.class);
+    }
+
+    @Test
+    void suspendeElAlmacenPorSuNit() {
+        listener.onSuscripcionSuspendida(Map.of("data", Map.of("nit", "900123456-1", "almacenId", UUID.randomUUID().toString())));
+
+        verify(useCase).suspenderAlmacen(IdAlmacen.desdeNit("900123456-1"));
     }
 }
