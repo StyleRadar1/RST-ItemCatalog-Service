@@ -12,6 +12,7 @@
 | **Testing Integración** | Testcontainers | Gestionada por Spring Boot |
 | **Métricas de Cobertura** | JaCoCo | `0.8.12` |
 | **Análisis Estático** | SpotBugs | `4.8.6.4` |
+| **Cliente HTTP** | Spring Cloud OpenFeign | `2023.0.3` |
 
 ---
 

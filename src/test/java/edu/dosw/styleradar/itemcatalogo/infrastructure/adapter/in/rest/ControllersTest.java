@@ -23,9 +23,14 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -75,12 +80,31 @@ class ControllersTest {
         when(useCase.obtener(prenda.getId())).thenReturn(prenda);
         when(useCase.editar(eq(prenda.getId()), eq(new Solicitante(almacenId, false)), any(), any(), any(), any())).thenReturn(prenda);
         when(useCase.retirar(prenda.getId(), new Solicitante(null, true))).thenReturn(prenda);
-        PrendaController controller = new PrendaController(useCase);
+        SincronizarAlmacenesUseCase almacenes = mock(SincronizarAlmacenesUseCase.class);
+        when(almacenes.almacenDelUsuario(any())).thenReturn(Optional.empty());
+        PrendaController controller = new PrendaController(useCase, almacenes);
 
-        assertThat(controller.publicar(request).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(controller.publicar(request, null).getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(controller.obtener(prenda.getId()).getBody().id()).isEqualTo(prenda.getId());
-        assertThat(controller.editar(prenda.getId(), almacenId, null, request).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.retirar(prenda.getId(), null, "admin").getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.editar(prenda.getId(), almacenId, null, null, null, request).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.retirar(prenda.getId(), null, null, "ROLE_ADMIN_STYLERADAR", null).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void usaElAlmacenDelUsuarioEnMsTiendas() {
+        GestionarPrendaUseCase useCase = mock(GestionarPrendaUseCase.class);
+        SincronizarAlmacenesUseCase almacenes = mock(SincronizarAlmacenesUseCase.class);
+        when(almacenes.almacenDelUsuario(10L)).thenReturn(Optional.of(almacenId));
+        when(useCase.publicar(eq(almacenId), any(), any(), any(), any())).thenReturn(prenda);
+        when(useCase.retirar(prenda.getId(), new Solicitante(almacenId, false))).thenReturn(prenda);
+        PrendaController controller = new PrendaController(useCase, almacenes);
+        PrendaRequest sinAlmacen = new PrendaRequest(null, request.nombre(), request.tipo(), request.color(), request.marca(),
+                request.estilo(), request.precio(), request.fotografias());
+
+        assertThat(controller.publicar(sinAlmacen, "10").getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(controller.retirar(prenda.getId(), null, "ADMIN_ALMACEN", null, "10").getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThatThrownBy(() -> controller.publicar(sinAlmacen, "abc")).isInstanceOf(ParametroInvalidoException.class);
     }
 
     @Test
@@ -93,14 +117,17 @@ class ControllersTest {
         when(useCase.moderarGrupo(almacenId, EstadoPublicacion.APROBADA, null, moderador)).thenReturn(List.of(prenda));
         ModeracionController controller = new ModeracionController(useCase);
 
-        PendientesResponse pendientes = controller.pendientes().getBody();
+        PendientesResponse pendientes = controller.pendientes("ADMIN_STYLERADAR", null).getBody();
 
         assertThat(pendientes.tipoPublicador()).isEqualTo("TIENDA");
         assertThat(pendientes.total()).isEqualTo(1);
         assertThat(pendientes.grupos().get(0).almacen()).isEqualTo("Calle 85 Store");
         assertThat(pendientes.grupos().get(0).pendientes()).isEqualTo(1);
-        assertThat(controller.moderar(prenda.getId(), aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.moderarGrupo(almacenId, aprobar).getBody()).hasSize(1);
+        assertThat(controller.moderar(prenda.getId(), null, "COMPRADOR,ADMIN_STYLERADAR", aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.moderarGrupo(almacenId, "ADMIN", null, aprobar).getBody()).hasSize(1);
+        assertThatThrownBy(() -> controller.moderar(prenda.getId(), "ADMIN_ALMACEN", null, aprobar))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.pendientes(null, null)).isInstanceOf(AccesoDenegadoException.class);
     }
 
     @Test
@@ -108,7 +135,7 @@ class ControllersTest {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         when(useCase.pendientesPorGrupo()).thenReturn(List.of());
 
-        PendientesResponse pendientes = new ModeracionController(useCase).pendientes().getBody();
+        PendientesResponse pendientes = new ModeracionController(useCase).pendientes(null, "ADMIN_STYLERADAR").getBody();
 
         assertThat(pendientes.total()).isZero();
         assertThat(pendientes.grupos()).isEmpty();

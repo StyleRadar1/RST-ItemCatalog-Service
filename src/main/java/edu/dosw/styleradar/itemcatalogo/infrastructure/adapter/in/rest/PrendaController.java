@@ -3,8 +3,10 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.PrendaRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.PrendaApi;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,27 +21,32 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/prendas")
 public class PrendaController implements PrendaApi {
 
-    static final String HEADER_ALMACEN = "X-Almacen-Id";
-    static final String HEADER_ROL = "X-User-Role";
-    static final String ROL_ADMIN = "ADMIN";
-
     private final GestionarPrendaUseCase gestionarPrenda;
+    private final SincronizarAlmacenesUseCase almacenes;
 
-    public PrendaController(GestionarPrendaUseCase gestionarPrenda) {
+    public PrendaController(GestionarPrendaUseCase gestionarPrenda, SincronizarAlmacenesUseCase almacenes) {
         this.gestionarPrenda = gestionarPrenda;
+        this.almacenes = almacenes;
     }
 
     @Override
     @PostMapping
-    public ResponseEntity<PrendaResponse> publicar(@Valid @RequestBody PrendaRequest request) {
+    public ResponseEntity<PrendaResponse> publicar(@Valid @RequestBody PrendaRequest request,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
+        UUID almacenId = almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(request.almacenId());
+        if (almacenId == null) {
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS",
+                    Map.of("almacenId", "El almacén es obligatorio"));
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(PrendaMapperIn.toResponse(gestionarPrenda.publicar(
-                request.almacenId(), request.nombre(), PrendaMapperIn.toAtributos(request),
+                almacenId, request.nombre(), PrendaMapperIn.toAtributos(request),
                 PrendaMapperIn.toPrecio(request), PrendaMapperIn.toFotografias(request))));
     }
 
@@ -52,23 +59,31 @@ public class PrendaController implements PrendaApi {
     @Override
     @PutMapping("/{id}")
     public ResponseEntity<PrendaResponse> editar(@PathVariable UUID id,
-                                                 @RequestHeader(value = HEADER_ALMACEN, required = false) UUID almacenId,
-                                                 @RequestHeader(value = HEADER_ROL, required = false) String rol,
-                                                 @Valid @RequestBody PrendaRequest request) {
-        return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.editar(id, solicitante(almacenId, rol),
-                request.nombre(), PrendaMapperIn.toAtributos(request), PrendaMapperIn.toPrecio(request),
-                PrendaMapperIn.toFotografias(request))));
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
+            @Valid @RequestBody PrendaRequest request) {
+        return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.editar(id,
+                solicitante(almacenId, rol, roles, usuarioId), request.nombre(), PrendaMapperIn.toAtributos(request),
+                PrendaMapperIn.toPrecio(request), PrendaMapperIn.toFotografias(request))));
     }
 
     @Override
     @DeleteMapping("/{id}")
     public ResponseEntity<PrendaResponse> retirar(@PathVariable UUID id,
-                                                  @RequestHeader(value = HEADER_ALMACEN, required = false) UUID almacenId,
-                                                  @RequestHeader(value = HEADER_ROL, required = false) String rol) {
-        return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.retirar(id, solicitante(almacenId, rol))));
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
+        return ResponseEntity.ok(PrendaMapperIn.toResponse(
+                gestionarPrenda.retirar(id, solicitante(almacenId, rol, roles, usuarioId))));
     }
 
-    private static Solicitante solicitante(UUID almacenId, String rol) {
-        return new Solicitante(almacenId, ROL_ADMIN.equalsIgnoreCase(rol));
+    private Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId) {
+        boolean admin = Identidad.esAdmin(rol, roles);
+        UUID almacen = almacenId != null || admin ? almacenId
+                : almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(null);
+        return new Solicitante(almacen, admin);
     }
 }

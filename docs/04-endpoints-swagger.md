@@ -20,7 +20,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 | 400 | `FOTOGRAFIAS_EXCEDIDAS` | Se envían más de 5 fotografías |
 | 400 | `RANGO_PRECIO_INVALIDO` | `precioMin` es mayor que `precioMax` |
 | 400 | `UBICACION_REQUERIDA` | Se pide `orden=DISTANCIA` sin `lat` o sin `lng` |
-| 403 | `ACCESO_DENEGADO` | No es el almacén dueño ni un administrador |
+| 403 | `ACCESO_DENEGADO` | No es el almacén dueño ni un administrador, o intenta moderar sin ser `ADMIN_STYLERADAR` |
 | 404 | `PRENDA_NO_ENCONTRADA` | La prenda no existe |
 | 404 | `ALMACEN_NO_ENCONTRADO` | El almacén no existe |
 | 404 | `ALMACEN_SIN_PENDIENTES` | El almacén no tiene publicaciones pendientes (moderación por grupos) |
@@ -52,17 +52,19 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 
 ### Tabla de Endpoints Expuestos
 
+El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
+
 | Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
 | :---: | :--- | :--- | :--- | :---: |
 | `GET` | `/api/v1/prendas` | Buscar prendas por texto libre con filtros opcionales (tipo, color, marca, estilo, talla y rango de precio) y ordenarlas por recientes, reputación o distancia con `lat` y `lng` (SR-RF-07 a 15; la talla se consulta en `ms-inventario`) | Público | `200`, `400` |
 | `GET` | `/api/v1/prendas/{id}/similares` | Consultar prendas similares cuando no hay coincidencia exacta (SR-RF-16) | Público | `200`, `404` |
 | `GET` | `/api/v1/prendas/{id}` | Consultar el detalle de una prenda | Público | `200`, `404` |
-| `POST` | `/api/v1/prendas` | Publicar una prenda con fotografías, precio y atributos; queda pendiente de moderación (SR-RF-50, 51, 53 y 54) | `TIENDA` | `201`, `400`, `404`, `422` |
-| `PUT` | `/api/v1/prendas/{id}` | Editar una prenda y devolverla a moderación; usa las cabeceras `X-Almacen-Id` y `X-User-Role` (SR-RF-55) | `TIENDA` dueña, `ADMIN` | `200`, `400`, `403`, `404`, `422` |
-| `DELETE` | `/api/v1/prendas/{id}` | Retirar una prenda del catálogo; usa las cabeceras `X-Almacen-Id` y `X-User-Role` (SR-RF-58) | `TIENDA` dueña, `ADMIN` | `200`, `403`, `404`, `422` |
-| `PUT` | `/api/v1/prendas/{id}/moderacion` | Aprobar o rechazar una publicación; el rechazo exige motivo (SR-RF-61) | `ADMIN` | `200`, `400`, `404`, `422` |
-| `GET` | `/api/v1/prendas/pendientes` | Consultar las publicaciones pendientes agrupadas por almacén (SR-RF-87) | `ADMIN` | `200` |
-| `PUT` | `/api/v1/prendas/pendientes/almacenes/{almacenId}/moderacion` | Aprobar o rechazar todas las publicaciones pendientes de un almacén (SR-RF-87) | `ADMIN` | `200`, `400`, `404`, `422` |
+| `POST` | `/api/v1/prendas` | Publicar una prenda con fotografías, precio y atributos; queda pendiente de moderación; si llega `X-User-Id`, el almacén es el que el usuario administra en `ms-tiendas` (SR-RF-50, 51, 53 y 54) | `ADMIN_ALMACEN` | `201`, `400`, `404`, `422` |
+| `PUT` | `/api/v1/prendas/{id}` | Editar una prenda y devolverla a moderación; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-55) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `DELETE` | `/api/v1/prendas/{id}` | Retirar una prenda del catálogo; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-58) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `403`, `404`, `422` |
+| `PUT` | `/api/v1/prendas/{id}/moderacion` | Aprobar o rechazar una publicación; el rechazo exige motivo (SR-RF-61) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `GET` | `/api/v1/prendas/pendientes` | Consultar las publicaciones pendientes agrupadas por almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `403` |
+| `PUT` | `/api/v1/prendas/pendientes/almacenes/{almacenId}/moderacion` | Aprobar o rechazar todas las publicaciones pendientes de un almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
 | `GET` | `/api/v1/almacenes/{almacenId}/catalogo` | Consultar el catálogo de un almacén (SR-RF-22) | Público | `200`, `404` |
 | `GET` | `/api/v1/almacenes/{almacenId}/catalogo/resumen` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
 | `GET` | `/api/v1/almacenes/{almacenId}/novedades` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
