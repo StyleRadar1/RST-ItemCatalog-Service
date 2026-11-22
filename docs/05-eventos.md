@@ -32,7 +32,7 @@ El id de cada almacén es un UUID fijo calculado desde su NIT, el mismo que usa 
 | `styleradar.catalogo.suscripcion-suspendida.q` | Recibe las suspensiones de suscripción. |
 | `styleradar.catalogo.dlq` | Cola de errores: por el DLX `styleradar.dlx` llegan aquí los mensajes que no se pudieron procesar (por ejemplo, sin un id válido). |
 
-Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `imagenUrl` con la primera foto, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno.
+Los mensajes que publica el servicio son JSON con `eventoId`, `productor`, `itemId`/`prendaId`, `tiendaId`/`almacenId` y los datos del evento (`nombrePrenda`, `categoria`, `precio`, `imagenUrl` con la primera foto, `motivo`, `estadoModeracion`, fechas). Los ids son UUID. Los nombres del exchange, las colas y el DLX se pueden cambiar por ambiente con variables de entorno. Las fechas van en UTC con formato ISO-8601 terminado en `Z`. En `prenda.publicada` también se envían `category` (categoría que reconoce `ms-probador-virtual`: TOP, BOTTOM, ONE_PIECE, OUTERWEAR, FOOTWEAR o ACCESSORIES) y `availableSizes`/`tallasDisponibles` y `stockTotal` (tallas y unidades con stock en `ms-inventario`, si se conocen al aprobar). `moderacion.cambiada` incluye `propietarioUsuarioId`, el usuario que administra el almacén según `ms-tiendas` (se registra cuando ese usuario publica, edita o retira una prenda).
 
 ---
 

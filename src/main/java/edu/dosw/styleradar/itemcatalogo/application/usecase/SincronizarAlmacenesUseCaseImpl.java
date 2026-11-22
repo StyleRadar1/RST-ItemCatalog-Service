@@ -28,9 +28,11 @@ public class SincronizarAlmacenesUseCaseImpl implements SincronizarAlmacenesUseC
                 descartados++;
                 continue;
             }
-            boolean activo = almacenRepository.findById(a.id()).map(AlmacenResumen::activo).orElse(true);
+            Optional<AlmacenResumen> actual = almacenRepository.findById(a.id());
+            boolean activo = actual.map(AlmacenResumen::activo).orElse(true);
+            Long administrador = actual.map(AlmacenResumen::administradorId).orElse(null);
             BigDecimal reputacion = a.reputacion() == null ? BigDecimal.ZERO : a.reputacion();
-            almacenRepository.save(new AlmacenResumen(a.id(), a.nombre().trim(), reputacion, activo));
+            almacenRepository.save(new AlmacenResumen(a.id(), a.nombre().trim(), reputacion, activo, administrador));
             guardados++;
         }
         return new CargaAlmacenes(guardados, descartados);
@@ -38,6 +40,13 @@ public class SincronizarAlmacenesUseCaseImpl implements SincronizarAlmacenesUseC
 
     @Override
     public Optional<UUID> almacenDelUsuario(Long usuarioId) {
-        return usuarioId == null ? Optional.empty() : tiendas.almacenDelUsuario(usuarioId);
+        if (usuarioId == null) {
+            return Optional.empty();
+        }
+        Optional<UUID> almacenId = tiendas.almacenDelUsuario(usuarioId);
+        almacenId.flatMap(almacenRepository::findById)
+                .filter(almacen -> !usuarioId.equals(almacen.administradorId()))
+                .ifPresent(almacen -> almacenRepository.save(almacen.conAdministrador(usuarioId)));
+        return almacenId;
     }
 }

@@ -11,6 +11,8 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,6 +25,7 @@ import static edu.dosw.styleradar.itemcatalogo.application.usecase.PrendasDePrue
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,7 +36,8 @@ class ModerarPublicacionUseCaseImplTest {
     private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
     private final AlmacenRepositoryPort almacenes = mock(AlmacenRepositoryPort.class);
     private final EventPublisherPort eventos = mock(EventPublisherPort.class);
-    private final ModerarPublicacionUseCaseImpl useCase = new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos);
+    private final StockPrendaPort stock = mock(StockPrendaPort.class);
+    private final ModerarPublicacionUseCaseImpl useCase = new ModerarPublicacionUseCaseImpl(prendas, almacenes, eventos, stock);
     private final UUID moderador = UUID.randomUUID();
 
     private Prenda pendienteGuardada() {
@@ -132,5 +136,36 @@ class ModerarPublicacionUseCaseImplTest {
 
         assertThatThrownBy(() -> useCase.moderarGrupo(almacen, EstadoPublicacion.APROBADA, null, moderador))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void alAprobarEnviaLasTallasDeInventario() {
+        Prenda prenda = pendienteGuardada();
+        when(stock.disponibilidad(prenda.getId())).thenReturn(Optional.of(new Disponibilidad(3, List.of("M"))));
+
+        useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
+
+        verify(eventos).publicar(argThat((PrendaPublicadaEvent e) -> List.of("M").equals(e.tallas()) && e.stockTotal() == 3));
+    }
+
+    @Test
+    void siInventarioFallaApruebaIgualSinTallas() {
+        Prenda prenda = pendienteGuardada();
+        when(stock.disponibilidad(prenda.getId())).thenThrow(new IllegalStateException("inventario caído"));
+
+        useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
+
+        verify(eventos).publicar(argThat((PrendaPublicadaEvent e) -> e.tallas() == null));
+    }
+
+    @Test
+    void laModeracionLlevaAlAdministradorDelAlmacen() {
+        Prenda prenda = pendienteGuardada();
+        when(almacenes.findById(prenda.getAlmacenId()))
+                .thenReturn(Optional.of(new AlmacenResumen(prenda.getAlmacenId(), "Atelier", BigDecimal.ONE, true, 42L)));
+
+        useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
+
+        verify(eventos).publicar(argThat((ModeracionCambiadaEvent e) -> Long.valueOf(42L).equals(e.propietarioUsuarioId())));
     }
 }

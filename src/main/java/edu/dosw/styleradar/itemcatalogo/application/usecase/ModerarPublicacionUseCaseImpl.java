@@ -11,6 +11,8 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 
 import java.util.Comparator;
@@ -24,12 +26,14 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
     private final EventPublisherPort eventPublisher;
+    private final StockPrendaPort stock;
 
     public ModerarPublicacionUseCaseImpl(PrendaRepositoryPort prendaRepository, AlmacenRepositoryPort almacenRepository,
-                                         EventPublisherPort eventPublisher) {
+                                         EventPublisherPort eventPublisher, StockPrendaPort stock) {
         this.prendaRepository = prendaRepository;
         this.almacenRepository = almacenRepository;
         this.eventPublisher = eventPublisher;
+        this.stock = stock;
     }
 
     @Override
@@ -41,11 +45,21 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
     }
 
     private Prenda avisar(Prenda prenda, String motivo) {
-        eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo));
+        Long propietario = almacenRepository.findById(prenda.getAlmacenId())
+                .map(AlmacenResumen::administradorId).orElse(null);
+        eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo, propietario));
         if (prenda.getEstado() == EstadoPublicacion.APROBADA) {
-            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda));
+            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda, disponibilidad(prenda.getId())));
         }
         return prenda;
+    }
+
+    private Disponibilidad disponibilidad(UUID prendaId) {
+        try {
+            return stock.disponibilidad(prendaId).orElse(null);
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     @Override

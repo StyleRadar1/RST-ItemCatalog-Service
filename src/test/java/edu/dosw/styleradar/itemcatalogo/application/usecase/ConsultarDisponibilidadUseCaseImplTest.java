@@ -47,4 +47,20 @@ class ConsultarDisponibilidadUseCaseImplTest {
         assertThatThrownBy(() -> useCase.consultar(prendaId)).isInstanceOf(ResourceNotFoundException.class);
         verifyNoInteractions(stock);
     }
+
+    @Test
+    void lasTallasOfertadasSonNulasSiInventarioNoInforma() {
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.empty());
+
+        assertThat(useCase.tallasOfertadas(prendaId)).isEmpty();
+    }
+
+    @Test
+    void devuelveLasTallasOfertadas() {
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.of(new Disponibilidad(0, List.of())));
+
+        assertThat(useCase.tallasOfertadas(prendaId)).contains(List.of());
+    }
 }
