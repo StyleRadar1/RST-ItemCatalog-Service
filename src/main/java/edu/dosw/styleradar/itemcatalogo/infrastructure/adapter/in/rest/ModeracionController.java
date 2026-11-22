@@ -43,10 +43,11 @@ public class ModeracionController implements ModeracionApi {
     public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody ModeracionRequest request) {
         Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(moderarPublicacion.moderarGrupo(
-                almacenId, request.decision(), request.motivo(), request.moderadorId())));
+                almacenId, request.decision(), request.motivo(), Identidad.moderador(usuarioId, request.moderadorId()))));
     }
 
     @Override
@@ -54,9 +55,11 @@ public class ModeracionController implements ModeracionApi {
     public ResponseEntity<PrendaResponse> moderar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody ModeracionRequest request) {
         Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(
-                moderarPublicacion.moderar(id, request.decision(), request.motivo(), request.moderadorId())));
+                moderarPublicacion.moderar(id, request.decision(), request.motivo(),
+                        Identidad.moderador(usuarioId, request.moderadorId()))));
     }
 }

@@ -116,7 +116,7 @@ class ControllersTest {
     void moderaPublicaciones() {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         UUID moderador = UUID.randomUUID();
-        ModeracionRequest aprobar = new ModeracionRequest(EstadoPublicacion.APROBADA, null, moderador);
+        ModeracionRequest aprobar = new ModeracionRequest(EstadoPublicacion.APROBADA, null, moderador.toString());
         when(useCase.pendientesPorGrupo()).thenReturn(List.of(new GrupoPendientes(almacenId, "Calle 85 Store", List.of(prenda))));
         when(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador)).thenReturn(prenda);
         when(useCase.moderarGrupo(almacenId, EstadoPublicacion.APROBADA, null, moderador)).thenReturn(List.of(prenda));
@@ -128,9 +128,9 @@ class ControllersTest {
         assertThat(pendientes.total()).isEqualTo(1);
         assertThat(pendientes.grupos().get(0).almacen()).isEqualTo("Calle 85 Store");
         assertThat(pendientes.grupos().get(0).pendientes()).isEqualTo(1);
-        assertThat(controller.moderar(prenda.getId(), null, "COMPRADOR,ADMIN_STYLERADAR", aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.moderarGrupo(almacenId, "ADMIN", null, aprobar).getBody()).hasSize(1);
-        assertThatThrownBy(() -> controller.moderar(prenda.getId(), "ADMIN_ALMACEN", null, aprobar))
+        assertThat(controller.moderar(prenda.getId(), null, "COMPRADOR,ADMIN_STYLERADAR", null, aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(controller.moderarGrupo(almacenId, "ADMIN", null, null, aprobar).getBody()).hasSize(1);
+        assertThatThrownBy(() -> controller.moderar(prenda.getId(), "ADMIN_ALMACEN", null, null, aprobar))
                 .isInstanceOf(AccesoDenegadoException.class);
         assertThatThrownBy(() -> controller.pendientes(null, null)).isInstanceOf(AccesoDenegadoException.class);
     }
@@ -179,5 +179,18 @@ class ControllersTest {
 
         assertThat(controller.pendientes(null, "BUYER,STYLERADAR_ADMIN").getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThatThrownBy(() -> controller.pendientes("STORE_ADMIN", "BUYER")).isInstanceOf(AccesoDenegadoException.class);
+    }
+
+    @Test
+    void elModeradorSaleDelUsuarioAutenticado() {
+        ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
+        UUID desdeToken = UUID.nameUUIDFromBytes("ms-auth:usuario:4".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        when(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, desdeToken)).thenReturn(prenda);
+        ModeracionController controller = new ModeracionController(useCase);
+
+        assertThat(controller.moderar(prenda.getId(), "STYLERADAR_ADMIN", null, "4",
+                new ModeracionRequest(EstadoPublicacion.APROBADA, null, "admin-1")).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThatThrownBy(() -> controller.moderar(prenda.getId(), "STYLERADAR_ADMIN", null, null,
+                new ModeracionRequest(EstadoPublicacion.APROBADA, null, "admin-1"))).isInstanceOf(ParametroInvalidoException.class);
     }
 }
