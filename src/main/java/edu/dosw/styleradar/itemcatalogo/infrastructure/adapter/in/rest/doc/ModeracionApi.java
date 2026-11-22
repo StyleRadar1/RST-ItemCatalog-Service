@@ -30,13 +30,14 @@ public interface ModeracionApi {
     @ApiResponse(responseCode = "422", description = "The rejection reason is missing or the decision is not valid")
     @ApiResponse(responseCode = "403", description = "The user is not a StyleRadar administrator")
     ResponseEntity<List<PrendaResponse>> moderarGrupo(UUID almacenId, @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol, @Parameter(description = "All the user roles sent by the API Gateway") String roles,
-                                                      ModeracionRequest request);
+                                                      @Parameter(description = "User id sent by the API Gateway; it is the moderator when present") String usuarioId, ModeracionRequest request);
 
-    @Operation(summary = "Approve or reject a publication", description = "decision APROBADA or RECHAZADA; a rejection requires a reason (SR-RF-61).")
+    @Operation(summary = "Approve or reject a publication", description = "decision APROBADA or RECHAZADA; a rejection requires a reason (SR-RF-61). The moderator is the authenticated user (X-User-Id); moderadorId (UUID) is only used when calling the service directly.")
     @ApiResponse(responseCode = "200", description = "Publication moderated")
     @ApiResponse(responseCode = "400", description = "Invalid fields")
     @ApiResponse(responseCode = "404", description = "The garment does not exist")
     @ApiResponse(responseCode = "422", description = "The garment is not pending or the reason is missing")
     @ApiResponse(responseCode = "403", description = "The user is not a StyleRadar administrator")
-    ResponseEntity<PrendaResponse> moderar(UUID id, @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol, @Parameter(description = "All the user roles sent by the API Gateway") String roles, ModeracionRequest request);
+    ResponseEntity<PrendaResponse> moderar(UUID id, @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol, @Parameter(description = "All the user roles sent by the API Gateway") String roles,
+                                           @Parameter(description = "User id sent by the API Gateway; it is the moderator when present") String usuarioId, ModeracionRequest request);
 }

@@ -1,10 +1,14 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 final class Identidad {
 
@@ -38,5 +42,22 @@ final class Identidad {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    // El usuario autenticado tiene prioridad sobre el moderadorId del cuerpo
+    static UUID moderador(String usuarioId, String moderadorId) {
+        Long usuario = usuario(usuarioId);
+        if (usuario != null) {
+            return UUID.nameUUIDFromBytes(("ms-auth:usuario:" + usuario).getBytes(StandardCharsets.UTF_8));
+        }
+        try {
+            if (moderadorId != null && !moderadorId.isBlank()) {
+                return UUID.fromString(moderadorId.trim());
+            }
+        } catch (IllegalArgumentException e) {
+            // no es un UUID; se informa abajo
+        }
+        throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS",
+                Map.of("moderadorId", "El moderador es obligatorio: llega en X-User-Id o como UUID en moderadorId"));
     }
 }
