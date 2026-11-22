@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public interface ActualizarDisponibilidadUseCase {
 
-    void marcarAgotada(UUID prendaId);
+    void sincronizarStock(UUID prendaId);
 
     void suspenderAlmacen(UUID almacenId);
 }

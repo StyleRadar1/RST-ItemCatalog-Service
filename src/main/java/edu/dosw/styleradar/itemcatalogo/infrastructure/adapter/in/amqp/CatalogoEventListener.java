@@ -24,9 +24,7 @@ public class CatalogoEventListener {
         if (prendaId == null) {
             throw new AmqpRejectAndDontRequeueException("Evento de inventario sin prendaId válido: " + payload);
         }
-        if (estaAgotada(payload)) {
-            actualizarDisponibilidad.marcarAgotada(prendaId);
-        }
+        actualizarDisponibilidad.sincronizarStock(prendaId);
     }
 
     @RabbitListener(queues = "${styleradar.rabbitmq.queues.suscripcion}")
@@ -37,12 +35,6 @@ public class CatalogoEventListener {
             throw new AmqpRejectAndDontRequeueException("Evento de suscripción sin almacenId válido: " + payload);
         }
         actualizarDisponibilidad.suspenderAlmacen(almacenId);
-    }
-
-    static boolean estaAgotada(Map<String, Object> payload) {
-        Object estado = leer(payload, "estado");
-        Object stock = leer(payload, "stockActual");
-        return "AGOTADA".equals(String.valueOf(estado)) || (stock != null && "0".equals(stock.toString()));
     }
 
     static UUID leerUuid(Map<String, Object> payload, String... claves) {
