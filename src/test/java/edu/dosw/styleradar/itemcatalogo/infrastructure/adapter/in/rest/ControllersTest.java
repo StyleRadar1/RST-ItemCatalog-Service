@@ -167,4 +167,14 @@ class ControllersTest {
                 .isEqualTo(new TallasMedidasResponse(List.of("S", "M"), List.of()));
         assertThat(controller.tallasMedidas(otra).getBody().availableSizes()).isNull();
     }
+
+    @Test
+    void aceptaLosRolesNuevosDeMsAuth() {
+        ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
+        when(useCase.pendientesPorGrupo()).thenReturn(List.of());
+        ModeracionController controller = new ModeracionController(useCase);
+
+        assertThat(controller.pendientes(null, "BUYER,STYLERADAR_ADMIN").getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThatThrownBy(() -> controller.pendientes("STORE_ADMIN", "BUYER")).isInstanceOf(AccesoDenegadoException.class);
+    }
 }

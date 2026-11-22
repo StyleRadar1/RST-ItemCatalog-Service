@@ -12,7 +12,8 @@ final class Identidad {
     static final String HEADER_ROL = "X-User-Role";
     static final String HEADER_ROLES = "X-User-Roles";
     static final String HEADER_USUARIO = "X-User-Id";
-    private static final Set<String> ROLES_ADMIN = Set.of("ADMIN", "ADMIN_STYLERADAR");
+    // ms-auth pasó los roles a inglés (STYLERADAR_ADMIN); se aceptan también los nombres anteriores
+    private static final Set<String> ROLES_ADMIN = Set.of("ADMIN", "ADMIN_STYLERADAR", "STYLERADAR_ADMIN");
 
     private Identidad() {
     }
