@@ -36,7 +36,7 @@ public interface PrendaApi {
     @ApiResponse(responseCode = "422", description = "The garment is withdrawn")
     ResponseEntity<PrendaResponse> editar(UUID id,
                                           @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
-                                          @Parameter(description = "Role sent by the API Gateway; ADMIN or ADMIN_STYLERADAR") String rol,
+                                          @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol,
                                           @Parameter(description = "All the user roles sent by the API Gateway") String roles,
                                           @Parameter(description = "User id sent by the API Gateway; used to find the user store in ms-tiendas") String usuarioId,
                                           PrendaRequest request);
@@ -49,7 +49,7 @@ public interface PrendaApi {
     @ApiResponse(responseCode = "422", description = "The garment was already withdrawn")
     ResponseEntity<PrendaResponse> retirar(UUID id,
                                            @Parameter(description = "Store making the request (sent by the API Gateway)") UUID almacenId,
-                                           @Parameter(description = "Role sent by the API Gateway; ADMIN or ADMIN_STYLERADAR") String rol,
+                                           @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol,
                                            @Parameter(description = "All the user roles sent by the API Gateway") String roles,
                                            @Parameter(description = "User id sent by the API Gateway; used to find the user store in ms-tiendas") String usuarioId);
 }

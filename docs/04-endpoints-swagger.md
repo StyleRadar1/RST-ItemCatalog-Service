@@ -52,7 +52,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 
 ### Tabla de Endpoints Expuestos
 
-El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
+El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `STYLERADAR_ADMIN` (nombre actual de ms-auth), `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
 
 | Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
 | :---: | :--- | :--- | :--- | :---: |
