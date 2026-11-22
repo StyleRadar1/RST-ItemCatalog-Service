@@ -83,6 +83,10 @@ public class Prenda {
         disponible = false;
     }
 
+    public void marcarDisponible() {
+        disponible = true;
+    }
+
     public boolean esVisible() {
         return estado == EstadoPublicacion.APROBADA && disponible;
     }

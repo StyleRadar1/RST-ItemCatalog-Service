@@ -45,8 +45,8 @@ public class BeanConfig {
     }
 
     @Bean
-    public ActualizarDisponibilidadUseCase actualizarDisponibilidadUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes) {
-        return new ActualizarDisponibilidadUseCaseImpl(prendas, almacenes);
+    public ActualizarDisponibilidadUseCase actualizarDisponibilidadUseCase(PrendaRepositoryPort prendas, AlmacenRepositoryPort almacenes, StockPrendaPort stock) {
+        return new ActualizarDisponibilidadUseCaseImpl(prendas, almacenes, stock);
     }
 
     @Bean

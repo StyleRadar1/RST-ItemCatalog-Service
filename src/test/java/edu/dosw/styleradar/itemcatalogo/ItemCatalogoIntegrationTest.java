@@ -1,5 +1,10 @@
 package edu.dosw.styleradar.itemcatalogo;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import java.util.Optional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -22,6 +27,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
@@ -60,6 +67,15 @@ class ItemCatalogoIntegrationTest {
         registry.add("spring.rabbitmq.username", RABBIT::getAdminUsername);
         registry.add("spring.rabbitmq.password", RABBIT::getAdminPassword);
         registry.add("tiendas.carga.habilitada", () -> "false");
+    }
+
+    // ms-inventario no existe en el CI; se simula que la prenda quedó sin unidades
+    @MockBean
+    private StockPrendaPort stock;
+
+    @BeforeEach
+    void inventarioSinUnidades() {
+        when(stock.disponibilidad(any())).thenReturn(Optional.of(Disponibilidad.sinStock()));
     }
 
     @Autowired
