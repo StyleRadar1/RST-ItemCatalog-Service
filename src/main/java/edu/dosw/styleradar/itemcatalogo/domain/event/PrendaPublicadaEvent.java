@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.domain.event;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 
@@ -11,17 +12,19 @@ import java.util.UUID;
 
 public record PrendaPublicadaEvent(UUID prendaId, UUID almacenId, String nombre, String tipo, String color,
                                    String marca, String estilo, BigDecimal precio, String imagenUrl,
-                                   LocalDateTime fecha, List<String> tallas) {
+                                   LocalDateTime fecha, List<String> tallas, Integer stockTotal) {
 
     public static PrendaPublicadaEvent de(Prenda prenda) {
         return de(prenda, null);
     }
 
-    public static PrendaPublicadaEvent de(Prenda prenda, List<String> tallas) {
+    public static PrendaPublicadaEvent de(Prenda prenda, Disponibilidad disponibilidad) {
+        List<String> tallas = disponibilidad == null ? null : disponibilidad.tallasConStock();
+        Integer stockTotal = disponibilidad == null ? null : disponibilidad.stockTotal();
         return new PrendaPublicadaEvent(prenda.getId(), prenda.getAlmacenId(), prenda.getNombre(),
                 prenda.getAtributos().tipo(), prenda.getAtributos().color(), prenda.getAtributos().marca(),
                 prenda.getAtributos().estilo(), prenda.getPrecio().valor(), primeraFoto(prenda), prenda.getFechaPublicacion(),
-                tallas);
+                tallas, stockTotal);
     }
 
     private static String primeraFoto(Prenda prenda) {

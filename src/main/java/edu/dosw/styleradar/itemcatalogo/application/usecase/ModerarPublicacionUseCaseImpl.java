@@ -45,16 +45,18 @@ public class ModerarPublicacionUseCaseImpl implements ModerarPublicacionUseCase 
     }
 
     private Prenda avisar(Prenda prenda, String motivo) {
-        eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo));
+        Long propietario = almacenRepository.findById(prenda.getAlmacenId())
+                .map(AlmacenResumen::administradorId).orElse(null);
+        eventPublisher.publicar(ModeracionCambiadaEvent.de(prenda, motivo, propietario));
         if (prenda.getEstado() == EstadoPublicacion.APROBADA) {
-            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda, tallasOfertadas(prenda.getId())));
+            eventPublisher.publicar(PrendaPublicadaEvent.de(prenda, disponibilidad(prenda.getId())));
         }
         return prenda;
     }
 
-    private List<String> tallasOfertadas(UUID prendaId) {
+    private Disponibilidad disponibilidad(UUID prendaId) {
         try {
-            return stock.disponibilidad(prendaId).map(Disponibilidad::tallasConStock).orElse(null);
+            return stock.disponibilidad(prendaId).orElse(null);
         } catch (RuntimeException e) {
             return null;
         }

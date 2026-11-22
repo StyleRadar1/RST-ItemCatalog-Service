@@ -69,7 +69,7 @@ class RepositoryAdaptersTest {
     @Test
     void convierteLosAlmacenes() {
         AlmacenResumenJpaRepository jpa = mock(AlmacenResumenJpaRepository.class);
-        AlmacenResumenEntity entity = new AlmacenResumenEntity(UUID.randomUUID(), "Calle 85", new BigDecimal("4.20"), true);
+        AlmacenResumenEntity entity = new AlmacenResumenEntity(UUID.randomUUID(), "Calle 85", new BigDecimal("4.20"), true, 15L);
         when(jpa.findAll()).thenReturn(List.of(entity));
         when(jpa.findById(entity.getAlmacenId())).thenReturn(Optional.of(entity));
         when(jpa.save(any())).thenAnswer(inv -> inv.getArgument(0));

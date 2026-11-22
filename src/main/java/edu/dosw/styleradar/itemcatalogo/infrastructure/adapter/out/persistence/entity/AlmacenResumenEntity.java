@@ -25,14 +25,22 @@ public class AlmacenResumenEntity {
     @Column(nullable = false)
     private boolean activo;
 
+    @Column(name = "administrador_id")
+    private Long administradorId;
+
     protected AlmacenResumenEntity() {
     }
 
-    public AlmacenResumenEntity(UUID almacenId, String nombre, BigDecimal reputacion, boolean activo) {
+    public AlmacenResumenEntity(UUID almacenId, String nombre, BigDecimal reputacion, boolean activo, Long administradorId) {
         this.almacenId = almacenId;
         this.nombre = nombre;
         this.reputacion = reputacion;
         this.activo = activo;
+        this.administradorId = administradorId;
+    }
+
+    public Long getAdministradorId() {
+        return administradorId;
     }
 
     public UUID getAlmacenId() {

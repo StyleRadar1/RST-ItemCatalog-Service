@@ -47,7 +47,7 @@ class RabbitMQPublisherAdapterTest {
     void publicaLaPrendaPublicadaConLosDatosDeLaPrenda() {
         adapter.publicar(new PrendaPublicadaEvent(prendaId, almacenId, "Chaqueta denim", "Chaqueta", "Azul", "Levis",
                 "Urbano", new BigDecimal("190000"), "https://foto/1.jpg", LocalDateTime.of(2026, 11, 21, 18, 0),
-                List.of("M", "L")));
+                List.of("M", "L"), 7));
 
         Map<String, Object> payload = enviado("styleradar.catalogo.prenda.publicada");
         assertThat(payload).containsEntry("itemId", prendaId.toString())
@@ -57,13 +57,15 @@ class RabbitMQPublisherAdapterTest {
                 .containsEntry("imagenUrl", "https://foto/1.jpg")
                 .containsEntry("category", "OUTERWEAR")
                 .containsEntry("availableSizes", List.of("M", "L"))
+                .containsEntry("tallasDisponibles", List.of("M", "L"))
+                .containsEntry("stockTotal", 7)
                 .containsEntry("fechaPublicacion", "2026-11-21T18:00:00Z");
     }
 
     @Test
     void sinTallasConocidasNoEnviaAvailableSizes() {
         adapter.publicar(new PrendaPublicadaEvent(prendaId, almacenId, "Vestido", "Vestido", "Negro", "Luna Store",
-                "FORMAL", new BigDecimal("90000"), null, LocalDateTime.now(), null));
+                "FORMAL", new BigDecimal("90000"), null, LocalDateTime.now(), null, null));
 
         assertThat(enviado("styleradar.catalogo.prenda.publicada")).doesNotContainKey("availableSizes")
                 .containsEntry("category", "ONE_PIECE");
@@ -92,9 +94,10 @@ class RabbitMQPublisherAdapterTest {
     @Test
     void publicaElCambioDeModeracion() {
         adapter.publicar(new ModeracionCambiadaEvent(prendaId, almacenId, "Chaqueta denim", EstadoPublicacion.RECHAZADA,
-                "Foto borrosa", LocalDateTime.now()));
+                "Foto borrosa", LocalDateTime.now(), 42L));
 
-        assertThat(enviado("styleradar.catalogo.moderacion.cambiada")).containsEntry("estadoModeracion", "RECHAZADA")
+        assertThat(enviado("styleradar.catalogo.moderacion.cambiada")).containsEntry("propietarioUsuarioId", 42L)
+                .containsEntry("estadoModeracion", "RECHAZADA")
                 .containsEntry("observacion", "Foto borrosa");
     }
 

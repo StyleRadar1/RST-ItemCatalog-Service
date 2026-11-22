@@ -145,7 +145,7 @@ class ModerarPublicacionUseCaseImplTest {
 
         useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
 
-        verify(eventos).publicar(argThat((PrendaPublicadaEvent e) -> List.of("M").equals(e.tallas())));
+        verify(eventos).publicar(argThat((PrendaPublicadaEvent e) -> List.of("M").equals(e.tallas()) && e.stockTotal() == 3));
     }
 
     @Test
@@ -156,5 +156,16 @@ class ModerarPublicacionUseCaseImplTest {
         useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
 
         verify(eventos).publicar(argThat((PrendaPublicadaEvent e) -> e.tallas() == null));
+    }
+
+    @Test
+    void laModeracionLlevaAlAdministradorDelAlmacen() {
+        Prenda prenda = pendienteGuardada();
+        when(almacenes.findById(prenda.getAlmacenId()))
+                .thenReturn(Optional.of(new AlmacenResumen(prenda.getAlmacenId(), "Atelier", BigDecimal.ONE, true, 42L)));
+
+        useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador);
+
+        verify(eventos).publicar(argThat((ModeracionCambiadaEvent e) -> Long.valueOf(42L).equals(e.propietarioUsuarioId())));
     }
 }

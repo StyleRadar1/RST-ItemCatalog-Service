@@ -56,4 +56,15 @@ class SincronizarAlmacenesUseCaseImplTest {
         assertThat(useCase.almacenDelUsuario(null)).isEmpty();
         verifyNoInteractions(tiendas);
     }
+
+    @Test
+    void registraAlUsuarioComoAdministradorDelAlmacen() {
+        UUID almacen = UUID.randomUUID();
+        when(tiendas.almacenDelUsuario(10L)).thenReturn(Optional.of(almacen));
+        when(almacenes.findById(almacen)).thenReturn(Optional.of(new AlmacenResumen(almacen, "Atelier", BigDecimal.ONE, true)));
+
+        assertThat(useCase.almacenDelUsuario(10L)).contains(almacen);
+
+        verify(almacenes).save(new AlmacenResumen(almacen, "Atelier", BigDecimal.ONE, true, 10L));
+    }
 }
