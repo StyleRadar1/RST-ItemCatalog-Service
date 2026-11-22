@@ -69,7 +69,7 @@ El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a par
 | `GET` | `/api/v1/almacenes/{almacenId}/catalogo/resumen` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
 | `GET` | `/api/v1/almacenes/{almacenId}/novedades` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
 | `GET` | `/api/v1/catalogo/items/{itemId}/disponibilidad` | Unidades totales y tallas con stock de una prenda, tomadas de `ms-inventario`; la usa `ms-notificaciones` (si inventario no tiene la prenda, `stockTotal` es 0) | Interno | `200`, `400`, `404` |
-| `GET` | `/api/v1/catalogo/items/{itemId}/tallas-medidas` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`, siempre `[]` porque el catálogo no guarda medidas en cm); la usa `ms-probador-virtual` (SR-RF-24 del probador) | Interno | `200`, `400`, `404` |
+| `GET` | `/api/v1/catalogo/items/{itemId}/tallas-medidas` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`, rangos de referencia en cm de la guía de tallas del catálogo para cada talla ofertada: pecho, cintura y cadera en tallas de letra; cintura en tallas numéricas de pantalón; vacía en calzado, accesorios y talla única); la usa `ms-probador-virtual` (SR-RF-24 del probador) | Interno | `200`, `400`, `404` |
 | `GET` | `/api/v1/health` | Estado del servicio | Público | `200` |
 
 ---

@@ -50,7 +50,10 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         payload.put("marca", evento.marca());
         payload.put("estilo", evento.estilo());
         payload.put("precio", evento.precio());
-        payload.put("category", categoriaProbador(evento.tipo()));
+        String categoria = categoriaProbador(evento.tipo());
+        if (categoria != null) {
+            payload.put("category", categoria);
+        }
         payload.put("imagenUrl", evento.imagenUrl());
         if (evento.tallas() != null) {
             payload.put("availableSizes", evento.tallas());
@@ -94,10 +97,10 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
             return null;
         }
         return switch (tipo.trim().toLowerCase(Locale.ROOT)) {
-            case "camisa", "camiseta", "buzo", "suéter", "sueter" -> "TOP";
-            case "pantalón", "pantalon", "falda" -> "BOTTOM";
-            case "vestido", "conjunto" -> "ONE_PIECE";
-            case "saco", "chaqueta" -> "OUTERWEAR";
+            case "camisa", "camiseta", "buzo", "suéter", "sueter", "saco", "blusa", "polo", "hoodie" -> "TOP";
+            case "pantalón", "pantalon", "falda", "jean", "short" -> "BOTTOM";
+            case "vestido", "conjunto", "enterizo" -> "ONE_PIECE";
+            case "chaqueta", "blazer" -> "OUTERWEAR";
             case "calzado" -> "FOOTWEAR";
             case "accesorio" -> "ACCESSORIES";
             default -> null;

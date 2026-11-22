@@ -32,6 +32,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCa
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.DisponibilidadResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.TallasMedidasResponse;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
+import edu.dosw.styleradar.itemcatalogo.domain.model.GuiaMedidas;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -158,13 +159,15 @@ class ControllersTest {
     @Test
     void devuelveLasTallasYMedidasParaElProbador() {
         ConsultarDisponibilidadUseCase useCase = mock(ConsultarDisponibilidadUseCase.class);
-        when(useCase.tallasOfertadas(prenda.getId())).thenReturn(Optional.of(List.of("S", "M")));
+        GuiaMedidas.MedidasTalla m = new GuiaMedidas.MedidasTalla("M", 92.0, 100.0, 74.0, 82.0, 98.0, 104.0);
+        when(useCase.tallasYMedidas(prenda.getId()))
+                .thenReturn(new ConsultarDisponibilidadUseCase.TallasYMedidas(List.of("M"), List.of(m)));
         UUID otra = UUID.randomUUID();
-        when(useCase.tallasOfertadas(otra)).thenReturn(Optional.empty());
+        when(useCase.tallasYMedidas(otra)).thenReturn(new ConsultarDisponibilidadUseCase.TallasYMedidas(null, List.of()));
         DisponibilidadController controller = new DisponibilidadController(useCase);
 
-        assertThat(controller.tallasMedidas(prenda.getId()).getBody())
-                .isEqualTo(new TallasMedidasResponse(List.of("S", "M"), List.of()));
+        assertThat(controller.tallasMedidas(prenda.getId()).getBody()).isEqualTo(new TallasMedidasResponse(List.of("M"),
+                List.of(new TallasMedidasResponse.RangoMedidas("M", 92.0, 100.0, 74.0, 82.0, 98.0, 104.0))));
         assertThat(controller.tallasMedidas(otra).getBody().availableSizes()).isNull();
     }
 

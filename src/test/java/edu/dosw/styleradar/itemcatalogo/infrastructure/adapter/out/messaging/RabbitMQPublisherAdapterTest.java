@@ -75,7 +75,10 @@ class RabbitMQPublisherAdapterTest {
     void mapeaLosTiposALasCategoriasDelProbador() {
         assertThat(RabbitMQPublisherAdapter.categoriaProbador("Camiseta")).isEqualTo("TOP");
         assertThat(RabbitMQPublisherAdapter.categoriaProbador("Pantalón")).isEqualTo("BOTTOM");
-        assertThat(RabbitMQPublisherAdapter.categoriaProbador("Saco")).isEqualTo("OUTERWEAR");
+        assertThat(RabbitMQPublisherAdapter.categoriaProbador("Saco")).isEqualTo("TOP");
+        assertThat(RabbitMQPublisherAdapter.categoriaProbador("Blazer")).isEqualTo("OUTERWEAR");
+        assertThat(RabbitMQPublisherAdapter.categoriaProbador("Jean")).isEqualTo("BOTTOM");
+        assertThat(RabbitMQPublisherAdapter.categoriaProbador("Enterizo")).isEqualTo("ONE_PIECE");
         assertThat(RabbitMQPublisherAdapter.categoriaProbador("Calzado")).isEqualTo("FOOTWEAR");
         assertThat(RabbitMQPublisherAdapter.categoriaProbador("Accesorio")).isEqualTo("ACCESSORIES");
         assertThat(RabbitMQPublisherAdapter.categoriaProbador("Otro")).isNull();
@@ -107,5 +110,14 @@ class RabbitMQPublisherAdapterTest {
 
         assertThatCode(() -> adapter.publicar(new PrendaRetiradaEvent(prendaId, almacenId, "motivo", LocalDateTime.now())))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void noEnviaCategoryCuandoElTipoNoTieneCategoriaEnElProbador() {
+        adapter.publicar(new PrendaPublicadaEvent(prendaId, almacenId, "Gafas", "Otro", "Negro", "Luna Store",
+                "URBANO", new BigDecimal("50000"), null, LocalDateTime.now(), null, null));
+
+        assertThat(enviado("styleradar.catalogo.prenda.publicada")).doesNotContainKey("category")
+                .containsEntry("categoria", "Otro");
     }
 }

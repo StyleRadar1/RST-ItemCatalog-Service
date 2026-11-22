@@ -5,6 +5,9 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.GuiaMedidas;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -49,18 +52,27 @@ class ConsultarDisponibilidadUseCaseImplTest {
     }
 
     @Test
-    void lasTallasOfertadasSonNulasSiInventarioNoInforma() {
-        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
-        when(stock.disponibilidad(prendaId)).thenReturn(Optional.empty());
+    void armaLaTablaDeMedidasConLasTallasOfertadas() {
+        Prenda prenda = mock(Prenda.class);
+        when(prenda.getAtributos()).thenReturn(new AtributosBusqueda("Camiseta", "Negro", "Luna Store", "CASUAL"));
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(prenda));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.of(new Disponibilidad(4, List.of("M", "Única"))));
 
-        assertThat(useCase.tallasOfertadas(prendaId)).isEmpty();
+        ConsultarDisponibilidadUseCase.TallasYMedidas tabla = useCase.tallasYMedidas(prendaId);
+
+        assertThat(tabla.tallas()).containsExactly("M", "Única");
+        assertThat(tabla.medidas()).extracting(GuiaMedidas.MedidasTalla::talla).containsExactly("M");
     }
 
     @Test
-    void devuelveLasTallasOfertadas() {
-        when(prendas.findById(prendaId)).thenReturn(Optional.of(mock(Prenda.class)));
-        when(stock.disponibilidad(prendaId)).thenReturn(Optional.of(new Disponibilidad(0, List.of())));
+    void sinInventarioNoHayTallasNiMedidas() {
+        Prenda prenda = mock(Prenda.class);
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(prenda));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.empty());
 
-        assertThat(useCase.tallasOfertadas(prendaId)).contains(List.of());
+        ConsultarDisponibilidadUseCase.TallasYMedidas tabla = useCase.tallasYMedidas(prendaId);
+
+        assertThat(tabla.tallas()).isNull();
+        assertThat(tabla.medidas()).isEmpty();
     }
 }
