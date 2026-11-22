@@ -35,7 +35,11 @@ public class DisponibilidadController implements DisponibilidadApi {
     @Override
     @GetMapping("/{itemId}/tallas-medidas")
     public ResponseEntity<TallasMedidasResponse> tallasMedidas(@PathVariable UUID itemId) {
-        List<String> tallas = consultarDisponibilidad.tallasOfertadas(itemId).orElse(null);
-        return ResponseEntity.ok(new TallasMedidasResponse(tallas, List.of()));
+        ConsultarDisponibilidadUseCase.TallasYMedidas tabla = consultarDisponibilidad.tallasYMedidas(itemId);
+        List<TallasMedidasResponse.RangoMedidas> medidas = tabla.medidas().stream()
+                .map(m -> new TallasMedidasResponse.RangoMedidas(m.talla(), m.minPecho(), m.maxPecho(), m.minCintura(),
+                        m.maxCintura(), m.minCadera(), m.maxCadera()))
+                .toList();
+        return ResponseEntity.ok(new TallasMedidasResponse(tabla.tallas(), medidas));
     }
 }
