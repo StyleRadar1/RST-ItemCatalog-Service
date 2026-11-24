@@ -2,6 +2,7 @@ package edu.dosw.styleradar.itemcatalogo.application.usecase;
 
 import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
@@ -9,13 +10,16 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
+import edu.dosw.styleradar.itemcatalogo.domain.model.ValoresUnificados;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
@@ -35,10 +39,11 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
 
     @Override
     public Prenda publicar(UUID almacenId, String nombre, AtributosBusqueda atributos, Precio precio, List<Fotografia> fotografias) {
+        validarAtributos(atributos);
         AlmacenResumen almacen = almacenRepository.findById(almacenId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId, "ALMACEN_NO_ENCONTRADO"));
         if (!almacen.activo()) {
-            throw new DomainException("El almacén está suspendido y no puede publicar prendas");
+            throw new DomainException("El almacén está suspendido y no puede publicar prendas", "ALMACEN_SUSPENDIDO");
         }
         return prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
     }
@@ -46,12 +51,13 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
     @Override
     public Prenda obtener(UUID prendaId) {
         return prendaRepository.findById(prendaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA"));
     }
 
     @Override
     public Prenda editar(UUID prendaId, Solicitante solicitante, String nombre, AtributosBusqueda atributos, Precio precio,
                          List<Fotografia> fotografias) {
+        validarAtributos(atributos);
         Prenda prenda = obtener(prendaId);
         prenda.verificarPermiso(solicitante);
         prenda.editar(nombre, atributos, precio, fotografias);
@@ -66,5 +72,24 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         Prenda retirada = prendaRepository.save(prenda);
         eventPublisher.publicar(new PrendaRetiradaEvent(prendaId, prenda.getAlmacenId(), MOTIVO_RETIRO, LocalDateTime.now()));
         return retirada;
+    }
+
+    private static void validarAtributos(AtributosBusqueda atributos) {
+        Map<String, String> errores = new LinkedHashMap<>();
+        if (!ValoresUnificados.esTipo(atributos.tipo())) {
+            errores.put("tipo", ValoresUnificados.MENSAJE_TIPO);
+        }
+        if (!ValoresUnificados.esColor(atributos.color())) {
+            errores.put("color", ValoresUnificados.MENSAJE_COLOR);
+        }
+        if (!ValoresUnificados.esMarca(atributos.marca())) {
+            errores.put("marca", ValoresUnificados.MENSAJE_MARCA);
+        }
+        if (!ValoresUnificados.esEstilo(atributos.estilo())) {
+            errores.put("estilo", ValoresUnificados.MENSAJE_ESTILO);
+        }
+        if (!errores.isEmpty()) {
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS", errores);
+        }
     }
 }

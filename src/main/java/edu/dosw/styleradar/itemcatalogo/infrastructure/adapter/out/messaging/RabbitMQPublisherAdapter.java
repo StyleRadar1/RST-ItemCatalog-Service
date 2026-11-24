@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,7 +50,19 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         payload.put("marca", evento.marca());
         payload.put("estilo", evento.estilo());
         payload.put("precio", evento.precio());
-        payload.put("fechaPublicacion", evento.fecha().toString());
+        String categoria = categoriaProbador(evento.tipo());
+        if (categoria != null) {
+            payload.put("category", categoria);
+        }
+        payload.put("imagenUrl", evento.imagenUrl());
+        if (evento.tallas() != null) {
+            payload.put("availableSizes", evento.tallas());
+            payload.put("tallasDisponibles", evento.tallas());
+        }
+        if (evento.stockTotal() != null) {
+            payload.put("stockTotal", evento.stockTotal());
+        }
+        payload.put("fechaPublicacion", utc(evento.fecha()));
         enviar(rkPublicada, payload);
     }
 
@@ -55,7 +70,7 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
     public void publicar(PrendaRetiradaEvent evento) {
         Map<String, Object> payload = base(evento.prendaId(), evento.almacenId());
         payload.put("motivo", evento.motivo());
-        payload.put("fechaEvento", evento.fecha().toString());
+        payload.put("fechaEvento", utc(evento.fecha()));
         enviar(rkRetirada, payload);
     }
 
@@ -65,8 +80,31 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         payload.put("nombrePrenda", evento.nombre());
         payload.put("estadoModeracion", evento.estado().name());
         payload.put("observacion", evento.motivo());
-        payload.put("fechaModeracion", evento.fecha().toString());
+        payload.put("fechaModeracion", utc(evento.fecha()));
+        if (evento.propietarioUsuarioId() != null) {
+            payload.put("propietarioUsuarioId", evento.propietarioUsuarioId());
+        }
         enviar(rkModeracion, payload);
+    }
+
+    static String utc(LocalDateTime fecha) {
+        return fecha == null ? null : fecha.atZone(ZoneOffset.UTC).toInstant().toString();
+    }
+
+    // Categorías que reconoce ms-probador-virtual para el probador
+    static String categoriaProbador(String tipo) {
+        if (tipo == null) {
+            return null;
+        }
+        return switch (tipo.trim().toLowerCase(Locale.ROOT)) {
+            case "camisa", "camiseta", "buzo", "suéter", "sueter", "saco", "blusa", "polo", "hoodie" -> "TOP";
+            case "pantalón", "pantalon", "falda", "jean", "short" -> "BOTTOM";
+            case "vestido", "conjunto", "enterizo" -> "ONE_PIECE";
+            case "chaqueta", "blazer" -> "OUTERWEAR";
+            case "calzado" -> "FOOTWEAR";
+            case "accesorio" -> "ACCESSORIES";
+            default -> null;
+        };
     }
 
     private Map<String, Object> base(UUID prendaId, UUID almacenId) {

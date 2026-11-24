@@ -4,6 +4,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaPublicadaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.event.PrendaRetiradaEvent;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.DomainException;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
@@ -32,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class GestionarPrendaUseCaseImplTest {
@@ -41,7 +43,7 @@ class GestionarPrendaUseCaseImplTest {
     private final EventPublisherPort eventos = mock(EventPublisherPort.class);
     private final GestionarPrendaUseCaseImpl useCase = new GestionarPrendaUseCaseImpl(prendas, almacenes, eventos);
 
-    private final AtributosBusqueda atributos = new AtributosBusqueda("Chaqueta", "Azul", "Levis", "Urbano");
+    private final AtributosBusqueda atributos = new AtributosBusqueda("Chaqueta", "Azul", "Luna Store", "Urbano");
     private final Precio precio = new Precio(new BigDecimal("190000"));
     private final List<Fotografia> fotos = List.of(new Fotografia("https://foto/1.jpg", 1));
 
@@ -59,6 +61,22 @@ class GestionarPrendaUseCaseImplTest {
 
         assertThat(prenda.getEstado()).isEqualTo(EstadoPublicacion.PENDIENTE);
         verify(eventos, never()).publicar(any(PrendaPublicadaEvent.class));
+    }
+
+    @Test
+    void losAtributosDebenSerDeLasListasUnificadas() {
+        AtributosBusqueda gorra = new AtributosBusqueda("Gorra", "Rojo", "Levis", "Elegante");
+        UUID almacenId = UUID.randomUUID();
+        UUID prendaId = UUID.randomUUID();
+        Solicitante dueno = new Solicitante(almacenId, false);
+
+        assertThatThrownBy(() -> useCase.publicar(almacenId, "Gorra", gorra, precio, fotos))
+                .isInstanceOf(ParametroInvalidoException.class)
+                .satisfies(ex -> assertThat(((ParametroInvalidoException) ex).getErrores())
+                        .containsOnlyKeys("tipo", "color", "marca", "estilo"));
+        assertThatThrownBy(() -> useCase.editar(prendaId, dueno, "Gorra", gorra, precio, fotos))
+                .isInstanceOf(ParametroInvalidoException.class);
+        verifyNoInteractions(almacenes);
     }
 
     @Test

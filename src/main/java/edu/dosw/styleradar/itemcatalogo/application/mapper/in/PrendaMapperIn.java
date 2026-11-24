@@ -10,6 +10,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +39,23 @@ public final class PrendaMapperIn {
     }
 
     public static PrendaResponse toResponse(Prenda prenda) {
+        return toResponse(prenda, null);
+    }
+
+    public static PrendaResponse toResponse(PrendaEncontrada encontrada) {
+        return toResponse(encontrada.prenda(), encontrada.distanciaKm());
+    }
+
+    public static List<PrendaResponse> toEncontradas(List<PrendaEncontrada> encontradas) {
+        return encontradas.stream().map(PrendaMapperIn::toResponse).toList();
+    }
+
+    private static PrendaResponse toResponse(Prenda prenda, Double distanciaKm) {
         AtributosBusqueda a = prenda.getAtributos();
         return new PrendaResponse(prenda.getId(), prenda.getAlmacenId(), prenda.getNombre(), a.tipo(), a.color(),
                 a.marca(), a.estilo(), prenda.getPrecio().valor(),
                 prenda.getFotografias().stream().map(Fotografia::url).toList(),
-                prenda.getEstado().name(), prenda.isDisponible(), prenda.getFechaPublicacion());
+                prenda.getEstado().name(), prenda.isDisponible(), prenda.getFechaPublicacion(), distanciaKm);
     }
 
     public static List<PrendaResponse> toResponse(List<Prenda> prendas) {

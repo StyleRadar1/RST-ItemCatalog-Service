@@ -7,13 +7,18 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.FiltroBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
+import edu.dosw.styleradar.itemcatalogo.domain.model.ValoresUnificados;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Ubicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +29,7 @@ import java.util.stream.Collectors;
 public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
 
     private static final int MAX_SIMILARES = 10;
+    private static final int MAX_COLOR = 40;
 
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
@@ -39,25 +45,98 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
     }
 
     @Override
-    public List<Prenda> buscar(FiltroBusqueda filtro) {
+    public List<PrendaEncontrada> buscar(FiltroBusqueda filtro) {
         if (filtro.orden() == Ordenamiento.DISTANCIA && filtro.ubicacion() == null) {
-            throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)");
+            throw new ParametroInvalidoException("Para ordenar por distancia se debe indicar la ubicación (lat y lng)", "UBICACION_REQUERIDA");
         }
+        validarFiltro(filtro);
         Map<UUID, AlmacenResumen> almacenes = almacenesActivos();
         Set<UUID> conTalla = filtro.talla() == null ? null : tallaDisponible.prendasConStock(filtro.talla());
         List<Prenda> resultado = visibles(almacenes).stream()
                 .filter(p -> p.cumple(filtro))
                 .filter(p -> conTalla == null || conTalla.contains(p.getId()))
                 .toList();
+        Map<UUID, Double> kilometros = distancias(filtro, resultado);
         return resultado.stream()
-                .sorted(orden(filtro, almacenes, resultado))
+                .sorted(orden(filtro, almacenes, kilometros))
+                .map(p -> new PrendaEncontrada(p, kilometros.get(p.getAlmacenId())))
                 .toList();
+    }
+
+    private Map<UUID, Double> distancias(FiltroBusqueda filtro, List<Prenda> resultado) {
+        if (filtro.ubicacion() == null) {
+            return Map.of();
+        }
+        return resultado.stream()
+                .map(Prenda::getAlmacenId)
+                .distinct()
+                .collect(Collectors.toMap(Function.identity(), id -> distanciaAlmacen.kilometros(id, filtro.ubicacion())));
+    }
+
+    private static void validarFiltro(FiltroBusqueda filtro) {
+        Map<String, String> errores = new LinkedHashMap<>();
+        if (presente(filtro.tipo()) && !ValoresUnificados.esTipo(filtro.tipo())) {
+            errores.put("tipo", ValoresUnificados.MENSAJE_TIPO);
+        }
+        if (presente(filtro.color())) {
+            validarColor(filtro.color(), errores);
+        }
+        if (presente(filtro.marca()) && !ValoresUnificados.esMarca(filtro.marca())) {
+            errores.put("marca", ValoresUnificados.MENSAJE_MARCA);
+        }
+        if (presente(filtro.estilo()) && !ValoresUnificados.esEstilo(filtro.estilo())) {
+            errores.put("estilo", ValoresUnificados.MENSAJE_ESTILO);
+        }
+        if (presente(filtro.talla()) && !ValoresUnificados.esTalla(filtro.talla())) {
+            errores.put("talla", ValoresUnificados.MENSAJE_TALLA);
+        }
+        validarUbicacion(filtro.ubicacion(), errores);
+        validarRangoPrecio(filtro.precioMin(), filtro.precioMax(), errores);
+    }
+
+    private static void validarColor(String color, Map<String, String> errores) {
+        if (color.length() > MAX_COLOR) {
+            errores.put("color", "El color no puede superar los 40 caracteres");
+        } else if (!ValoresUnificados.esColor(color)) {
+            errores.put("color", ValoresUnificados.MENSAJE_COLOR);
+        }
+    }
+
+    private static void validarUbicacion(Ubicacion ubicacion, Map<String, String> errores) {
+        if (ubicacion == null) {
+            return;
+        }
+        if (ubicacion.latitud() < -90 || ubicacion.latitud() > 90) {
+            errores.put("lat", "La latitud debe estar entre -90 y 90");
+        }
+        if (ubicacion.longitud() < -180 || ubicacion.longitud() > 180) {
+            errores.put("lng", "La longitud debe estar entre -180 y 180");
+        }
+    }
+
+    private static boolean presente(String valor) {
+        return valor != null && !valor.isBlank();
+    }
+
+    private static void validarRangoPrecio(BigDecimal precioMin, BigDecimal precioMax, Map<String, String> errores) {
+        if (precioMin != null && precioMin.signum() < 0) {
+            errores.put("precioMin", "El precio mínimo no puede ser negativo");
+        }
+        if (precioMax != null && precioMax.signum() < 0) {
+            errores.put("precioMax", "El precio máximo no puede ser negativo");
+        }
+        if (!errores.isEmpty()) {
+            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS", errores);
+        }
+        if (precioMin != null && precioMax != null && precioMin.compareTo(precioMax) > 0) {
+            throw new ParametroInvalidoException("El precio mínimo no puede ser mayor que el precio máximo", "RANGO_PRECIO_INVALIDO");
+        }
     }
 
     @Override
     public List<Prenda> similares(UUID prendaId) {
         Prenda prenda = prendaRepository.findById(prendaId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la prenda " + prendaId, "PRENDA_NO_ENCONTRADA"));
         return visibles(almacenesActivos()).stream()
                 .filter(p -> p.esSimilarA(prenda))
                 .limit(MAX_SIMILARES)
@@ -71,12 +150,8 @@ public class BuscarPrendasUseCaseImpl implements BuscarPrendasUseCase {
                 .toList();
     }
 
-    private Comparator<Prenda> orden(FiltroBusqueda filtro, Map<UUID, AlmacenResumen> almacenes, List<Prenda> resultado) {
+    private Comparator<Prenda> orden(FiltroBusqueda filtro, Map<UUID, AlmacenResumen> almacenes, Map<UUID, Double> kilometros) {
         if (filtro.orden() == Ordenamiento.DISTANCIA) {
-            Map<UUID, Double> kilometros = resultado.stream()
-                    .map(Prenda::getAlmacenId)
-                    .distinct()
-                    .collect(Collectors.toMap(Function.identity(), id -> distanciaAlmacen.kilometros(id, filtro.ubicacion())));
             return Comparator.comparingDouble(p -> kilometros.get(p.getAlmacenId()));
         }
         if (filtro.orden() == Ordenamiento.REPUTACION) {

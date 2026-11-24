@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public record PrendaResponse(UUID id, UUID almacenId, String nombre, String tipo, String color, String marca,
                              String estilo, BigDecimal precio, List<String> fotografias, String estado,
-                             boolean disponible, LocalDateTime fechaPublicacion) {
+                             boolean disponible, LocalDateTime fechaPublicacion, Double distanciaKm) {
 }

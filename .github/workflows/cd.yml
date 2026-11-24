@@ -12,6 +12,10 @@ on:
         type: choice
         options: [qa, prod]
 
+concurrency:
+  group: cd-${{ github.ref_name }}-${{ inputs.ambiente || 'auto' }}
+  cancel-in-progress: false
+
 env:
   APP_PORT: 8220
   DB_NAME: item_catalogo_db
@@ -19,6 +23,7 @@ env:
   RESOURCE_GROUP: STYLE_RADAR_PROD_RG
   CONTAINERAPP_ENV: styleradar-cae-prod
   DB_SERVER: styleradar-postgres-prod
+  RABBITMQ_HOST_QA: styleradar-rabbitmq-qa.northcentralus.cloudapp.azure.com
 
 permissions:
   contents: read
@@ -43,16 +48,16 @@ jobs:
           echo "app=$APP-$AMBIENTE" >> "$GITHUB_OUTPUT"
           echo "imagen=${{ env.REGISTRY }}/$REPO:$AMBIENTE-${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Construir y publicar la imagen
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           push: true
@@ -60,7 +65,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - uses: azure/login@v2
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2.3.1
         with:
           creds: ${{ secrets.AZURE_CREDENCIALES_PROD }}
 
@@ -72,9 +77,25 @@ jobs:
             --name "$DB_NAME" || true
 
       - name: Desplegar el contenedor
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
         run: |
           DOMINIO=$(az containerapp env show --name "$CONTAINERAPP_ENV" --resource-group "$RESOURCE_GROUP" --query properties.defaultDomain -o tsv)
           AMBIENTE=${{ steps.vars.outputs.ambiente }}
+          BROKER=()
+          if [ "$AMBIENTE" = "qa" ]; then
+            BROKER=(
+              RABBITMQ_HOST="$RABBITMQ_HOST_QA"
+              RABBITMQ_PORT=5671
+              RABBITMQ_VHOST=/
+              RABBITMQ_USER=ms_catalogo
+              RABBITMQ_PASSWORD="$RABBITMQ_PASSWORD"
+              RABBITMQ_SSL_ENABLED=true
+              RABBITMQ_SSL_VERIFY_HOSTNAME=false
+            )
+          fi
           az containerapp up \
             --name "${{ steps.vars.outputs.app }}" \
             --resource-group "$RESOURCE_GROUP" \
@@ -85,17 +106,37 @@ jobs:
             --ingress external \
             --registry-server "$REGISTRY" \
             --registry-username "${{ github.actor }}" \
-            --registry-password "${{ secrets.GITHUB_TOKEN }}" \
+            --registry-password "$REGISTRY_PASSWORD" \
             --env-vars \
               SERVER_PORT="$APP_PORT" \
               DB_HOST="$DB_SERVER.postgres.database.azure.com" \
               DB_PORT=5432 \
               DB_NAME="$DB_NAME" \
               DB_USER=styleradar_admin \
-              DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              DB_PASSWORD="$DB_PASSWORD" \
               SPRING_PROFILES_ACTIVE="$AMBIENTE" \
               INVENTARIO_URL="https://rst-inventory-service-$AMBIENTE.$DOMINIO/api/v1" \
-              GEOLOCALIZACION_URL="https://rst-geolocation-service-$AMBIENTE.$DOMINIO/api/v1"
+              GEOLOCALIZACION_URL="https://rst-geolocation-service-$AMBIENTE.$DOMINIO/api/v1" \
+              "${BROKER[@]}"
+
+      - name: Mantener una réplica activa
+        run: az containerapp update --name "${{ steps.vars.outputs.app }}" --resource-group "$RESOURCE_GROUP" --min-replicas 1
+
+      - name: Esperar al health antes de enviar tráfico
+        continue-on-error: true
+        run: |
+          ID=$(az containerapp show --name "${{ steps.vars.outputs.app }}" --resource-group "$RESOURCE_GROUP" --query id -o tsv)
+          URL="https://management.azure.com$ID?api-version=2024-03-01"
+          TEMPLATE=$(az rest --method get --url "$URL" --query properties.template -o json)
+          if [ "$(echo "$TEMPLATE" | jq '[.containers[0].probes[]?.type] | index("Readiness") != null')" = "true" ]; then
+            echo "Las sondas ya están configuradas"
+            exit 0
+          fi
+          NUEVO=$(echo "$TEMPLATE" | jq --argjson port "$APP_PORT" '.containers[0].probes = [
+            {"type": "Startup", "httpGet": {"path": "/api/v1/health", "port": $port}, "initialDelaySeconds": 10, "periodSeconds": 10, "failureThreshold": 30},
+            {"type": "Readiness", "httpGet": {"path": "/api/v1/health", "port": $port}, "periodSeconds": 10, "failureThreshold": 3}
+          ]')
+          az rest --method patch --url "$URL" --body "{\"properties\": {\"template\": $NUEVO}}"
 
       - name: Verificar el health
         run: |

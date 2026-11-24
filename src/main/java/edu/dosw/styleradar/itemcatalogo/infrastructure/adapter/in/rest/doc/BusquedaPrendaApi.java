@@ -12,29 +12,29 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Búsqueda", description = "Búsqueda y filtros del catálogo")
+@Tag(name = "Search", description = "Catalog search and filters")
 public interface BusquedaPrendaApi {
 
-    @Operation(summary = "Buscar prendas",
-            description = "Busca por texto libre y filtra por tipo, color, marca, estilo, talla disponible y rango de precio. Ordena por recientes, por reputación del almacén o por distancia a la ubicación indicada (SR-RF-07 a 15).")
-    @ApiResponse(responseCode = "200", description = "Prendas aprobadas que cumplen el filtro")
-    @ApiResponse(responseCode = "400", description = "Algún parámetro tiene un formato inválido o se pidió orden por distancia sin ubicación")
+    @Operation(summary = "Search garments",
+            description = "Searches by free text and filters by type, color, brand, style, available size and price range. Sorts by most recent, store rating or distance to the given location; with lat and lng each garment includes distanciaKm (SR-RF-07 to 15).")
+    @ApiResponse(responseCode = "200", description = "Approved garments that match the filter")
+    @ApiResponse(responseCode = "400", description = "A parameter is invalid or not in its list, or distance sorting was requested without a location")
     ResponseEntity<List<PrendaResponse>> buscar(
-            @Parameter(description = "Texto libre", example = "chaqueta") String texto,
-            @Parameter(example = "Chaqueta") String tipo,
-            @Parameter(example = "Azul") String color,
-            @Parameter(example = "Levis") String marca,
-            @Parameter(example = "Urbano") String estilo,
-            @Parameter(description = "Solo prendas con unidades disponibles en esta talla, según ms-inventario", example = "M") String talla,
-            @Parameter(example = "50000") BigDecimal precioMin,
-            @Parameter(example = "200000") BigDecimal precioMax,
-            @Parameter(description = "RECIENTES (por defecto), REPUTACION o DISTANCIA") Ordenamiento orden,
-            @Parameter(description = "Latitud del usuario, obligatoria para ordenar por distancia", example = "4.6683") Double lat,
-            @Parameter(description = "Longitud del usuario, obligatoria para ordenar por distancia", example = "-74.0546") Double lng);
+            @Parameter(description = "Free text", example = "chaqueta") String texto,
+            @Parameter(description = "Garment type from the unified list", example = "Chaqueta") String tipo,
+            @Parameter(description = "Color from the unified list", example = "Azul") String color,
+            @Parameter(description = "Brand: one of the allied stores", example = "Luna Store") String marca,
+            @Parameter(description = "Style: CASUAL, FORMAL, DEPORTIVO, URBANO or VINTAGE", example = "URBANO") String estilo,
+            @Parameter(description = "Only garments with available units in this size, according to ms-inventario", example = "M") String talla,
+            @Parameter(description = "Minimum price in COP", example = "50000") BigDecimal precioMin,
+            @Parameter(description = "Maximum price in COP", example = "200000") BigDecimal precioMax,
+            @Parameter(description = "RECIENTES (default), REPUTACION or DISTANCIA") Ordenamiento orden,
+            @Parameter(description = "User latitude, required to sort by distance", example = "4.6683") Double lat,
+            @Parameter(description = "User longitude, required to sort by distance", example = "-74.0546") Double lng);
 
-    @Operation(summary = "Consultar prendas similares",
-            description = "Prendas del mismo tipo o estilo, para cuando no hay coincidencia exacta (SR-RF-16).")
-    @ApiResponse(responseCode = "200", description = "Prendas similares")
-    @ApiResponse(responseCode = "404", description = "La prenda no existe")
+    @Operation(summary = "Get similar garments",
+            description = "Up to 10 garments of the same type or style, for when there is no exact match (SR-RF-16).")
+    @ApiResponse(responseCode = "200", description = "Similar garments")
+    @ApiResponse(responseCode = "404", description = "The garment does not exist")
     ResponseEntity<List<PrendaResponse>> similares(UUID id);
 }

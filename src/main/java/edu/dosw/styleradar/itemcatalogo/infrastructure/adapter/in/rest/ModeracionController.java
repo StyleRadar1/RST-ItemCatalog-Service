@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,22 +31,35 @@ public class ModeracionController implements ModeracionApi {
 
     @Override
     @GetMapping("/pendientes")
-    public ResponseEntity<PendientesResponse> pendientes() {
+    public ResponseEntity<PendientesResponse> pendientes(
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles) {
+        Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toPendientes(moderarPublicacion.pendientesPorGrupo()));
     }
 
     @Override
     @PutMapping("/pendientes/almacenes/{almacenId}/moderacion")
     public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable UUID almacenId,
-                                                             @Valid @RequestBody ModeracionRequest request) {
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
+            @Valid @RequestBody ModeracionRequest request) {
+        Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(moderarPublicacion.moderarGrupo(
-                almacenId, request.decision(), request.motivo(), request.moderadorId())));
+                almacenId, request.decision(), request.motivo(), Identidad.moderador(usuarioId, request.moderadorId()))));
     }
 
     @Override
     @PutMapping("/{id}/moderacion")
-    public ResponseEntity<PrendaResponse> moderar(@PathVariable UUID id, @Valid @RequestBody ModeracionRequest request) {
+    public ResponseEntity<PrendaResponse> moderar(@PathVariable UUID id,
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
+            @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
+            @Valid @RequestBody ModeracionRequest request) {
+        Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(
-                moderarPublicacion.moderar(id, request.decision(), request.motivo(), request.moderadorId())));
+                moderarPublicacion.moderar(id, request.decision(), request.motivo(),
+                        Identidad.moderador(usuarioId, request.moderadorId()))));
     }
 }

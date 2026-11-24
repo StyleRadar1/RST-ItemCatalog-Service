@@ -15,6 +15,7 @@ import java.util.UUID;
 public class ConsultarCatalogoAlmacenUseCaseImpl implements ConsultarCatalogoAlmacenUseCase {
 
     private static final int DIAS_NOVEDADES = 7;
+    private static final int MAX_NOVEDADES = 3;
 
     private final PrendaRepositoryPort prendaRepository;
     private final AlmacenRepositoryPort almacenRepository;
@@ -27,7 +28,7 @@ public class ConsultarCatalogoAlmacenUseCaseImpl implements ConsultarCatalogoAlm
     @Override
     public List<Prenda> catalogo(UUID almacenId) {
         AlmacenResumen almacen = almacenRepository.findById(almacenId)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el almacén " + almacenId, "ALMACEN_NO_ENCONTRADO"));
         if (!almacen.activo()) {
             return List.of();
         }
@@ -42,6 +43,7 @@ public class ConsultarCatalogoAlmacenUseCaseImpl implements ConsultarCatalogoAlm
         LocalDateTime desde = LocalDateTime.now().minusDays(DIAS_NOVEDADES);
         return catalogo(almacenId).stream()
                 .filter(p -> p.getFechaPublicacion().isAfter(desde))
+                .limit(MAX_NOVEDADES)
                 .toList();
     }
 }

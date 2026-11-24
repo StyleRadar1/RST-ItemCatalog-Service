@@ -1,5 +1,10 @@
 package edu.dosw.styleradar.itemcatalogo;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import java.util.Optional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -22,6 +27,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
@@ -40,6 +47,8 @@ class ItemCatalogoIntegrationTest {
     private static final String CALLE_85 ="a2222222-2222-2222-2222-222222222222";
     private static final String HOODIE = "b3333333-3333-3333-3333-333333333333";
     private static final String ALMACEN = "X-Almacen-Id";
+    private static final String ROL = "X-User-Role";
+    private static final String ADMIN = "ADMIN_STYLERADAR";
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -57,6 +66,16 @@ class ItemCatalogoIntegrationTest {
         registry.add("spring.rabbitmq.port", RABBIT::getAmqpPort);
         registry.add("spring.rabbitmq.username", RABBIT::getAdminUsername);
         registry.add("spring.rabbitmq.password", RABBIT::getAdminPassword);
+        registry.add("tiendas.carga.habilitada", () -> "false");
+    }
+
+    // ms-inventario no existe en el CI; se simula que la prenda quedó sin unidades
+    @MockBean
+    private StockPrendaPort stock;
+
+    @BeforeEach
+    void inventarioSinUnidades() {
+        when(stock.disponibilidad(any())).thenReturn(Optional.of(Disponibilidad.sinStock()));
     }
 
     @Autowired
@@ -73,7 +92,7 @@ class ItemCatalogoIntegrationTest {
 
     private String prendaJson(String nombre) {
         return """
-                {"almacenId":"%s","nombre":"%s","tipo":"Gorra","color":"Rojo","marca":"Calle 85",
+                {"almacenId":"%s","nombre":"%s","tipo":"Accesorio","color":"Negro","marca":"Calle 85 Store",
                  "estilo":"Urbano","precio":45000,"fotografias":["https://foto/gorra.jpg"]}
                 """.formatted(CALLE_85, nombre);
     }
@@ -93,7 +112,7 @@ class ItemCatalogoIntegrationTest {
         mockMvc.perform(get("/prendas").param("texto", "gorra roja"))
                 .andExpect(jsonPath("$[*].id", not(hasItem(id))));
 
-        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
@@ -150,13 +169,14 @@ class ItemCatalogoIntegrationTest {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
 
-        mockMvc.perform(put("/prendas/" + id + "/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/prendas/" + id + "/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk());
 
         Object mensaje = rabbitTemplate.receiveAndConvert(cola, 5000);
         assertThat(((Map<?, ?>) mensaje).get("itemId")).isEqualTo(id);
         assertThat(((Map<?, ?>) mensaje).get("nombrePrenda")).isEqualTo("Gorra amarilla");
+        assertThat(((Map<?, ?>) mensaje).get("imagenUrl")).isEqualTo("https://foto/gorra.jpg");
     }
 
     @Test
@@ -221,7 +241,7 @@ class ItemCatalogoIntegrationTest {
 
     @Test
     void listaLasPendientesPorAlmacen() throws Exception {
-        mockMvc.perform(get("/prendas/pendientes"))
+        mockMvc.perform(get("/prendas/pendientes").header(ROL, ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.grupos[?(@.almacenId == 'a3333333-3333-3333-3333-333333333333')].pendientes", hasItem(1)));
     }
@@ -234,8 +254,26 @@ class ItemCatalogoIntegrationTest {
         mockMvc.perform(get("/prendas/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(put("/prendas/b1111111-1111-1111-1111-111111111111/moderacion").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(get("/prendas").param("tipo", "Gorra").param("estilo", "Elegante").param("lat", "95").param("lng", "-74"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.tipo").exists())
+                .andExpect(jsonPath("$.errors.estilo").exists())
+                .andExpect(jsonPath("$.errors.lat").value("La latitud debe estar entre -90 y 90"));
+
+        mockMvc.perform(get("/prendas").param("precioMin", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.precioMin").value("El precio mínimo no puede ser negativo"));
+
+        mockMvc.perform(get("/prendas").param("precioMin", "200000").param("precioMax", "100000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("El precio mínimo no puede ser mayor que el precio máximo"));
+
+        mockMvc.perform(put("/prendas/b1111111-1111-1111-1111-111111111111/moderacion").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isUnprocessableEntity());
+
+        mockMvc.perform(get("/prendas/pendientes").header(ROL, "COMPRADOR"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESO_DENEGADO"));
     }
 }

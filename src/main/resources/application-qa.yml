@@ -1,0 +1,2 @@
+tiendas:
+  url: ${TIENDAS_URL:https://styleradar-tiendas-qa.azurewebsites.net/api/v1}

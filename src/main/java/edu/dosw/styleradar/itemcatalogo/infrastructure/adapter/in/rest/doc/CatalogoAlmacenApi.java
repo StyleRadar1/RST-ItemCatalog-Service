@@ -10,21 +10,21 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Catálogo de almacén", description = "Catálogo, resumen y novedades de un almacén")
+@Tag(name = "Store catalog", description = "Catalog, summary and new arrivals of a store")
 public interface CatalogoAlmacenApi {
 
-    @Operation(summary = "Consultar catálogo de un almacén", description = "Prendas aprobadas y disponibles del almacén (SR-RF-22).")
-    @ApiResponse(responseCode = "200", description = "Catálogo del almacén")
-    @ApiResponse(responseCode = "404", description = "El almacén no existe")
+    @Operation(summary = "Get a store catalog", description = "Approved and available garments of the store (SR-RF-22).")
+    @ApiResponse(responseCode = "200", description = "Store catalog")
+    @ApiResponse(responseCode = "404", description = "The store does not exist")
     ResponseEntity<List<PrendaResponse>> catalogo(UUID almacenId);
 
-    @Operation(summary = "Consultar catálogo resumido", description = "Total de prendas y las 4 más recientes, para el mapa (SR-RF-19).")
-    @ApiResponse(responseCode = "200", description = "Resumen del catálogo")
-    @ApiResponse(responseCode = "404", description = "El almacén no existe")
+    @Operation(summary = "Get catalog summary", description = "Total garments and the 4 most recent ones, for the map (SR-RF-19).")
+    @ApiResponse(responseCode = "200", description = "Catalog summary")
+    @ApiResponse(responseCode = "404", description = "The store does not exist")
     ResponseEntity<CatalogoResumenResponse> resumen(UUID almacenId);
 
-    @Operation(summary = "Consultar novedades semanales", description = "Prendas publicadas en los últimos 7 días (SR-RF-20).")
-    @ApiResponse(responseCode = "200", description = "Novedades del almacén")
-    @ApiResponse(responseCode = "404", description = "El almacén no existe")
+    @Operation(summary = "Get weekly new arrivals", description = "Up to 3 garments published in the last 7 days, newest first (SR-RF-20).")
+    @ApiResponse(responseCode = "200", description = "Store new arrivals")
+    @ApiResponse(responseCode = "404", description = "The store does not exist")
     ResponseEntity<List<PrendaResponse>> novedades(UUID almacenId);
 }

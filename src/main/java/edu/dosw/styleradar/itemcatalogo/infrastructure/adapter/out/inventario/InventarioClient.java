@@ -12,4 +12,7 @@ public interface InventarioClient {
 
     @GetMapping("/inventario/tallas/{talla}/prendas")
     List<UUID> prendasDisponibles(@PathVariable("talla") String talla);
+
+    @GetMapping("/inventario/prenda/{prendaId}")
+    DisponibilidadInventarioResponse disponibilidad(@PathVariable("prendaId") UUID prendaId);
 }

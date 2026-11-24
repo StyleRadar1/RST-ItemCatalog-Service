@@ -45,7 +45,7 @@ public class Prenda {
 
     public void editar(String nombre, AtributosBusqueda atributos, Precio precio, List<Fotografia> fotografias) {
         if (estado == EstadoPublicacion.RETIRADA) {
-            throw new DomainException("No se puede editar una prenda retirada");
+            throw new DomainException("No se puede editar una prenda retirada", "PRENDA_RETIRADA");
         }
         validar(nombre, fotografias);
         this.nombre = nombre;
@@ -57,7 +57,7 @@ public class Prenda {
 
     public void retirar() {
         if (estado == EstadoPublicacion.RETIRADA) {
-            throw new DomainException("La prenda ya está retirada");
+            throw new DomainException("La prenda ya está retirada", "PRENDA_YA_RETIRADA");
         }
         estado = EstadoPublicacion.RETIRADA;
     }
@@ -68,7 +68,7 @@ public class Prenda {
 
     public void rechazar(UUID moderadorId, String motivo) {
         if (motivo == null || motivo.isBlank()) {
-            throw new DomainException("El rechazo debe tener un motivo");
+            throw new DomainException("El rechazo debe tener un motivo", "MOTIVO_REQUERIDO");
         }
         moderar(EstadoPublicacion.RECHAZADA, motivo, moderadorId);
     }
@@ -81,6 +81,10 @@ public class Prenda {
 
     public void marcarAgotada() {
         disponible = false;
+    }
+
+    public void marcarDisponible() {
+        disponible = true;
     }
 
     public boolean esVisible() {
@@ -103,7 +107,7 @@ public class Prenda {
 
     private void moderar(EstadoPublicacion decision, String motivo, UUID moderadorId) {
         if (estado != EstadoPublicacion.PENDIENTE) {
-            throw new DomainException("Solo se pueden moderar prendas pendientes");
+            throw new DomainException("Solo se pueden moderar prendas pendientes", "PRENDA_NO_PENDIENTE");
         }
         moderaciones.add(new Moderacion(UUID.randomUUID(), decision, motivo, moderadorId, LocalDateTime.now()));
         estado = decision;
