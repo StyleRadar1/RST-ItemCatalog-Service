@@ -10,7 +10,6 @@ import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.Busqu
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/prendas")
 public class BusquedaPrendaController implements BusquedaPrendaApi {
 
     private final BuscarPrendasUseCase buscarPrendas;
@@ -29,7 +27,7 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
     }
 
     @Override
-    @GetMapping
+    @GetMapping({"/items", "/prendas"})
     public ResponseEntity<List<PrendaResponse>> buscar(@RequestParam(required = false) String texto,
                                                        @RequestParam(required = false) String tipo,
                                                        @RequestParam(required = false) String color,
@@ -47,7 +45,7 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
     }
 
     @Override
-    @GetMapping("/{id}/similares")
+    @GetMapping({"/items/{id}/similar", "/prendas/{id}/similares"})
     public ResponseEntity<List<PrendaResponse>> similares(@PathVariable UUID id) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(buscarPrendas.similares(id)));
     }

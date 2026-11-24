@@ -11,11 +11,11 @@ class OpenApiConfigTest {
 
     @Test
     void swaggerShowsEveryPathWithApiV1() {
-        OpenAPI openApi = new OpenApiConfig().openApi().paths(new Paths().addPathItem("/prendas", new PathItem()));
+        OpenAPI openApi = new OpenApiConfig().openApi().paths(new Paths().addPathItem("/items", new PathItem()).addPathItem("/prendas", new PathItem()));
 
         new OpenApiConfig().apiV1Paths("/api/v1").customise(openApi);
 
-        assertThat(openApi.getPaths()).containsOnlyKeys("/api/v1/prendas");
+        assertThat(openApi.getPaths()).containsOnlyKeys("/api/v1/items");
         assertThat(openApi.getServers()).extracting("url").containsExactly("/");
     }
 }

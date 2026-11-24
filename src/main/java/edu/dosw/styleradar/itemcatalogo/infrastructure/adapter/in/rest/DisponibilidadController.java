@@ -8,14 +8,12 @@ import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.Dispo
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/catalogo/items")
 public class DisponibilidadController implements DisponibilidadApi {
 
     private final ConsultarDisponibilidadUseCase consultarDisponibilidad;
@@ -25,7 +23,7 @@ public class DisponibilidadController implements DisponibilidadApi {
     }
 
     @Override
-    @GetMapping("/{itemId}/disponibilidad")
+    @GetMapping({"/items/{itemId}/availability", "/catalogo/items/{itemId}/disponibilidad"})
     public ResponseEntity<DisponibilidadResponse> disponibilidad(@PathVariable UUID itemId) {
         Disponibilidad disponibilidad = consultarDisponibilidad.consultar(itemId);
         return ResponseEntity.ok(new DisponibilidadResponse(itemId.toString(), disponibilidad.stockTotal(),
@@ -33,7 +31,7 @@ public class DisponibilidadController implements DisponibilidadApi {
     }
 
     @Override
-    @GetMapping("/{itemId}/tallas-medidas")
+    @GetMapping({"/items/{itemId}/size-guide", "/catalogo/items/{itemId}/tallas-medidas"})
     public ResponseEntity<TallasMedidasResponse> tallasMedidas(@PathVariable UUID itemId) {
         ConsultarDisponibilidadUseCase.TallasYMedidas tabla = consultarDisponibilidad.tallasYMedidas(itemId);
         List<TallasMedidasResponse.RangoMedidas> medidas = tabla.medidas().stream()
