@@ -43,7 +43,7 @@ class StockPrendaAdapterTest {
 
     @Test
     void siInventarioNoTieneLaPrendaNoHayDisponibilidad() {
-        Request request = Request.create(Request.HttpMethod.GET, "/inventario/prenda/" + prendaId, Map.of(), null,
+        Request request = Request.create(Request.HttpMethod.GET, "/inventory/garments/" + prendaId, Map.of(), null,
                 StandardCharsets.UTF_8, null);
         when(client.disponibilidad(prendaId)).thenThrow(new FeignException.NotFound("no", request, null, Map.of()));
 

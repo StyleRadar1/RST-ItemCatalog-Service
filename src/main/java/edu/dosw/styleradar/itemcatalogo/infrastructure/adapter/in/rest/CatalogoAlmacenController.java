@@ -23,19 +23,19 @@ public class CatalogoAlmacenController implements CatalogoAlmacenApi {
     }
 
     @Override
-    @GetMapping({"/stores/{storeId}/catalog", "/almacenes/{storeId}/catalogo"})
+    @GetMapping("/stores/{storeId}/catalog")
     public ResponseEntity<List<PrendaResponse>> catalogo(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.catalogo(almacenId)));
     }
 
     @Override
-    @GetMapping({"/stores/{storeId}/catalog/summary", "/almacenes/{storeId}/catalogo/resumen"})
+    @GetMapping("/stores/{storeId}/catalog/summary")
     public ResponseEntity<CatalogoResumenResponse> resumen(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResumen(almacenId, consultarCatalogo.catalogo(almacenId)));
     }
 
     @Override
-    @GetMapping({"/stores/{storeId}/new-arrivals", "/almacenes/{storeId}/novedades"})
+    @GetMapping("/stores/{storeId}/new-arrivals")
     public ResponseEntity<List<PrendaResponse>> novedades(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.novedades(almacenId)));
     }

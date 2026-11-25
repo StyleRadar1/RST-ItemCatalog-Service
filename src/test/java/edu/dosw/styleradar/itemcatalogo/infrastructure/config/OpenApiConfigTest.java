@@ -11,7 +11,7 @@ class OpenApiConfigTest {
 
     @Test
     void swaggerShowsEveryPathWithApiV1() {
-        OpenAPI openApi = new OpenApiConfig().openApi().paths(new Paths().addPathItem("/garments", new PathItem()).addPathItem("/prendas", new PathItem()));
+        OpenAPI openApi = new OpenApiConfig().openApi().paths(new Paths().addPathItem("/garments", new PathItem()));
 
         new OpenApiConfig().apiV1Paths("/api/v1").customise(openApi);
 

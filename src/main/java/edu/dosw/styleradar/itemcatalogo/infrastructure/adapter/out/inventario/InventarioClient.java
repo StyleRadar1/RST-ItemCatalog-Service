@@ -10,9 +10,9 @@ import java.util.UUID;
 @FeignClient(name = "ms-inventario", url = "${inventario.url}")
 public interface InventarioClient {
 
-    @GetMapping("/inventario/tallas/{talla}/prendas")
-    List<UUID> prendasDisponibles(@PathVariable("talla") String talla);
+    @GetMapping("/inventory/sizes/{size}/garments")
+    List<UUID> prendasDisponibles(@PathVariable("size") String talla);
 
-    @GetMapping("/inventario/prenda/{prendaId}")
-    DisponibilidadInventarioResponse disponibilidad(@PathVariable("prendaId") UUID prendaId);
+    @GetMapping("/inventory/garments/{garmentId}")
+    DisponibilidadInventarioResponse disponibilidad(@PathVariable("garmentId") UUID prendaId);
 }
