@@ -35,7 +35,7 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @PostMapping({"/items", "/prendas"})
+    @PostMapping({"/garments", "/prendas"})
     public ResponseEntity<PrendaResponse> publicar(@Valid @RequestBody PrendaRequest request,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
         UUID almacenId = almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(request.almacenId());
@@ -49,13 +49,13 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @GetMapping({"/items/{id}", "/prendas/{id}"})
+    @GetMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> obtener(@PathVariable UUID id) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.obtener(id)));
     }
 
     @Override
-    @PutMapping({"/items/{id}", "/prendas/{id}"})
+    @PutMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> editar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
@@ -68,7 +68,7 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @DeleteMapping({"/items/{id}", "/prendas/{id}"})
+    @DeleteMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> retirar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,

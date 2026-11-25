@@ -98,7 +98,7 @@ class ItemCatalogoIntegrationTest {
     }
 
     private String publicar(String nombre) throws Exception {
-        String body = mockMvc.perform(post("/items").contentType(MediaType.APPLICATION_JSON).content(prendaJson(nombre)))
+        String body = mockMvc.perform(post("/garments").contentType(MediaType.APPLICATION_JSON).content(prendaJson(nombre)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.estado").value("PENDIENTE"))
                 .andReturn().getResponse().getContentAsString();
@@ -109,15 +109,15 @@ class ItemCatalogoIntegrationTest {
     void publicaModeraYBuscaUnaPrenda() throws Exception {
         String id = publicar("Gorra roja");
 
-        mockMvc.perform(get("/items").param("texto", "gorra roja"))
+        mockMvc.perform(get("/garments").param("texto", "gorra roja"))
                 .andExpect(jsonPath("$[*].id", not(hasItem(id))));
 
-        mockMvc.perform(put("/items/" + id + "/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/garments/" + id + "/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("APROBADA"));
 
-        mockMvc.perform(get("/items").param("texto", "gorra roja"))
+        mockMvc.perform(get("/garments").param("texto", "gorra roja"))
                 .andExpect(jsonPath("$[0].id").value(id));
     }
 
@@ -125,17 +125,17 @@ class ItemCatalogoIntegrationTest {
     void soloElDuenoEditaYRetiraLaPrenda() throws Exception {
         String id = publicar("Gorra azul");
 
-        mockMvc.perform(put("/items/" + id).header(ALMACEN, "a1111111-1111-1111-1111-111111111111")
+        mockMvc.perform(put("/garments/" + id).header(ALMACEN, "a1111111-1111-1111-1111-111111111111")
                         .contentType(MediaType.APPLICATION_JSON).content(prendaJson("Gorra ajena")))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(put("/items/" + id).header(ALMACEN, CALLE_85)
+        mockMvc.perform(put("/garments/" + id).header(ALMACEN, CALLE_85)
                         .contentType(MediaType.APPLICATION_JSON).content(prendaJson("Gorra azul oscuro")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Gorra azul oscuro"))
                 .andExpect(jsonPath("$.fotografias", hasSize(1)));
 
-        mockMvc.perform(delete("/items/" + id))
+        mockMvc.perform(delete("/garments/" + id))
                 .andExpect(status().isForbidden());
     }
 
@@ -154,7 +154,7 @@ class ItemCatalogoIntegrationTest {
         String id = publicar("Gorra verde");
 
         // Act
-        mockMvc.perform(delete("/items/" + id).header(ALMACEN, CALLE_85))
+        mockMvc.perform(delete("/garments/" + id).header(ALMACEN, CALLE_85))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("RETIRADA"));
 
@@ -169,7 +169,7 @@ class ItemCatalogoIntegrationTest {
         String cola = escuchar("q.test.prenda-publicada", "styleradar.catalogo.prenda.publicada");
         String id = publicar("Gorra amarilla");
 
-        mockMvc.perform(put("/items/" + id + "/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/garments/" + id + "/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isOk());
 
@@ -187,7 +187,7 @@ class ItemCatalogoIntegrationTest {
         boolean agotada = false;
         for (int i = 0; i < 50 && !agotada; i++) {
             Thread.sleep(100);
-            String body = mockMvc.perform(get("/items/b4444444-4444-4444-4444-444444444444")).andReturn().getResponse().getContentAsString();
+            String body = mockMvc.perform(get("/garments/b4444444-4444-4444-4444-444444444444")).andReturn().getResponse().getContentAsString();
             agotada = !objectMapper.readTree(body).get("disponible").asBoolean();
         }
 
@@ -210,69 +210,69 @@ class ItemCatalogoIntegrationTest {
         boolean agotada = false;
         for (int i = 0; i < 50 && !agotada; i++) {
             Thread.sleep(100);
-            String body = mockMvc.perform(get("/items/" + HOODIE)).andReturn().getResponse().getContentAsString();
+            String body = mockMvc.perform(get("/garments/" + HOODIE)).andReturn().getResponse().getContentAsString();
             agotada = !objectMapper.readTree(body).get("disponible").asBoolean();
         }
 
         assertThat(agotada).isTrue();
-        mockMvc.perform(get("/items").param("texto", "hoodie"))
+        mockMvc.perform(get("/garments").param("texto", "hoodie"))
                 .andExpect(jsonPath("$[*].id", not(hasItem(HOODIE))));
     }
 
     @Test
     void filtraYOrdenaLaBusqueda() throws Exception {
-        mockMvc.perform(get("/items").param("tipo", "Chaqueta"))
+        mockMvc.perform(get("/garments").param("tipo", "Chaqueta"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nombre").value("Chaqueta denim oversize"));
 
-        mockMvc.perform(get("/items").param("orden", "REPUTACION"))
+        mockMvc.perform(get("/garments").param("orden", "REPUTACION"))
                 .andExpect(jsonPath("$[0].nombre").value("Blazer de lino"));
     }
 
     @Test
     void consultaElCatalogoDeUnAlmacen() throws Exception {
-        mockMvc.perform(get("/catalog/stores/" + CALLE_85 + "/summary"))
+        mockMvc.perform(get("/stores/" + CALLE_85 + "/catalog/summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.almacenId").value(CALLE_85));
 
-        mockMvc.perform(get("/catalog/stores/" + CALLE_85 + "/new-arrivals"))
+        mockMvc.perform(get("/stores/" + CALLE_85 + "/new-arrivals"))
                 .andExpect(jsonPath("$[*].nombre", not(hasItem("Hoodie gráfico"))));
     }
 
     @Test
     void listaLasPendientesPorAlmacen() throws Exception {
-        mockMvc.perform(get("/items/pending").header(ROL, ADMIN))
+        mockMvc.perform(get("/garments/pending").header(ROL, ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.grupos[?(@.almacenId == 'a3333333-3333-3333-3333-333333333333')].pendientes", hasItem(1)));
     }
 
     @Test
     void respondeErroresClaros() throws Exception {
-        mockMvc.perform(post("/items").contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"\"}"))
+        mockMvc.perform(post("/garments").contentType(MediaType.APPLICATION_JSON).content("{\"nombre\":\"\"}"))
                 .andExpect(status().isBadRequest());
 
-        mockMvc.perform(get("/items/00000000-0000-0000-0000-000000000000"))
+        mockMvc.perform(get("/garments/00000000-0000-0000-0000-000000000000"))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(get("/items").param("tipo", "Gorra").param("estilo", "Elegante").param("lat", "95").param("lng", "-74"))
+        mockMvc.perform(get("/garments").param("tipo", "Gorra").param("estilo", "Elegante").param("lat", "95").param("lng", "-74"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.tipo").exists())
                 .andExpect(jsonPath("$.errors.estilo").exists())
                 .andExpect(jsonPath("$.errors.lat").value("La latitud debe estar entre -90 y 90"));
 
-        mockMvc.perform(get("/items").param("precioMin", "-1"))
+        mockMvc.perform(get("/garments").param("precioMin", "-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.precioMin").value("El precio mínimo no puede ser negativo"));
 
-        mockMvc.perform(get("/items").param("precioMin", "200000").param("precioMax", "100000"))
+        mockMvc.perform(get("/garments").param("precioMin", "200000").param("precioMax", "100000"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("El precio mínimo no puede ser mayor que el precio máximo"));
 
-        mockMvc.perform(put("/items/b1111111-1111-1111-1111-111111111111/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(put("/garments/b1111111-1111-1111-1111-111111111111/moderation").header(ROL, ADMIN).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"decision\":\"APROBADA\",\"moderadorId\":\"99999999-9999-9999-9999-999999999999\"}"))
                 .andExpect(status().isUnprocessableEntity());
 
-        mockMvc.perform(get("/items/pending").header(ROL, "COMPRADOR"))
+        mockMvc.perform(get("/garments/pending").header(ROL, "COMPRADOR"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("ACCESO_DENEGADO"));
     }

@@ -27,7 +27,7 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
     }
 
     @Override
-    @GetMapping({"/items", "/prendas"})
+    @GetMapping({"/garments", "/prendas"})
     public ResponseEntity<List<PrendaResponse>> buscar(@RequestParam(required = false) String texto,
                                                        @RequestParam(required = false) String tipo,
                                                        @RequestParam(required = false) String color,
@@ -45,7 +45,7 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
     }
 
     @Override
-    @GetMapping({"/items/{id}/similar", "/prendas/{id}/similares"})
+    @GetMapping({"/garments/{id}/similar", "/prendas/{id}/similares"})
     public ResponseEntity<List<PrendaResponse>> similares(@PathVariable UUID id) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(buscarPrendas.similares(id)));
     }

@@ -28,7 +28,7 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @GetMapping({"/items/pending", "/prendas/pendientes"})
+    @GetMapping({"/garments/pending", "/prendas/pendientes"})
     public ResponseEntity<PendientesResponse> pendientes(
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles) {
@@ -37,7 +37,7 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @PutMapping({"/items/pending/stores/{storeId}/moderation", "/prendas/pendientes/almacenes/{storeId}/moderacion"})
+    @PutMapping({"/garments/pending/stores/{storeId}/moderation", "/prendas/pendientes/almacenes/{storeId}/moderacion"})
     public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable("storeId") UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
@@ -49,7 +49,7 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @PutMapping({"/items/{id}/moderation", "/prendas/{id}/moderacion"})
+    @PutMapping({"/garments/{id}/moderation", "/prendas/{id}/moderacion"})
     public ResponseEntity<PrendaResponse> moderar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
