@@ -4,8 +4,11 @@ import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
 import edu.dosw.styleradar.itemcatalogo.domain.model.FiltroBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ordenamiento;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Ubicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.BusquedaPrendaApi;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +24,11 @@ import java.util.UUID;
 public class BusquedaPrendaController implements BusquedaPrendaApi {
 
     private final BuscarPrendasUseCase buscarPrendas;
+    private final ConsultarNitAlmacenUseCase nitAlmacenes;
 
-    public BusquedaPrendaController(BuscarPrendasUseCase buscarPrendas) {
+    public BusquedaPrendaController(BuscarPrendasUseCase buscarPrendas, ConsultarNitAlmacenUseCase nitAlmacenes) {
         this.buscarPrendas = buscarPrendas;
+        this.nitAlmacenes = nitAlmacenes;
     }
 
     @Override
@@ -41,12 +46,15 @@ public class BusquedaPrendaController implements BusquedaPrendaApi {
                                                        @RequestParam(required = false) Double lng) {
         Ubicacion ubicacion = lat != null && lng != null ? new Ubicacion(lat, lng) : null;
         FiltroBusqueda filtro = new FiltroBusqueda(texto, tipo, color, marca, estilo, talla, precioMin, precioMax, orden, ubicacion);
-        return ResponseEntity.ok(PrendaMapperIn.toEncontradas(buscarPrendas.buscar(filtro)));
+        List<PrendaEncontrada> encontradas = buscarPrendas.buscar(filtro);
+        return ResponseEntity.ok(PrendaMapperIn.toEncontradas(encontradas,
+                nitAlmacenes.nitsDe(encontradas.stream().map(e -> e.prenda().getAlmacenId()).toList())));
     }
 
     @Override
     @GetMapping("/garments/{id}/similar")
     public ResponseEntity<List<PrendaResponse>> similares(@PathVariable UUID id) {
-        return ResponseEntity.ok(PrendaMapperIn.toResponse(buscarPrendas.similares(id)));
+        List<Prenda> similares = buscarPrendas.similares(id);
+        return ResponseEntity.ok(PrendaMapperIn.toResponse(similares, NitsDePrendas.de(nitAlmacenes, similares)));
     }
 }

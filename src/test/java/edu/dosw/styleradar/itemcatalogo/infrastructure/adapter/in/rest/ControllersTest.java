@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import edu.dosw.styleradar.itemcatalogo.application.dto.response.TallasMedidasRe
 import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GuiaMedidas;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,10 +45,12 @@ import static org.mockito.Mockito.when;
 
 class ControllersTest {
 
+    private static final String NIT = "900555777-1";
     private final UUID almacenId = UUID.randomUUID();
     private final Prenda prenda = Prenda.publicar(almacenId, "Chaqueta denim",
             new AtributosBusqueda("Chaqueta", "Azul", "Levis", "Urbano"), new Precio(new BigDecimal("190000")),
             List.of(new Fotografia("https://foto/1.jpg", 1)));
+    private final ConsultarNitAlmacenUseCase nits = ids -> ids.contains(almacenId) ? Map.of(almacenId, NIT) : Map.of();
     private final PrendaRequest request = new PrendaRequest(almacenId, "Chaqueta denim", "Chaqueta", "Azul", "Levis",
             "Urbano", new BigDecimal("190000"), List.of("https://foto/1.jpg"));
 
@@ -55,12 +59,13 @@ class ControllersTest {
         BuscarPrendasUseCase useCase = mock(BuscarPrendasUseCase.class);
         when(useCase.buscar(any())).thenReturn(List.of(new PrendaEncontrada(prenda, 1.5)));
         when(useCase.similares(prenda.getId())).thenReturn(List.of());
-        BusquedaPrendaController controller = new BusquedaPrendaController(useCase);
+        BusquedaPrendaController controller = new BusquedaPrendaController(useCase, nits);
 
         ResponseEntity<List<PrendaResponse>> busqueda = controller.buscar("denim", null, null, null, null, null, null, null, null, null, null);
 
         assertThat(busqueda.getBody()).extracting(PrendaResponse::nombre).containsExactly("Chaqueta denim");
         assertThat(busqueda.getBody()).extracting(PrendaResponse::distanciaKm).containsExactly(1.5);
+        assertThat(busqueda.getBody()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
         assertThat(controller.similares(prenda.getId()).getBody()).isEmpty();
     }
 
@@ -69,9 +74,9 @@ class ControllersTest {
         ConsultarCatalogoAlmacenUseCase useCase = mock(ConsultarCatalogoAlmacenUseCase.class);
         when(useCase.catalogo(almacenId)).thenReturn(List.of(prenda));
         when(useCase.novedades(almacenId)).thenReturn(List.of(prenda));
-        CatalogoAlmacenController controller = new CatalogoAlmacenController(useCase);
+        CatalogoAlmacenController controller = new CatalogoAlmacenController(useCase, nits);
 
-        assertThat(controller.catalogo(almacenId).getBody()).hasSize(1);
+        assertThat(controller.catalogo(almacenId).getBody()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
         assertThat(controller.novedades(almacenId).getBody()).hasSize(1);
         CatalogoResumenResponse resumen = controller.resumen(almacenId).getBody();
         assertThat(resumen.totalPrendas()).isEqualTo(1);
@@ -87,10 +92,12 @@ class ControllersTest {
         when(useCase.retirar(prenda.getId(), new Solicitante(null, true))).thenReturn(prenda);
         SincronizarAlmacenesUseCase almacenes = mock(SincronizarAlmacenesUseCase.class);
         when(almacenes.almacenDelUsuario(any())).thenReturn(Optional.empty());
-        PrendaController controller = new PrendaController(useCase, almacenes);
+        PrendaController controller = new PrendaController(useCase, almacenes, nits);
 
         assertThat(controller.publicar(request, null).getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(controller.obtener(prenda.getId()).getBody().id()).isEqualTo(prenda.getId());
+        assertThat(controller.obtener(prenda.getId()).getBody().storeNit()).isEqualTo(NIT);
+        assertThat(controller.obtener(prenda.getId()).getBody().almacenId()).isEqualTo(almacenId);
         assertThat(controller.editar(prenda.getId(), almacenId, null, null, null, request).getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(controller.retirar(prenda.getId(), null, null, "ROLE_ADMIN_STYLERADAR", null).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
@@ -103,7 +110,7 @@ class ControllersTest {
         when(almacenes.almacenDelUsuario(10L)).thenReturn(Optional.of(almacenId));
         when(useCase.publicar(eq(almacenId), any(), any(), any(), any())).thenReturn(prenda);
         when(useCase.retirar(prenda.getId(), new Solicitante(almacenId, false))).thenReturn(prenda);
-        PrendaController controller = new PrendaController(useCase, almacenes);
+        PrendaController controller = new PrendaController(useCase, almacenes, nits);
         PrendaRequest sinAlmacen = new PrendaRequest(null, request.nombre(), request.tipo(), request.color(), request.marca(),
                 request.estilo(), request.precio(), request.fotografias());
 
@@ -120,7 +127,7 @@ class ControllersTest {
         when(useCase.pendientesPorGrupo()).thenReturn(List.of(new GrupoPendientes(almacenId, "Calle 85 Store", List.of(prenda))));
         when(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, moderador)).thenReturn(prenda);
         when(useCase.moderarGrupo(almacenId, EstadoPublicacion.APROBADA, null, moderador)).thenReturn(List.of(prenda));
-        ModeracionController controller = new ModeracionController(useCase);
+        ModeracionController controller = new ModeracionController(useCase, nits);
 
         PendientesResponse pendientes = controller.pendientes("ADMIN_STYLERADAR", null).getBody();
 
@@ -128,6 +135,7 @@ class ControllersTest {
         assertThat(pendientes.total()).isEqualTo(1);
         assertThat(pendientes.grupos().get(0).almacen()).isEqualTo("Calle 85 Store");
         assertThat(pendientes.grupos().get(0).pendientes()).isEqualTo(1);
+        assertThat(pendientes.grupos().get(0).prendas()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
         assertThat(controller.moderar(prenda.getId(), null, "COMPRADOR,ADMIN_STYLERADAR", null, aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(controller.moderarGrupo(almacenId, "ADMIN", null, null, aprobar).getBody()).hasSize(1);
         assertThatThrownBy(() -> controller.moderar(prenda.getId(), "ADMIN_ALMACEN", null, null, aprobar))
@@ -140,10 +148,19 @@ class ControllersTest {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         when(useCase.pendientesPorGrupo()).thenReturn(List.of());
 
-        PendientesResponse pendientes = new ModeracionController(useCase).pendientes(null, "ADMIN_STYLERADAR").getBody();
+        PendientesResponse pendientes = new ModeracionController(useCase, nits).pendientes(null, "ADMIN_STYLERADAR").getBody();
 
         assertThat(pendientes.total()).isZero();
         assertThat(pendientes.grupos()).isEmpty();
+    }
+
+    @Test
+    void sinNitRegistradoElStoreNitVaVacio() {
+        GestionarPrendaUseCase useCase = mock(GestionarPrendaUseCase.class);
+        when(useCase.obtener(prenda.getId())).thenReturn(prenda);
+        PrendaController controller = new PrendaController(useCase, mock(SincronizarAlmacenesUseCase.class), ids -> Map.of());
+
+        assertThat(controller.obtener(prenda.getId()).getBody().storeNit()).isNull();
     }
 
     @Test
@@ -175,7 +192,7 @@ class ControllersTest {
     void aceptaLosRolesNuevosDeMsAuth() {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         when(useCase.pendientesPorGrupo()).thenReturn(List.of());
-        ModeracionController controller = new ModeracionController(useCase);
+        ModeracionController controller = new ModeracionController(useCase, nits);
 
         assertThat(controller.pendientes(null, "BUYER,STYLERADAR_ADMIN").getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThatThrownBy(() -> controller.pendientes("STORE_ADMIN", "BUYER")).isInstanceOf(AccesoDenegadoException.class);
@@ -186,7 +203,7 @@ class ControllersTest {
         ModerarPublicacionUseCase useCase = mock(ModerarPublicacionUseCase.class);
         UUID desdeToken = UUID.nameUUIDFromBytes("ms-auth:usuario:4".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         when(useCase.moderar(prenda.getId(), EstadoPublicacion.APROBADA, null, desdeToken)).thenReturn(prenda);
-        ModeracionController controller = new ModeracionController(useCase);
+        ModeracionController controller = new ModeracionController(useCase, nits);
 
         assertThat(controller.moderar(prenda.getId(), "STYLERADAR_ADMIN", null, "4",
                 new ModeracionRequest(EstadoPublicacion.APROBADA, null, "admin-1")).getStatusCode()).isEqualTo(HttpStatus.OK);

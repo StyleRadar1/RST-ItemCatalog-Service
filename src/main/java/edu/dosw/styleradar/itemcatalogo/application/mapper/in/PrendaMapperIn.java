@@ -13,6 +13,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -38,39 +39,36 @@ public final class PrendaMapperIn {
                 .toList();
     }
 
-    public static PrendaResponse toResponse(Prenda prenda) {
-        return toResponse(prenda, null);
+    public static PrendaResponse toResponse(Prenda prenda, Map<UUID, String> nits) {
+        return toResponse(prenda, null, nits);
     }
 
-    public static PrendaResponse toResponse(PrendaEncontrada encontrada) {
-        return toResponse(encontrada.prenda(), encontrada.distanciaKm());
+    public static List<PrendaResponse> toEncontradas(List<PrendaEncontrada> encontradas, Map<UUID, String> nits) {
+        return encontradas.stream().map(e -> toResponse(e.prenda(), e.distanciaKm(), nits)).toList();
     }
 
-    public static List<PrendaResponse> toEncontradas(List<PrendaEncontrada> encontradas) {
-        return encontradas.stream().map(PrendaMapperIn::toResponse).toList();
-    }
-
-    private static PrendaResponse toResponse(Prenda prenda, Double distanciaKm) {
+    private static PrendaResponse toResponse(Prenda prenda, Double distanciaKm, Map<UUID, String> nits) {
         AtributosBusqueda a = prenda.getAtributos();
         return new PrendaResponse(prenda.getId(), prenda.getAlmacenId(), prenda.getNombre(), a.tipo(), a.color(),
                 a.marca(), a.estilo(), prenda.getPrecio().valor(),
                 prenda.getFotografias().stream().map(Fotografia::url).toList(),
-                prenda.getEstado().name(), prenda.isDisponible(), prenda.getFechaPublicacion(), distanciaKm);
+                prenda.getEstado().name(), prenda.isDisponible(), prenda.getFechaPublicacion(), distanciaKm,
+                nits.get(prenda.getAlmacenId()));
     }
 
-    public static List<PrendaResponse> toResponse(List<Prenda> prendas) {
-        return prendas.stream().map(PrendaMapperIn::toResponse).toList();
+    public static List<PrendaResponse> toResponse(List<Prenda> prendas, Map<UUID, String> nits) {
+        return prendas.stream().map(prenda -> toResponse(prenda, nits)).toList();
     }
 
-    public static CatalogoResumenResponse toResumen(UUID almacenId, List<Prenda> prendas) {
+    public static CatalogoResumenResponse toResumen(UUID almacenId, List<Prenda> prendas, Map<UUID, String> nits) {
         return new CatalogoResumenResponse(almacenId, prendas.size(),
-                toResponse(prendas.stream().limit(PRENDAS_EN_RESUMEN).toList()));
+                toResponse(prendas.stream().limit(PRENDAS_EN_RESUMEN).toList(), nits));
     }
 
-    public static PendientesResponse toPendientes(List<GrupoPendientes> grupos) {
+    public static PendientesResponse toPendientes(List<GrupoPendientes> grupos, Map<UUID, String> nits) {
         List<GrupoPendientesResponse> respuesta = grupos.stream()
                 .map(grupo -> new GrupoPendientesResponse(grupo.almacenId(), grupo.almacen(), grupo.total(),
-                        toResponse(grupo.prendas())))
+                        toResponse(grupo.prendas(), nits)))
                 .toList();
         return new PendientesResponse(TIPO_PUBLICADOR, grupos.stream().mapToInt(GrupoPendientes::total).sum(), respuesta);
     }
