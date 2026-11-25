@@ -31,20 +31,9 @@ public class OpenApiConfig {
     public OpenApiCustomizer apiV1Paths(@Value("${server.servlet.context-path:}") String contextPath) {
         return openApi -> {
             Paths paths = new Paths();
-            openApi.getPaths().forEach((path, item) -> {
-                if (!esRutaEnEspanol(path)) {
-                    paths.addPathItem(contextPath + path, item);
-                }
-            });
+            openApi.getPaths().forEach((path, item) -> paths.addPathItem(contextPath + path, item));
             openApi.setPaths(paths);
             openApi.setServers(List.of(new Server().url("/")));
         };
     }
-
-    // Rutas anteriores en español: siguen funcionando mientras el gateway y el front pasan a inglés
-    static boolean esRutaEnEspanol(String path) {
-        return RUTAS_EN_ESPANOL.stream().anyMatch(r -> path.equals(r) || path.startsWith(r + "/"));
-    }
-
-    private static final List<String> RUTAS_EN_ESPANOL = List.of("/prendas", "/almacenes", "/catalogo");
 }

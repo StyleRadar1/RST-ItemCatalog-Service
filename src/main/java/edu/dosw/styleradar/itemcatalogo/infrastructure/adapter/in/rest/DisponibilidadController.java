@@ -23,7 +23,7 @@ public class DisponibilidadController implements DisponibilidadApi {
     }
 
     @Override
-    @GetMapping({"/garments/{itemId}/availability", "/catalogo/items/{itemId}/disponibilidad"})
+    @GetMapping("/garments/{itemId}/availability")
     public ResponseEntity<DisponibilidadResponse> disponibilidad(@PathVariable UUID itemId) {
         Disponibilidad disponibilidad = consultarDisponibilidad.consultar(itemId);
         return ResponseEntity.ok(new DisponibilidadResponse(itemId.toString(), disponibilidad.stockTotal(),
@@ -31,7 +31,7 @@ public class DisponibilidadController implements DisponibilidadApi {
     }
 
     @Override
-    @GetMapping({"/garments/{itemId}/size-guide", "/catalogo/items/{itemId}/tallas-medidas"})
+    @GetMapping("/garments/{itemId}/size-guide")
     public ResponseEntity<TallasMedidasResponse> tallasMedidas(@PathVariable UUID itemId) {
         ConsultarDisponibilidadUseCase.TallasYMedidas tabla = consultarDisponibilidad.tallasYMedidas(itemId);
         List<TallasMedidasResponse.RangoMedidas> medidas = tabla.medidas().stream()

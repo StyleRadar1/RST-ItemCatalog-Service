@@ -52,8 +52,6 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 
 ### Tabla de Endpoints Expuestos
 
-Las rutas anteriores en español (`/prendas`, `/almacenes`, `/fundaciones`, `/catalogo`) siguen respondiendo por compatibilidad mientras el API Gateway y el front terminan de migrar, pero ya no aparecen en Swagger.
-
 El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `STYLERADAR_ADMIN` (nombre actual de ms-auth), `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
 
 | Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
