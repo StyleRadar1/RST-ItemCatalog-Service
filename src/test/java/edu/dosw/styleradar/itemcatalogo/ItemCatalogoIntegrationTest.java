@@ -61,7 +61,7 @@ class ItemCatalogoIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
-        registry.add("spring.flyway.locations", () -> "classpath:db/migration,classpath:db/seed");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration,classpath:db/seed,classpath:db/qa");
         registry.add("spring.rabbitmq.host", RABBIT::getHost);
         registry.add("spring.rabbitmq.port", RABBIT::getAmqpPort);
         registry.add("spring.rabbitmq.username", RABBIT::getAdminUsername);
