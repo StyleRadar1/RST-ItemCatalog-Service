@@ -5,6 +5,7 @@ import edu.dosw.styleradar.itemcatalogo.application.usecase.BuscarPrendasUseCase
 import edu.dosw.styleradar.itemcatalogo.application.usecase.ConsultarCatalogoAlmacenUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.ConsultarDisponibilidadUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.ConsultarNitAlmacenUseCaseImpl;
+import edu.dosw.styleradar.itemcatalogo.application.usecase.GestionarMedidasPrendaUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.GestionarPrendaUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.ModerarPublicacionUseCaseImpl;
 import edu.dosw.styleradar.itemcatalogo.application.usecase.SincronizarAlmacenesUseCaseImpl;
@@ -13,12 +14,14 @@ import edu.dosw.styleradar.itemcatalogo.domain.port.in.BuscarPrendasUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarDisponibilidadUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarMedidasPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.GestionarPrendaUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.DistanciaAlmacenPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.EventPublisherPort;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.MedidaPrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.TallaDisponiblePort;
@@ -68,7 +71,14 @@ public class BeanConfig {
     }
 
     @Bean
-    public ConsultarDisponibilidadUseCase consultarDisponibilidadUseCase(PrendaRepositoryPort prendas, StockPrendaPort stock) {
-        return new ConsultarDisponibilidadUseCaseImpl(prendas, stock);
+    public ConsultarDisponibilidadUseCase consultarDisponibilidadUseCase(PrendaRepositoryPort prendas, StockPrendaPort stock,
+                                                                         MedidaPrendaRepositoryPort medidas) {
+        return new ConsultarDisponibilidadUseCaseImpl(prendas, stock, medidas);
+    }
+
+    @Bean
+    public GestionarMedidasPrendaUseCase gestionarMedidasPrendaUseCase(PrendaRepositoryPort prendas,
+                                                                       MedidaPrendaRepositoryPort medidas) {
+        return new GestionarMedidasPrendaUseCaseImpl(prendas, medidas);
     }
 }
