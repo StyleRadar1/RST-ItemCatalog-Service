@@ -3,6 +3,8 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.SincronizarAlmacenesUseCase;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -57,6 +59,14 @@ final class Identidad {
         } catch (IllegalArgumentException e) {
             return IdAlmacen.desdeNit(trimmed);
         }
+    }
+
+    static Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId,
+                                   SincronizarAlmacenesUseCase almacenes) {
+        boolean admin = esAdmin(rol, roles);
+        UUID almacen = almacenId != null || admin ? almacenId
+                : almacenes.almacenDelUsuario(usuario(usuarioId)).orElse(null);
+        return new Solicitante(almacen, admin);
     }
 
     private static boolean tieneAlgunRol(String rol, String roles, Set<String> permitidos) {

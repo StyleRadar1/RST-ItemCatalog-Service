@@ -36,7 +36,7 @@ public class DisponibilidadController implements DisponibilidadApi {
         ConsultarDisponibilidadUseCase.TallasYMedidas tabla = consultarDisponibilidad.tallasYMedidas(itemId);
         List<TallasMedidasResponse.RangoMedidas> medidas = tabla.medidas().stream()
                 .map(m -> new TallasMedidasResponse.RangoMedidas(m.talla(), m.minPecho(), m.maxPecho(), m.minCintura(),
-                        m.maxCintura(), m.minCadera(), m.maxCadera()))
+                        m.maxCintura(), m.minCadera(), m.maxCadera(), m.largo()))
                 .toList();
         return ResponseEntity.ok(new TallasMedidasResponse(tabla.tallas(), medidas));
     }

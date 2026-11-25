@@ -30,6 +30,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 | 422 | `PRENDA_YA_RETIRADA` | Se intenta retirar dos veces |
 | 422 | `PRENDA_NO_PENDIENTE` | Se intenta moderar una prenda que no está pendiente |
 | 422 | `MOTIVO_REQUERIDO` | Se rechaza sin motivo |
+| 422 | `MEDIDAS_INVALIDAS` | Las medidas tienen una talla inválida o repetida, un rango sin mínimo o máximo, un mínimo mayor que el máximo o un valor fuera de 0 a 300 cm |
 | 500 | `ERROR_INTERNO` | Error inesperado o falla de ms-inventario o ms-geolocalizacion |
 
 * **Especificación OpenAPI:** `http://localhost:8220/api/v1/v3/api-docs`
@@ -71,7 +72,9 @@ Cada prenda en las respuestas trae `almacenId` (UUID del almacén) y `storeNit`,
 | `GET` | `/api/v1/stores/{storeId}/catalog/summary` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
 | `GET` | `/api/v1/stores/{storeId}/new-arrivals` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
 | `GET` | `/api/v1/garments/{itemId}/availability` | Unidades totales y tallas con stock de una prenda, tomadas de `ms-inventario`; la usa `ms-notificaciones` (si inventario no tiene la prenda, `stockTotal` es 0) | Interno | `200`, `400`, `404` |
-| `GET` | `/api/v1/garments/{itemId}/size-guide` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`, rangos de referencia en cm de la guía de tallas del catálogo para cada talla ofertada: pecho, cintura y cadera en tallas de letra; cintura en tallas numéricas de pantalón; vacía en calzado, accesorios y talla única); la usa `ms-probador-virtual` (SR-RF-24 del probador) | Interno | `200`, `400`, `404` |
+| `GET` | `/api/v1/garments/{itemId}/size-guide` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`): para cada talla ofertada devuelve las medidas que registró la tienda (rangos de pecho, cintura y cadera y `lengthCm`) y, si no las registró, los rangos de referencia de la guía de tallas del catálogo; la usa `ms-probador-virtual` para el maniquí y la evaluación de talla (SR-RF-24) | Interno | `200`, `400`, `404` |
+| `PUT` | `/api/v1/garments/{id}/measurements` | Registrar las medidas en cm de cada talla de la prenda (`sizes` con `size`, `minChestCm`, `maxChestCm`, `minWaistCm`, `maxWaistCm`, `minHipCm`, `maxHipCm` y `lengthCm`); reemplaza las anteriores. Cada rango va con mínimo y máximo, la talla debe ser válida y no repetirse | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `GET` | `/api/v1/garments/{id}/measurements` | Consultar las medidas registradas por talla; lista vacía si la tienda no las ha registrado | Público | `200`, `400`, `404` |
 | `GET` | `/api/v1/health` | Estado del servicio | Público | `200` |
 
 ---

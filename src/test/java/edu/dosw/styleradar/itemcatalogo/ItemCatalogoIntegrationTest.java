@@ -127,6 +127,33 @@ class ItemCatalogoIntegrationTest {
     }
 
     @Test
+    void elDuenoGuardaYConsultaLasMedidasDeLaPrenda() throws Exception {
+        String id = publicar("Gorra negra");
+        String medidas = "{\"sizes\":[{\"size\":\"M\",\"minChestCm\":92,\"maxChestCm\":100,\"lengthCm\":70}]}";
+
+        mockMvc.perform(put("/garments/" + id + "/measurements").header(ALMACEN, "a1111111-1111-1111-1111-111111111111")
+                        .contentType(MediaType.APPLICATION_JSON).content(medidas))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/garments/" + id + "/measurements").header(ALMACEN, CALLE_85)
+                        .contentType(MediaType.APPLICATION_JSON).content(medidas))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sizes[0].lengthCm").value(70.0));
+
+        mockMvc.perform(get("/garments/" + id + "/measurements"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sizes", hasSize(1)))
+                .andExpect(jsonPath("$.sizes[0].size").value("M"))
+                .andExpect(jsonPath("$.sizes[0].maxChestCm").value(100.0));
+
+        mockMvc.perform(put("/garments/" + id + "/measurements").header(ALMACEN, CALLE_85)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sizes\":[{\"size\":\"M\",\"minChestCm\":100,\"maxChestCm\":92}]}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("MEDIDAS_INVALIDAS"));
+    }
+
+    @Test
     void soloElDuenoEditaYRetiraLaPrenda() throws Exception {
         String id = publicar("Gorra azul");
 

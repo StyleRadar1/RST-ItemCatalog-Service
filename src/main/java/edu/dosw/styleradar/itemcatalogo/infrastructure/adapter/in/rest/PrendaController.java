@@ -134,4 +134,8 @@ public class PrendaController implements PrendaApi {
                 : resolverAlmacenParaTienda(storeIdHeader, almacenIdHeader, usuarioId);
         return new Solicitante(almacen, admin);
     }
+
+    private Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId) {
+        return Identidad.solicitante(almacenId, rol, roles, usuarioId, almacenes);
+    }
 }
