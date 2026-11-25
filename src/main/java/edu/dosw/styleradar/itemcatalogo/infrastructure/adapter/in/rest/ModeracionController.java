@@ -4,6 +4,9 @@ import edu.dosw.styleradar.itemcatalogo.application.dto.request.ModeracionReques
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PendientesResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
+import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
+import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ModerarPublicacionUseCase;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.ModeracionApi;
 import jakarta.validation.Valid;
@@ -22,9 +25,11 @@ import java.util.UUID;
 public class ModeracionController implements ModeracionApi {
 
     private final ModerarPublicacionUseCase moderarPublicacion;
+    private final ConsultarNitAlmacenUseCase nitAlmacenes;
 
-    public ModeracionController(ModerarPublicacionUseCase moderarPublicacion) {
+    public ModeracionController(ModerarPublicacionUseCase moderarPublicacion, ConsultarNitAlmacenUseCase nitAlmacenes) {
         this.moderarPublicacion = moderarPublicacion;
+        this.nitAlmacenes = nitAlmacenes;
     }
 
     @Override
@@ -33,7 +38,9 @@ public class ModeracionController implements ModeracionApi {
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles) {
         Identidad.exigirAdmin(rol, roles);
-        return ResponseEntity.ok(PrendaMapperIn.toPendientes(moderarPublicacion.pendientesPorGrupo()));
+        List<GrupoPendientes> grupos = moderarPublicacion.pendientesPorGrupo();
+        return ResponseEntity.ok(PrendaMapperIn.toPendientes(grupos,
+                nitAlmacenes.nitsDe(grupos.stream().map(GrupoPendientes::almacenId).toList())));
     }
 
     @Override
@@ -45,7 +52,8 @@ public class ModeracionController implements ModeracionApi {
             @Valid @RequestBody ModeracionRequest request) {
         Identidad.exigirAdmin(rol, roles);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(moderarPublicacion.moderarGrupo(
-                almacenId, request.decision(), request.motivo(), Identidad.moderador(usuarioId, request.moderadorId()))));
+                almacenId, request.decision(), request.motivo(), Identidad.moderador(usuarioId, request.moderadorId())),
+                nitAlmacenes.nitsDe(List.of(almacenId))));
     }
 
     @Override
@@ -56,8 +64,8 @@ public class ModeracionController implements ModeracionApi {
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody ModeracionRequest request) {
         Identidad.exigirAdmin(rol, roles);
-        return ResponseEntity.ok(PrendaMapperIn.toResponse(
-                moderarPublicacion.moderar(id, request.decision(), request.motivo(),
-                        Identidad.moderador(usuarioId, request.moderadorId()))));
+        Prenda prenda = moderarPublicacion.moderar(id, request.decision(), request.motivo(),
+                Identidad.moderador(usuarioId, request.moderadorId()));
+        return ResponseEntity.ok(PrendaMapperIn.toResponse(prenda, NitsDePrendas.de(nitAlmacenes, List.of(prenda))));
     }
 }

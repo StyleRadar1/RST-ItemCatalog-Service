@@ -44,6 +44,23 @@ class SincronizarAlmacenesUseCaseImplTest {
     }
 
     @Test
+    void guardaElNitDeMsTiendasYConservaElAnteriorSiNoLlega() {
+        UUID conNit = UUID.randomUUID();
+        UUID sinNit = UUID.randomUUID();
+        when(almacenes.findById(conNit)).thenReturn(Optional.empty());
+        when(almacenes.findById(sinNit))
+                .thenReturn(Optional.of(new AlmacenResumen(sinNit, "Nora", BigDecimal.ONE, true, null, "900123456-1")));
+        when(tiendas.almacenes()).thenReturn(List.of(
+                new TiendasPort.AlmacenTienda(conNit, "Almacén Pruebas QA", BigDecimal.ONE, " 900555777-1 "),
+                new TiendasPort.AlmacenTienda(sinNit, "Nora", BigDecimal.ONE, null)));
+
+        useCase.cargarDesdeTiendas();
+
+        verify(almacenes).save(new AlmacenResumen(conNit, "Almacén Pruebas QA", BigDecimal.ONE, true, null, "900555777-1"));
+        verify(almacenes).save(new AlmacenResumen(sinNit, "Nora", BigDecimal.ONE, true, null, "900123456-1"));
+    }
+
+    @Test
     void buscaElAlmacenDelUsuario() {
         UUID almacen = UUID.randomUUID();
         when(tiendas.almacenDelUsuario(10L)).thenReturn(Optional.of(almacen));

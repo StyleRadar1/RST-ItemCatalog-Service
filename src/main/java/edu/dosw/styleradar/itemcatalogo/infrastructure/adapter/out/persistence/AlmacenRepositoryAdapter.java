@@ -1,11 +1,12 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence;
 
-import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.mapper.PrendaMapperOut;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AlmacenResumen;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.AlmacenRepositoryPort;
+import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.mapper.PrendaMapperOut;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.out.persistence.repository.AlmacenResumenJpaRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,11 @@ public class AlmacenRepositoryAdapter implements AlmacenRepositoryPort {
     @Override
     public List<AlmacenResumen> findAll() {
         return jpaRepository.findAll().stream().map(PrendaMapperOut::toDomain).toList();
+    }
+
+    @Override
+    public List<AlmacenResumen> findAllById(Collection<UUID> almacenIds) {
+        return jpaRepository.findAllById(almacenIds).stream().map(PrendaMapperOut::toDomain).toList();
     }
 
     @Override

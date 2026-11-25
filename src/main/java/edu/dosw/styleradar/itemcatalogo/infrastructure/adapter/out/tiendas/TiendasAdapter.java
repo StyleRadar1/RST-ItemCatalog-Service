@@ -39,7 +39,7 @@ public class TiendasAdapter implements TiendasPort {
                 break;
             }
             respuesta.content().forEach(a -> almacenes.add(
-                    new AlmacenTienda(idAlmacen(a.nit()), a.nombreComercial(), reputacion(a.reputacion()))));
+                    new AlmacenTienda(idAlmacen(a.nit()), a.nombreComercial(), reputacion(a.reputacion()), a.nit())));
         } while (!respuesta.last() && pagina < MAXIMO_PAGINAS);
         return almacenes;
     }

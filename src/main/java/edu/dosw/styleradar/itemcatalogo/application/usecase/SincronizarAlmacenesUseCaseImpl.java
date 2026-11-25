@@ -32,7 +32,8 @@ public class SincronizarAlmacenesUseCaseImpl implements SincronizarAlmacenesUseC
             boolean activo = actual.map(AlmacenResumen::activo).orElse(true);
             Long administrador = actual.map(AlmacenResumen::administradorId).orElse(null);
             BigDecimal reputacion = a.reputacion() == null ? BigDecimal.ZERO : a.reputacion();
-            almacenRepository.save(new AlmacenResumen(a.id(), a.nombre().trim(), reputacion, activo, administrador));
+            String nit = a.nit() == null || a.nit().isBlank() ? actual.map(AlmacenResumen::nit).orElse(null) : a.nit().trim();
+            almacenRepository.save(new AlmacenResumen(a.id(), a.nombre().trim(), reputacion, activo, administrador, nit));
             guardados++;
         }
         return new CargaAlmacenes(guardados, descartados);

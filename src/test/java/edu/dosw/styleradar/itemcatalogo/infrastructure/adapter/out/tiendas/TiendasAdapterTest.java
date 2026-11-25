@@ -32,6 +32,7 @@ class TiendasAdapterTest {
         assertThat(almacenes).hasSize(2);
         assertThat(almacenes.get(0).id()).isEqualTo(TiendasAdapter.idAlmacen("900123456-1"));
         assertThat(almacenes.get(0).reputacion()).isEqualByComparingTo("4.88");
+        assertThat(almacenes.get(0).nit()).isEqualTo("900123456-1");
         assertThat(almacenes.get(1).reputacion()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 

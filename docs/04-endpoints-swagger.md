@@ -54,6 +54,8 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 
 El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `STYLERADAR_ADMIN` (nombre actual de ms-auth), `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
 
+Cada prenda en las respuestas trae `almacenId` (UUID del almacén) y `storeNit`, el NIT del almacén en `ms-tiendas` con el que el front abre el chat con la tienda (`POST /api/v1/stores/{nit}/conversations`). `storeNit` va en `null` si el almacén todavía no tiene el NIT cargado desde `ms-tiendas`.
+
 | Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
 | :---: | :--- | :--- | :--- | :---: |
 | `GET` | `/api/v1/garments` | Buscar prendas por texto libre con filtros opcionales (tipo, color, marca, estilo, talla y rango de precio) y ordenarlas por recientes, reputación o distancia con `lat` y `lng` (SR-RF-07 a 15; la talla se consulta en `ms-inventario`) | Público | `200`, `400` |

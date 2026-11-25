@@ -28,15 +28,28 @@ public class AlmacenResumenEntity {
     @Column(name = "administrador_id")
     private Long administradorId;
 
+    @Column(length = 30)
+    private String nit;
+
     protected AlmacenResumenEntity() {
     }
 
     public AlmacenResumenEntity(UUID almacenId, String nombre, BigDecimal reputacion, boolean activo, Long administradorId) {
+        this(almacenId, nombre, reputacion, activo, administradorId, null);
+    }
+
+    public AlmacenResumenEntity(UUID almacenId, String nombre, BigDecimal reputacion, boolean activo, Long administradorId,
+                                String nit) {
         this.almacenId = almacenId;
         this.nombre = nombre;
         this.reputacion = reputacion;
         this.activo = activo;
         this.administradorId = administradorId;
+        this.nit = nit;
+    }
+
+    public String getNit() {
+        return nit;
     }
 
     public Long getAdministradorId() {
