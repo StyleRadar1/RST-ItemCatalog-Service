@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/11-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 11. RAMAS Y CÓMO CONTRIBUIR
+## <img src="https://img.shields.io/badge/10-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 10. RAMAS Y CÓMO CONTRIBUIR
 
 ### Estructura de Ramas Oficial
 
@@ -29,4 +29,4 @@ Los tipos más usados son `feat`, `fix`, `test`, `docs`, `refactor` y `chore`.
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>
