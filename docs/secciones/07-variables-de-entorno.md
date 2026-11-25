@@ -25,4 +25,6 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 
 ---
 
+* **Datos fijos de QA:** con el perfil `qa`, Flyway también carga `db/qa`. Ahí está la prenda `c3bc58c3-e0e2-43cd-a61a-1279a3894fe7` (Camiseta agotada QA notificaciones) del Almacén Pruebas QA, sin inventario para que su disponibilidad responda `stockTotal` 0; la usa la prueba automática de prenda agotada de ms-notificaciones y no se debe usar en otras pruebas.
+
 <p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>
