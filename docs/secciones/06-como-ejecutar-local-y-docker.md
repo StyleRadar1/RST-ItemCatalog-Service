@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/07-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 7. CÓMO EJECUTAR LOCAL Y CON DOCKER
+## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. CÓMO EJECUTAR LOCAL Y CON DOCKER
 
 ### Prerrequisitos de Entorno
 
@@ -39,7 +39,7 @@ curl http://localhost:8220/api/v1/health
           <strong><font color="#5600EF" size="3">CONTENEDOR OCI DOCKER EN EJECUCIÓN (docker compose ps)</font></strong>
         </p>
         <p>
-<img src="evidencias/docker-compose-ps.png" width="100%" alt="Docker Compose PS" /><br />
+<img src="../evidencias/docker-compose-ps.png" width="100%" alt="Docker Compose PS" /><br />
         </p>
       </td>
     </tr>
@@ -48,4 +48,4 @@ curl http://localhost:8220/api/v1/health
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/06-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 6. TECNOLOGÍAS Y DEPENDENCIAS
+## <img src="https://img.shields.io/badge/05-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 5. TECNOLOGÍAS Y DEPENDENCIAS
 
 | Capa / Componente | Tecnología | Versión |
 | :--- | :--- | :--- |
@@ -16,4 +16,4 @@
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

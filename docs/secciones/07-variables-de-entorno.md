@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. VARIABLES DE ENTORNO
+## <img src="https://img.shields.io/badge/07-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 7. VARIABLES DE ENTORNO
 
 Las variables se definen en `.env`, que no se versiona. La plantilla `.env.example` indica cuáles se requieren.
 
@@ -25,4 +25,4 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

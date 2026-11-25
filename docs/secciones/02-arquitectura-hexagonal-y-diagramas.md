@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ARQUITECTURA HEXAGONAL CON SU DIAGRAMA
+## <img src="https://img.shields.io/badge/02-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 2. ARQUITECTURA HEXAGONAL CON SUS DIAGRAMAS
 
 El servicio sigue la arquitectura hexagonal acordada por el curso. Las reglas del negocio se mantienen aisladas de las herramientas externas, como la base de datos, el broker de mensajería o la API REST, de modo que estas pueden cambiar sin afectar la lógica principal.
 
@@ -13,7 +13,7 @@ El servicio sigue la arquitectura hexagonal acordada por el curso. Las reglas de
           <strong><font color="#5600EF" size="3">DIAGRAMA DE CASOS DE USO · MS-ITEM-CATALOGO</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-casos-uso.png" width="100%" alt="Diagrama de casos de uso de ms-item-catalogo" /><br />
+          <img src="../evidencias/diagrama-casos-uso.png" width="100%" alt="Diagrama de casos de uso de ms-item-catalogo" /><br />
         </p>
       </td>
     </tr>
@@ -33,7 +33,7 @@ El usuario comprador busca prendas con texto libre (SR-RF-07). Los filtros por t
           <strong><font color="#5600EF" size="3">DIAGRAMA DE COMPONENTES GENERAL · STYLERADAR</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-componentes-general.png" width="100%" alt="Diagrama de componentes general de StyleRadar" /><br />
+          <img src="../evidencias/diagrama-componentes-general.png" width="100%" alt="Diagrama de componentes general de StyleRadar" /><br />
         </p>
       </td>
     </tr>
@@ -53,7 +53,7 @@ Diagrama de componentes general de StyleRadar, el mismo para todos los microserv
           <strong><font color="#5600EF" size="3">DIAGRAMA DE DESPLIEGUE · STYLERADAR</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-despliegue-general.png" width="100%" alt="Diagrama de despliegue de StyleRadar" /><br />
+          <img src="../evidencias/diagrama-despliegue-general.png" width="100%" alt="Diagrama de despliegue de StyleRadar" /><br />
         </p>
       </td>
     </tr>
@@ -73,7 +73,7 @@ Diagrama de despliegue general de StyleRadar, el mismo para todos los microservi
           <strong><font color="#5600EF" size="3">DIAGRAMA DE COMPONENTES ESPECÍFICO (HEXAGONAL)</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-componentes.png" width="100%" alt="Diagrama de componentes" /><br />
+          <img src="../evidencias/diagrama-componentes.png" width="100%" alt="Diagrama de componentes" /><br />
         </p>
       </td>
     </tr>
@@ -93,7 +93,7 @@ El diagrama muestra el servicio en arquitectura hexagonal. Las peticiones llegan
           <strong><font color="#5600EF" size="3">DIAGRAMA DE CLASES DEL DOMINIO</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-clases.png" width="100%" alt="Diagrama de clases" /><br />
+          <img src="../evidencias/diagrama-clases.png" width="100%" alt="Diagrama de clases" /><br />
         </p>
       </td>
     </tr>
@@ -113,7 +113,7 @@ El agregado principal es `Prenda`, que agrupa sus atributos de búsqueda (tipo, 
           <strong><font color="#5600EF" size="3">MODELO DE DATOS (POSTGRESQL)</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-base-datos.png" width="100%" alt="Diagrama de base de datos" /><br />
+          <img src="../evidencias/diagrama-base-datos.png" width="100%" alt="Diagrama de base de datos" /><br />
         </p>
       </td>
     </tr>
@@ -135,7 +135,7 @@ Los diagramas muestran, para cada funcionalidad, el recorrido de la petición po
           <strong><font color="#5600EF" size="3">PUBLICAR PRENDA</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-secuencia-publicar-prenda.png" width="100%" alt="Diagrama de secuencia publicar prenda" /><br />
+          <img src="../evidencias/diagrama-secuencia-publicar-prenda.png" width="100%" alt="Diagrama de secuencia publicar prenda" /><br />
         </p>
       </td>
     </tr>
@@ -153,7 +153,7 @@ Al publicar una prenda, Spring valida primero el `PrendaRequest`; si falta un da
           <strong><font color="#5600EF" size="3">APROBAR O RECHAZAR PUBLICACIÓN</font></strong>
         </p>
         <p>
-          <img src="evidencias/diagrama-secuencia-moderar-publicacion.png" width="100%" alt="Diagrama de secuencia moderar publicación" /><br />
+          <img src="../evidencias/diagrama-secuencia-moderar-publicacion.png" width="100%" alt="Diagrama de secuencia moderar publicación" /><br />
         </p>
       </td>
     </tr>
@@ -203,4 +203,4 @@ src/main/java/edu/dosw/styleradar/itemcatalogo/
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

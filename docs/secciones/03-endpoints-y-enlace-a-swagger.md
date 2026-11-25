@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/04-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 4. ENDPOINTS Y ENLACE A SWAGGER
+## <img src="https://img.shields.io/badge/03-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 3. ENDPOINTS Y ENLACE A SWAGGER
 
 ### Matriz Oficial de Enlaces por Entorno (PROD, QA, LOCAL)
 
@@ -43,7 +43,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
           <strong><font color="#5600EF" size="3">DOCUMENTACIÓN SWAGGER OPENAPI UI ACTIVA</font></strong>
         </p>
         <p>
-<img src="evidencias/swagger-ui.png" width="100%" alt="Evidencia Swagger UI" /><br />
+<img src="../evidencias/swagger-ui.png" width="100%" alt="Evidencia Swagger UI" /><br />
         </p>
       </td>
     </tr>
@@ -76,4 +76,4 @@ Cada prenda en las respuestas trae `almacenId` (UUID del almacén) y `storeNit`,
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>
