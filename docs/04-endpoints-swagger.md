@@ -52,24 +52,26 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 
 ### Tabla de Endpoints Expuestos
 
+Las rutas anteriores en español (`/prendas`, `/almacenes`, `/fundaciones`, `/catalogo`) siguen respondiendo por compatibilidad mientras el API Gateway y el front terminan de migrar, pero ya no aparecen en Swagger.
+
 El rol se lee de `X-User-Role` y `X-User-Roles`, que envía el API Gateway a partir del JWT. Se aceptan `STYLERADAR_ADMIN` (nombre actual de ms-auth), `ADMIN_STYLERADAR`, `ROLE_ADMIN_STYLERADAR` y `ADMIN` como administrador.
 
 | Método | Endpoint | Descripción | Rol Requerido | Códigos HTTP |
 | :---: | :--- | :--- | :--- | :---: |
-| `GET` | `/api/v1/prendas` | Buscar prendas por texto libre con filtros opcionales (tipo, color, marca, estilo, talla y rango de precio) y ordenarlas por recientes, reputación o distancia con `lat` y `lng` (SR-RF-07 a 15; la talla se consulta en `ms-inventario`) | Público | `200`, `400` |
-| `GET` | `/api/v1/prendas/{id}/similares` | Consultar prendas similares cuando no hay coincidencia exacta (SR-RF-16) | Público | `200`, `404` |
-| `GET` | `/api/v1/prendas/{id}` | Consultar el detalle de una prenda | Público | `200`, `404` |
-| `POST` | `/api/v1/prendas` | Publicar una prenda con fotografías, precio y atributos; queda pendiente de moderación; si llega `X-User-Id`, el almacén es el que el usuario administra en `ms-tiendas` (SR-RF-50, 51, 53 y 54) | `ADMIN_ALMACEN` | `201`, `400`, `404`, `422` |
-| `PUT` | `/api/v1/prendas/{id}` | Editar una prenda y devolverla a moderación; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-55) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
-| `DELETE` | `/api/v1/prendas/{id}` | Retirar una prenda del catálogo; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-58) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `403`, `404`, `422` |
-| `PUT` | `/api/v1/prendas/{id}/moderacion` | Aprobar o rechazar una publicación; el rechazo exige motivo; el moderador es el usuario autenticado (`X-User-Id`) y `moderadorId` (UUID) solo se usa al llamar el servicio directamente (SR-RF-61) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
-| `GET` | `/api/v1/prendas/pendientes` | Consultar las publicaciones pendientes agrupadas por almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `403` |
-| `PUT` | `/api/v1/prendas/pendientes/almacenes/{almacenId}/moderacion` | Aprobar o rechazar todas las publicaciones pendientes de un almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
-| `GET` | `/api/v1/almacenes/{almacenId}/catalogo` | Consultar el catálogo de un almacén (SR-RF-22) | Público | `200`, `404` |
-| `GET` | `/api/v1/almacenes/{almacenId}/catalogo/resumen` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
-| `GET` | `/api/v1/almacenes/{almacenId}/novedades` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
-| `GET` | `/api/v1/catalogo/items/{itemId}/disponibilidad` | Unidades totales y tallas con stock de una prenda, tomadas de `ms-inventario`; la usa `ms-notificaciones` (si inventario no tiene la prenda, `stockTotal` es 0) | Interno | `200`, `400`, `404` |
-| `GET` | `/api/v1/catalogo/items/{itemId}/tallas-medidas` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`, rangos de referencia en cm de la guía de tallas del catálogo para cada talla ofertada: pecho, cintura y cadera en tallas de letra; cintura en tallas numéricas de pantalón; vacía en calzado, accesorios y talla única); la usa `ms-probador-virtual` (SR-RF-24 del probador) | Interno | `200`, `400`, `404` |
+| `GET` | `/api/v1/garments` | Buscar prendas por texto libre con filtros opcionales (tipo, color, marca, estilo, talla y rango de precio) y ordenarlas por recientes, reputación o distancia con `lat` y `lng` (SR-RF-07 a 15; la talla se consulta en `ms-inventario`) | Público | `200`, `400` |
+| `GET` | `/api/v1/garments/{id}/similar` | Consultar prendas similares cuando no hay coincidencia exacta (SR-RF-16) | Público | `200`, `404` |
+| `GET` | `/api/v1/garments/{id}` | Consultar el detalle de una prenda | Público | `200`, `404` |
+| `POST` | `/api/v1/garments` | Publicar una prenda con fotografías, precio y atributos; queda pendiente de moderación; si llega `X-User-Id`, el almacén es el que el usuario administra en `ms-tiendas` (SR-RF-50, 51, 53 y 54) | `ADMIN_ALMACEN` | `201`, `400`, `404`, `422` |
+| `PUT` | `/api/v1/garments/{id}` | Editar una prenda y devolverla a moderación; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-55) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `DELETE` | `/api/v1/garments/{id}` | Retirar una prenda del catálogo; el almacén sale de `X-Almacen-Id` o del usuario (`X-User-Id`) en `ms-tiendas` (SR-RF-58) | `ADMIN_ALMACEN` dueño, `ADMIN_STYLERADAR` | `200`, `403`, `404`, `422` |
+| `PUT` | `/api/v1/garments/{id}/moderation` | Aprobar o rechazar una publicación; el rechazo exige motivo; el moderador es el usuario autenticado (`X-User-Id`) y `moderadorId` (UUID) solo se usa al llamar el servicio directamente (SR-RF-61) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `GET` | `/api/v1/garments/pending` | Consultar las publicaciones pendientes agrupadas por almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `403` |
+| `PUT` | `/api/v1/garments/pending/stores/{storeId}/moderation` | Aprobar o rechazar todas las publicaciones pendientes de un almacén (SR-RF-87) | `ADMIN_STYLERADAR` | `200`, `400`, `403`, `404`, `422` |
+| `GET` | `/api/v1/stores/{storeId}/catalog` | Consultar el catálogo de un almacén (SR-RF-22) | Público | `200`, `404` |
+| `GET` | `/api/v1/stores/{storeId}/catalog/summary` | Consultar el catálogo resumido para el mapa (SR-RF-19) | Público | `200`, `404` |
+| `GET` | `/api/v1/stores/{storeId}/new-arrivals` | Consultar las prendas publicadas en los últimos 7 días (SR-RF-20) | Público | `200`, `404` |
+| `GET` | `/api/v1/garments/{itemId}/availability` | Unidades totales y tallas con stock de una prenda, tomadas de `ms-inventario`; la usa `ms-notificaciones` (si inventario no tiene la prenda, `stockTotal` es 0) | Interno | `200`, `400`, `404` |
+| `GET` | `/api/v1/garments/{itemId}/size-guide` | Tallas ofertadas (`availableSizes`, las que tienen stock en `ms-inventario`; `[]` si no hay ninguna y `null` si inventario no tiene la prenda) y tabla de medidas (`sizes`, rangos de referencia en cm de la guía de tallas del catálogo para cada talla ofertada: pecho, cintura y cadera en tallas de letra; cintura en tallas numéricas de pantalón; vacía en calzado, accesorios y talla única); la usa `ms-probador-virtual` (SR-RF-24 del probador) | Interno | `200`, `400`, `404` |
 | `GET` | `/api/v1/health` | Estado del servicio | Público | `200` |
 
 ---

@@ -8,14 +8,12 @@ import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.Catal
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/almacenes/{almacenId}")
 public class CatalogoAlmacenController implements CatalogoAlmacenApi {
 
     private final ConsultarCatalogoAlmacenUseCase consultarCatalogo;
@@ -25,20 +23,20 @@ public class CatalogoAlmacenController implements CatalogoAlmacenApi {
     }
 
     @Override
-    @GetMapping("/catalogo")
-    public ResponseEntity<List<PrendaResponse>> catalogo(@PathVariable UUID almacenId) {
+    @GetMapping({"/stores/{storeId}/catalog", "/almacenes/{storeId}/catalogo"})
+    public ResponseEntity<List<PrendaResponse>> catalogo(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.catalogo(almacenId)));
     }
 
     @Override
-    @GetMapping("/catalogo/resumen")
-    public ResponseEntity<CatalogoResumenResponse> resumen(@PathVariable UUID almacenId) {
+    @GetMapping({"/stores/{storeId}/catalog/summary", "/almacenes/{storeId}/catalogo/resumen"})
+    public ResponseEntity<CatalogoResumenResponse> resumen(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResumen(almacenId, consultarCatalogo.catalogo(almacenId)));
     }
 
     @Override
-    @GetMapping("/novedades")
-    public ResponseEntity<List<PrendaResponse>> novedades(@PathVariable UUID almacenId) {
+    @GetMapping({"/stores/{storeId}/new-arrivals", "/almacenes/{storeId}/novedades"})
+    public ResponseEntity<List<PrendaResponse>> novedades(@PathVariable("storeId") UUID almacenId) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.novedades(almacenId)));
     }
 }

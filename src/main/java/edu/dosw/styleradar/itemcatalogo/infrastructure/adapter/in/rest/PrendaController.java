@@ -18,14 +18,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/prendas")
 public class PrendaController implements PrendaApi {
 
     private final GestionarPrendaUseCase gestionarPrenda;
@@ -37,7 +35,7 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @PostMapping
+    @PostMapping({"/garments", "/prendas"})
     public ResponseEntity<PrendaResponse> publicar(@Valid @RequestBody PrendaRequest request,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
         UUID almacenId = almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(request.almacenId());
@@ -51,13 +49,13 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @GetMapping("/{id}")
+    @GetMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> obtener(@PathVariable UUID id) {
         return ResponseEntity.ok(PrendaMapperIn.toResponse(gestionarPrenda.obtener(id)));
     }
 
     @Override
-    @PutMapping("/{id}")
+    @PutMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> editar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
@@ -70,7 +68,7 @@ public class PrendaController implements PrendaApi {
     }
 
     @Override
-    @DeleteMapping("/{id}")
+    @DeleteMapping({"/garments/{id}", "/prendas/{id}"})
     public ResponseEntity<PrendaResponse> retirar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,

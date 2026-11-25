@@ -13,14 +13,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/prendas")
 public class ModeracionController implements ModeracionApi {
 
     private final ModerarPublicacionUseCase moderarPublicacion;
@@ -30,7 +28,7 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @GetMapping("/pendientes")
+    @GetMapping({"/garments/pending", "/prendas/pendientes"})
     public ResponseEntity<PendientesResponse> pendientes(
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles) {
@@ -39,8 +37,8 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @PutMapping("/pendientes/almacenes/{almacenId}/moderacion")
-    public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable UUID almacenId,
+    @PutMapping({"/garments/pending/stores/{storeId}/moderation", "/prendas/pendientes/almacenes/{storeId}/moderacion"})
+    public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable("storeId") UUID almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
@@ -51,7 +49,7 @@ public class ModeracionController implements ModeracionApi {
     }
 
     @Override
-    @PutMapping("/{id}/moderacion")
+    @PutMapping({"/garments/{id}/moderation", "/prendas/{id}/moderacion"})
     public ResponseEntity<PrendaResponse> moderar(@PathVariable UUID id,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
