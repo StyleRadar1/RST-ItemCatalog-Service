@@ -63,6 +63,7 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
             payload.put("stockTotal", evento.stockTotal());
         }
         payload.put("fechaPublicacion", utc(evento.fecha()));
+        payload.put("fechaEvento", utc(evento.fecha()));
         enviar(rkPublicada, payload);
     }
 
@@ -81,6 +82,7 @@ public class RabbitMQPublisherAdapter implements EventPublisherPort {
         payload.put("estadoModeracion", evento.estado().name());
         payload.put("observacion", evento.motivo());
         payload.put("fechaModeracion", utc(evento.fecha()));
+        payload.put("fechaEvento", utc(evento.fecha()));
         if (evento.propietarioUsuarioId() != null) {
             payload.put("propietarioUsuarioId", evento.propietarioUsuarioId());
         }

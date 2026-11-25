@@ -59,7 +59,8 @@ class RabbitMQPublisherAdapterTest {
                 .containsEntry("availableSizes", List.of("M", "L"))
                 .containsEntry("tallasDisponibles", List.of("M", "L"))
                 .containsEntry("stockTotal", 7)
-                .containsEntry("fechaPublicacion", "2026-11-21T18:00:00Z");
+                .containsEntry("fechaPublicacion", "2026-11-21T18:00:00Z")
+                .containsEntry("fechaEvento", "2026-11-21T18:00:00Z");
     }
 
     @Test
@@ -88,20 +89,24 @@ class RabbitMQPublisherAdapterTest {
 
     @Test
     void publicaLaPrendaRetirada() {
-        adapter.publicar(new PrendaRetiradaEvent(prendaId, almacenId, "Retirada por el almacén", LocalDateTime.now()));
+        adapter.publicar(new PrendaRetiradaEvent(prendaId, almacenId, "Retirada por el almacén",
+                LocalDateTime.of(2026, 11, 24, 15, 30)));
 
         assertThat(enviado("styleradar.catalogo.prenda.retirada")).containsEntry("prendaId", prendaId.toString())
-                .containsEntry("motivo", "Retirada por el almacén");
+                .containsEntry("motivo", "Retirada por el almacén")
+                .containsEntry("fechaEvento", "2026-11-24T15:30:00Z");
     }
 
     @Test
     void publicaElCambioDeModeracion() {
         adapter.publicar(new ModeracionCambiadaEvent(prendaId, almacenId, "Chaqueta denim", EstadoPublicacion.RECHAZADA,
-                "Foto borrosa", LocalDateTime.now(), 42L));
+                "Foto borrosa", LocalDateTime.of(2026, 11, 24, 15, 30), 42L));
 
         assertThat(enviado("styleradar.catalogo.moderacion.cambiada")).containsEntry("propietarioUsuarioId", 42L)
                 .containsEntry("estadoModeracion", "RECHAZADA")
-                .containsEntry("observacion", "Foto borrosa");
+                .containsEntry("observacion", "Foto borrosa")
+                .containsEntry("fechaModeracion", "2026-11-24T15:30:00Z")
+                .containsEntry("fechaEvento", "2026-11-24T15:30:00Z");
     }
 
     @Test
