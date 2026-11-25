@@ -9,6 +9,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.EstadoPublicacion;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.PrendaEncontrada;
@@ -94,29 +95,64 @@ class ControllersTest {
         when(almacenes.almacenDelUsuario(any())).thenReturn(Optional.empty());
         PrendaController controller = new PrendaController(useCase, almacenes, nits);
 
-        assertThat(controller.publicar(request, null).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(controller.publicar(request, null, almacenId.toString(), "STORE_ADMIN", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
         assertThat(controller.obtener(prenda.getId()).getBody().id()).isEqualTo(prenda.getId());
         assertThat(controller.obtener(prenda.getId()).getBody().storeNit()).isEqualTo(NIT);
         assertThat(controller.obtener(prenda.getId()).getBody().almacenId()).isEqualTo(almacenId);
-        assertThat(controller.editar(prenda.getId(), almacenId, null, null, null, request).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.retirar(prenda.getId(), null, null, "ROLE_ADMIN_STYLERADAR", null).getStatusCode())
+        assertThat(controller.editar(prenda.getId(), null, almacenId.toString(), "STORE_ADMIN", null, null, request).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThat(controller.retirar(prenda.getId(), null, null, null, "ROLE_ADMIN_STYLERADAR", null).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    void usaElAlmacenDelUsuarioEnMsTiendas() {
+    void usaElAlmacenDelUsuarioEnMsTiendasYResuelveHeaderNit() {
         GestionarPrendaUseCase useCase = mock(GestionarPrendaUseCase.class);
         SincronizarAlmacenesUseCase almacenes = mock(SincronizarAlmacenesUseCase.class);
         when(almacenes.almacenDelUsuario(10L)).thenReturn(Optional.of(almacenId));
+        UUID desdeNit = IdAlmacen.desdeNit(NIT);
         when(useCase.publicar(eq(almacenId), any(), any(), any(), any())).thenReturn(prenda);
+        when(useCase.publicar(eq(desdeNit), any(), any(), any(), any())).thenReturn(prenda);
         when(useCase.retirar(prenda.getId(), new Solicitante(almacenId, false))).thenReturn(prenda);
         PrendaController controller = new PrendaController(useCase, almacenes, nits);
         PrendaRequest sinAlmacen = new PrendaRequest(null, request.nombre(), request.tipo(), request.color(), request.marca(),
                 request.estilo(), request.precio(), request.fotografias());
 
-        assertThat(controller.publicar(sinAlmacen, "10").getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(controller.retirar(prenda.getId(), null, "ADMIN_ALMACEN", null, "10").getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThatThrownBy(() -> controller.publicar(sinAlmacen, "abc")).isInstanceOf(ParametroInvalidoException.class);
+        assertThat(controller.publicar(sinAlmacen, null, null, "STORE_ADMIN", null, "10").getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+        assertThat(controller.publicar(sinAlmacen, NIT, null, "ADMIN_ALMACEN", null, null).getStatusCode())
+                .isEqualTo(HttpStatus.CREATED);
+        assertThat(controller.retirar(prenda.getId(), null, null, "ADMIN_ALMACEN", null, "10").getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThatThrownBy(() -> controller.publicar(sinAlmacen, null, null, "ADMIN_STYLERADAR", null, "abc"))
+                .isInstanceOf(ParametroInvalidoException.class);
+    }
+
+    @Test
+    void rechazaPublicacionEdicionYRetiroSinRolOAlmacenAjeno() {
+        GestionarPrendaUseCase useCase = mock(GestionarPrendaUseCase.class);
+        SincronizarAlmacenesUseCase almacenes = mock(SincronizarAlmacenesUseCase.class);
+        when(almacenes.almacenDelUsuario(10L)).thenReturn(Optional.of(almacenId));
+        PrendaController controller = new PrendaController(useCase, almacenes, nits);
+        UUID otroAlmacen = UUID.randomUUID();
+        PrendaRequest paraOtroAlmacen = new PrendaRequest(otroAlmacen, request.nombre(), request.tipo(), request.color(),
+                "Almacén Pruebas QA", request.estilo(), request.precio(), request.fotografias());
+
+        assertThatThrownBy(() -> controller.publicar(request, almacenId.toString(), null, "BUYER", null, null))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.publicar(request, almacenId.toString(), null, null, null, null))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.publicar(paraOtroAlmacen, almacenId.toString(), null, "STORE_ADMIN", null, "10"))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.publicar(paraOtroAlmacen, null, null, "STORE_ADMIN", null, null))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.publicar(request, otroAlmacen.toString(), null, "STORE_ADMIN", null, "10"))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.editar(prenda.getId(), almacenId.toString(), null, "BUYER", null, null, request))
+                .isInstanceOf(AccesoDenegadoException.class);
+        assertThatThrownBy(() -> controller.retirar(prenda.getId(), almacenId.toString(), null, null, null, null))
+                .isInstanceOf(AccesoDenegadoException.class);
     }
 
     @Test

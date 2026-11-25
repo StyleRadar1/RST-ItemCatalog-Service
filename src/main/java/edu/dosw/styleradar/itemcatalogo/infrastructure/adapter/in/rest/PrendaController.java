@@ -3,6 +3,7 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.PrendaRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
+import edu.dosw.styleradar.itemcatalogo.domain.exception.AccesoDenegadoException;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Solicitante;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -43,12 +45,13 @@ public class PrendaController implements PrendaApi {
     @Override
     @PostMapping("/garments")
     public ResponseEntity<PrendaResponse> publicar(@Valid @RequestBody PrendaRequest request,
+            @RequestHeader(value = Identidad.HEADER_STORE, required = false) String storeIdHeader,
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) String almacenIdHeader,
+            @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
+            @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
-        UUID almacenId = almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(request.almacenId());
-        if (almacenId == null) {
-            throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS",
-                    Map.of("almacenId", "El almacén es obligatorio"));
-        }
+        Identidad.exigirRolAlmacenOAdmin(rol, roles);
+        UUID almacenId = resolverAlmacenParaPublicacion(request.almacenId(), storeIdHeader, almacenIdHeader, rol, roles, usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta(gestionarPrenda.publicar(
                 almacenId, request.nombre(), PrendaMapperIn.toAtributos(request),
                 PrendaMapperIn.toPrecio(request), PrendaMapperIn.toFotografias(request))));
@@ -63,34 +66,72 @@ public class PrendaController implements PrendaApi {
     @Override
     @PutMapping("/garments/{id}")
     public ResponseEntity<PrendaResponse> editar(@PathVariable UUID id,
-            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
+            @RequestHeader(value = Identidad.HEADER_STORE, required = false) String storeIdHeader,
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) String almacenIdHeader,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody PrendaRequest request) {
+        Identidad.exigirRolAlmacenOAdmin(rol, roles);
         return ResponseEntity.ok(respuesta(gestionarPrenda.editar(id,
-                solicitante(almacenId, rol, roles, usuarioId), request.nombre(), PrendaMapperIn.toAtributos(request),
-                PrendaMapperIn.toPrecio(request), PrendaMapperIn.toFotografias(request))));
+                solicitante(storeIdHeader, almacenIdHeader, rol, roles, usuarioId), request.nombre(),
+                PrendaMapperIn.toAtributos(request), PrendaMapperIn.toPrecio(request),
+                PrendaMapperIn.toFotografias(request))));
     }
 
     @Override
     @DeleteMapping("/garments/{id}")
     public ResponseEntity<PrendaResponse> retirar(@PathVariable UUID id,
-            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
+            @RequestHeader(value = Identidad.HEADER_STORE, required = false) String storeIdHeader,
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) String almacenIdHeader,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId) {
-        return ResponseEntity.ok(respuesta(gestionarPrenda.retirar(id, solicitante(almacenId, rol, roles, usuarioId))));
+        Identidad.exigirRolAlmacenOAdmin(rol, roles);
+        return ResponseEntity.ok(respuesta(gestionarPrenda.retirar(id,
+                solicitante(storeIdHeader, almacenIdHeader, rol, roles, usuarioId))));
+    }
+
+    private UUID resolverAlmacenParaPublicacion(UUID bodyAlmacenId, String storeIdHeader, String almacenIdHeader,
+                                                String rol, String roles, String usuarioId) {
+        if (Identidad.esAdmin(rol, roles)) {
+            UUID headerAlmacen = Identidad.resolverAlmacenHeader(storeIdHeader, almacenIdHeader);
+            UUID resuelto = bodyAlmacenId != null ? bodyAlmacenId
+                    : (headerAlmacen != null ? headerAlmacen
+                    : almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(null));
+            if (resuelto == null) {
+                throw new ParametroInvalidoException("La solicitud tiene campos inválidos", "DATOS_INVALIDOS",
+                        Map.of("almacenId", "El almacén es obligatorio"));
+            }
+            return resuelto;
+        }
+        UUID almacenTienda = resolverAlmacenParaTienda(storeIdHeader, almacenIdHeader, usuarioId);
+        if (almacenTienda == null) {
+            throw new AccesoDenegadoException("No se pudo verificar el almacén del usuario autenticado");
+        }
+        if (bodyAlmacenId != null && !almacenTienda.equals(bodyAlmacenId)) {
+            throw new AccesoDenegadoException("No puedes publicar prendas en un almacén distinto al tuyo");
+        }
+        return almacenTienda;
+    }
+
+    private UUID resolverAlmacenParaTienda(String storeIdHeader, String almacenIdHeader, String usuarioId) {
+        Optional<UUID> usuarioAlmacen = almacenes.almacenDelUsuario(Identidad.usuario(usuarioId));
+        UUID headerAlmacen = Identidad.resolverAlmacenHeader(storeIdHeader, almacenIdHeader);
+        if (usuarioAlmacen.isPresent() && headerAlmacen != null && !usuarioAlmacen.get().equals(headerAlmacen)) {
+            throw new AccesoDenegadoException("El almacén de la solicitud no coincide con el almacén del usuario");
+        }
+        return usuarioAlmacen.orElse(headerAlmacen);
     }
 
     private PrendaResponse respuesta(Prenda prenda) {
         return PrendaMapperIn.toResponse(prenda, NitsDePrendas.de(nitAlmacenes, List.of(prenda)));
     }
 
-    private Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId) {
+    private Solicitante solicitante(String storeIdHeader, String almacenIdHeader, String rol, String roles, String usuarioId) {
         boolean admin = Identidad.esAdmin(rol, roles);
-        UUID almacen = almacenId != null || admin ? almacenId
-                : almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(null);
+        UUID almacen = admin ? Identidad.resolverAlmacenHeader(storeIdHeader, almacenIdHeader)
+                : resolverAlmacenParaTienda(storeIdHeader, almacenIdHeader, usuarioId);
         return new Solicitante(almacen, admin);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -122,6 +123,14 @@ class GlobalExceptionHandlerTest {
         ProblemDetail detail = handler.handleRouteNotFound(ex);
         assertThat(detail.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
         assertThat(detail.getTitle()).isEqualTo("Ruta no encontrada");
+    }
+
+    @Test
+    void methodNotAllowedReturns405() {
+        HttpRequestMethodNotSupportedException ex = new HttpRequestMethodNotSupportedException("PATCH");
+        ProblemDetail detail = handler.handleMethodNotAllowed(ex);
+        assertThat(detail.getStatus()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED.value());
+        assertThat(detail.getProperties()).containsEntry("code", "METODO_NO_PERMITIDO");
     }
 
     @Test

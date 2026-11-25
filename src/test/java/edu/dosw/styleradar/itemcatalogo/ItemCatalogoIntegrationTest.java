@@ -47,8 +47,10 @@ class ItemCatalogoIntegrationTest {
     private static final String CALLE_85 ="a2222222-2222-2222-2222-222222222222";
     private static final String HOODIE = "b3333333-3333-3333-3333-333333333333";
     private static final String ALMACEN = "X-Almacen-Id";
+    private static final String STORE = "X-Store-Id";
     private static final String ROL = "X-User-Role";
     private static final String ADMIN = "ADMIN_STYLERADAR";
+    private static final String STORE_ADMIN = "STORE_ADMIN";
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -98,7 +100,10 @@ class ItemCatalogoIntegrationTest {
     }
 
     private String publicar(String nombre) throws Exception {
-        String body = mockMvc.perform(post("/garments").contentType(MediaType.APPLICATION_JSON).content(prendaJson(nombre)))
+        String body = mockMvc.perform(post("/garments")
+                        .header(ROL, STORE_ADMIN)
+                        .header(STORE, CALLE_85)
+                        .contentType(MediaType.APPLICATION_JSON).content(prendaJson(nombre)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.estado").value("PENDIENTE"))
                 .andReturn().getResponse().getContentAsString();
@@ -125,11 +130,11 @@ class ItemCatalogoIntegrationTest {
     void soloElDuenoEditaYRetiraLaPrenda() throws Exception {
         String id = publicar("Gorra azul");
 
-        mockMvc.perform(put("/garments/" + id).header(ALMACEN, "a1111111-1111-1111-1111-111111111111")
+        mockMvc.perform(put("/garments/" + id).header(ROL, STORE_ADMIN).header(ALMACEN, "a1111111-1111-1111-1111-111111111111")
                         .contentType(MediaType.APPLICATION_JSON).content(prendaJson("Gorra ajena")))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(put("/garments/" + id).header(ALMACEN, CALLE_85)
+        mockMvc.perform(put("/garments/" + id).header(ROL, STORE_ADMIN).header(ALMACEN, CALLE_85)
                         .contentType(MediaType.APPLICATION_JSON).content(prendaJson("Gorra azul oscuro")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Gorra azul oscuro"))
@@ -154,7 +159,7 @@ class ItemCatalogoIntegrationTest {
         String id = publicar("Gorra verde");
 
         // Act
-        mockMvc.perform(delete("/garments/" + id).header(ALMACEN, CALLE_85))
+        mockMvc.perform(delete("/garments/" + id).header(ROL, STORE_ADMIN).header(ALMACEN, CALLE_85))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("RETIRADA"));
 

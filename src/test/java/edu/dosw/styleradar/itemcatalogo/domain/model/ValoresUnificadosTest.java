@@ -21,7 +21,11 @@ class ValoresUnificadosTest {
         assertThat(ValoresUnificados.esTalla("31")).isFalse();
         assertThat(ValoresUnificados.esTalla("unica")).isTrue();
         assertThat(ValoresUnificados.esMarca("nomada studio")).isTrue();
-        assertThat(ValoresUnificados.esMarca("Levis")).isFalse();
+        assertThat(ValoresUnificados.esMarca("Levis")).isTrue();
+        assertThat(ValoresUnificados.esMarca("Almacén Pruebas QA")).isTrue();
+        assertThat(ValoresUnificados.esMarca(null)).isFalse();
+        assertThat(ValoresUnificados.esMarca("   ")).isFalse();
+        assertThat(ValoresUnificados.esMarca("m".repeat(61))).isFalse();
         assertThat(ValoresUnificados.esTipo(null)).isFalse();
     }
 }
