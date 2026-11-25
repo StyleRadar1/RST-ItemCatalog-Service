@@ -88,9 +88,6 @@ public class PrendaController implements PrendaApi {
     }
 
     private Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId) {
-        boolean admin = Identidad.esAdmin(rol, roles);
-        UUID almacen = almacenId != null || admin ? almacenId
-                : almacenes.almacenDelUsuario(Identidad.usuario(usuarioId)).orElse(null);
-        return new Solicitante(almacen, admin);
+        return Identidad.solicitante(almacenId, rol, roles, usuarioId, almacenes);
     }
 }
