@@ -24,6 +24,7 @@ public record PrendaRequest(
         @Size(max = 20, message = "El color no puede superar los 20 caracteres")
         String color,
         @NotBlank(message = "La marca es obligatoria")
+        @Size(max = 60, message = "La marca no puede superar los 60 caracteres")
         String marca,
         @NotBlank(message = "El estilo es obligatorio")
         @Size(max = 20, message = "El estilo no puede superar los 20 caracteres")

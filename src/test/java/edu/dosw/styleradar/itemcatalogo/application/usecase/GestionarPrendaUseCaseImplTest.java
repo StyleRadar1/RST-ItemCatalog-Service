@@ -65,7 +65,7 @@ class GestionarPrendaUseCaseImplTest {
 
     @Test
     void losAtributosDebenSerDeLasListasUnificadas() {
-        AtributosBusqueda gorra = new AtributosBusqueda("Gorra", "Rojo", "Levis", "Elegante");
+        AtributosBusqueda gorra = new AtributosBusqueda("Gorra", "Rojo", "m".repeat(61), "Elegante");
         UUID almacenId = UUID.randomUUID();
         UUID prendaId = UUID.randomUUID();
         Solicitante dueno = new Solicitante(almacenId, false);
@@ -77,6 +77,17 @@ class GestionarPrendaUseCaseImplTest {
         assertThatThrownBy(() -> useCase.editar(prendaId, dueno, "Gorra", gorra, precio, fotos))
                 .isInstanceOf(ParametroInvalidoException.class);
         verifyNoInteractions(almacenes);
+    }
+
+    @Test
+    void permitePublicarConMarcaDeTiendaRealSinListaQuemada() {
+        AlmacenResumen almacen = almacen("4.50", true);
+        when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
+        AtributosBusqueda marcaReal = new AtributosBusqueda("Chaqueta", "Azul", "Almacén Pruebas QA", "Urbano");
+
+        Prenda prenda = useCase.publicar(almacen.almacenId(), "Chaqueta QA", marcaReal, precio, fotos);
+
+        assertThat(prenda.getAtributos().marca()).isEqualTo("Almacén Pruebas QA");
     }
 
     @Test

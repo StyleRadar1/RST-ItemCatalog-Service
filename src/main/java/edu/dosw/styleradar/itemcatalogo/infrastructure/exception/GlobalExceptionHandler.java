@@ -7,6 +7,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundExcepti
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -70,6 +71,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
     public ProblemDetail handleRouteNotFound(Exception ex) {
         return problem(HttpStatus.NOT_FOUND, "RUTA_NO_ENCONTRADA", "Ruta no encontrada", "El recurso o ruta solicitada no existe");
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        return problem(HttpStatus.METHOD_NOT_ALLOWED, "METODO_NO_PERMITIDO", "Método HTTP no permitido",
+                "El método HTTP '" + ex.getMethod() + "' no está permitido para esta ruta");
     }
 
     @ExceptionHandler(Exception.class)

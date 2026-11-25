@@ -12,8 +12,7 @@ public final class ValoresUnificados {
             "Pantalón", "Falda", "Vestido", "Conjunto", "Calzado", "Accesorio");
     private static final List<String> COLORES = List.of("Negro", "Blanco", "Gris", "Azul", "Café", "Beige", "Crudo", "Plata");
     private static final List<String> ESTILOS = List.of("CASUAL", "FORMAL", "DEPORTIVO", "URBANO", "VINTAGE");
-    private static final List<String> MARCAS = List.of("Kicks Local", "Luna Store", "Nómada Studio", "Segunda mano",
-            "The Local Lab", "Ropero 57", "Norte Denim", "Casa Tweed", "Sastrería Antonia", "Calle 85 Store", "Nora Vintage");
+    private static final int MAX_MARCA = 60;
     private static final List<String> TALLAS = Stream.concat(
             Stream.of("XS", "S", "M", "L", "XL", "XXL", "26", "28", "30", "32", "36", "Única"),
             IntStream.rangeClosed(34, 45).mapToObj(String::valueOf)).toList();
@@ -21,7 +20,7 @@ public final class ValoresUnificados {
     public static final String MENSAJE_TIPO = "El tipo debe ser uno de: " + String.join(", ", TIPOS);
     public static final String MENSAJE_COLOR = "El color debe ser uno de: " + String.join(", ", COLORES);
     public static final String MENSAJE_ESTILO = "El estilo debe ser uno de: " + String.join(", ", ESTILOS);
-    public static final String MENSAJE_MARCA = "La marca debe ser una de las tiendas: " + String.join(", ", MARCAS);
+    public static final String MENSAJE_MARCA = "La marca debe tener entre 1 y 60 caracteres";
     public static final String MENSAJE_TALLA = "La talla debe ser XS, S, M, L, XL, XXL, de pantalón 26, 28, 30, 32, 34 o 36, "
             + "de calzado entre 34 y 45 o Única";
 
@@ -41,7 +40,11 @@ public final class ValoresUnificados {
     }
 
     public static boolean esMarca(String valor) {
-        return contiene(MARCAS, valor);
+        if (valor == null) {
+            return false;
+        }
+        String trimmed = valor.trim();
+        return !trimmed.isEmpty() && trimmed.length() <= MAX_MARCA && trimmed.chars().noneMatch(Character::isISOControl);
     }
 
     public static boolean esTalla(String valor) {
