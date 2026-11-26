@@ -77,9 +77,11 @@ class ControllersTest {
         when(useCase.novedades(almacenId)).thenReturn(List.of(prenda));
         CatalogoAlmacenController controller = new CatalogoAlmacenController(useCase, nits);
 
-        assertThat(controller.catalogo(almacenId).getBody()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
-        assertThat(controller.novedades(almacenId).getBody()).hasSize(1);
-        CatalogoResumenResponse resumen = controller.resumen(almacenId).getBody();
+        assertThat(controller.catalogo(almacenId.toString()).getBody()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
+        assertThat(controller.novedades(almacenId.toString()).getBody()).hasSize(1);
+        when(useCase.catalogo(IdAlmacen.desdeNit(NIT))).thenReturn(List.of(prenda));
+        assertThat(controller.catalogo(NIT).getBody()).hasSize(1);
+        CatalogoResumenResponse resumen = controller.resumen(almacenId.toString()).getBody();
         assertThat(resumen.totalPrendas()).isEqualTo(1);
         assertThat(resumen.prendas()).hasSize(1);
     }
@@ -173,7 +175,7 @@ class ControllersTest {
         assertThat(pendientes.grupos().get(0).pendientes()).isEqualTo(1);
         assertThat(pendientes.grupos().get(0).prendas()).extracting(PrendaResponse::storeNit).containsExactly(NIT);
         assertThat(controller.moderar(prenda.getId(), null, "COMPRADOR,ADMIN_STYLERADAR", null, aprobar).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(controller.moderarGrupo(almacenId, "ADMIN", null, null, aprobar).getBody()).hasSize(1);
+        assertThat(controller.moderarGrupo(almacenId.toString(), "ADMIN", null, null, aprobar).getBody()).hasSize(1);
         assertThatThrownBy(() -> controller.moderar(prenda.getId(), "ADMIN_ALMACEN", null, null, aprobar))
                 .isInstanceOf(AccesoDenegadoException.class);
         assertThatThrownBy(() -> controller.pendientes(null, null)).isInstanceOf(AccesoDenegadoException.class);

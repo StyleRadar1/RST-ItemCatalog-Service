@@ -21,7 +21,7 @@ public interface MedidasPrendaApi {
     @ApiResponse(responseCode = "403", description = "Not the owner store or an admin")
     @ApiResponse(responseCode = "404", description = "The garment does not exist")
     @ApiResponse(responseCode = "422", description = "Invalid size, repeated size, min greater than max or withdrawn garment")
-    ResponseEntity<MedidasPrendaResponse> registrar(UUID id, UUID almacenId, String rol, String roles, String usuarioId,
+    ResponseEntity<MedidasPrendaResponse> registrar(UUID id, String almacenId, String rol, String roles, String usuarioId,
                                                     MedidasPrendaRequest request);
 
     @Operation(summary = "Get garment measurements",

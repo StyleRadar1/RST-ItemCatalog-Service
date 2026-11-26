@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.application.dto.request;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record PrendaRequest(
+        @JsonDeserialize(using = IdAlmacenDeserializer.class)
         UUID almacenId,
         @NotBlank(message = "El nombre es obligatorio")
         @Size(min = 3, max = 60, message = "El nombre debe tener entre 3 y 60 caracteres")

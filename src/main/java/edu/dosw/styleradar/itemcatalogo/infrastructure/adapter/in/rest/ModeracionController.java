@@ -4,6 +4,7 @@ import edu.dosw.styleradar.itemcatalogo.application.dto.request.ModeracionReques
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PendientesResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.GrupoPendientes;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
@@ -45,12 +46,13 @@ public class ModeracionController implements ModeracionApi {
 
     @Override
     @PutMapping("/garments/pending/stores/{storeId}/moderation")
-    public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable("storeId") UUID almacenId,
+    public ResponseEntity<List<PrendaResponse>> moderarGrupo(@PathVariable("storeId") String storeId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody ModeracionRequest request) {
         Identidad.exigirAdmin(rol, roles);
+        UUID almacenId = IdAlmacen.desdeTexto(storeId);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(moderarPublicacion.moderarGrupo(
                 almacenId, request.decision(), request.motivo(), Identidad.moderador(usuarioId, request.moderadorId())),
                 nitAlmacenes.nitsDe(List.of(almacenId))));

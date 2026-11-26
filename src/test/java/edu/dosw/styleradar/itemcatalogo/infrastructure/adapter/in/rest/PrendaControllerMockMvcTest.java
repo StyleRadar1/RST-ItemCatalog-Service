@@ -2,6 +2,7 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Fotografia;
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Precio;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
@@ -80,6 +81,26 @@ class PrendaControllerMockMvcTest {
                 .andExpect(header().string("X-Correlation-Id", "req-item-123"))
                 .andExpect(jsonPath("$.marca").value("Almacén Pruebas QA"))
                 .andExpect(jsonPath("$.fotografias[0]").value("https://cdn.example.com/mi%20foto.jpg"));
+    }
+
+    @Test
+    void storeAdminPublicaConElNitDeSuTiendaEnLaCabeceraYEnElCuerpo() throws Exception {
+        UUID desdeNit = IdAlmacen.desdeNit("900555777-1");
+        Prenda prenda = Prenda.publicar(desdeNit, "Chaqueta QA",
+                new AtributosBusqueda("Chaqueta", "Azul", "Almacén Pruebas QA", "Urbano"),
+                new Precio(new BigDecimal("190000")), List.of(new Fotografia("https://cdn.example.com/foto.jpg", 1)));
+        when(almacenes.almacenDelUsuario(any())).thenReturn(Optional.empty());
+        when(nitAlmacenes.nitsDe(any())).thenReturn(Map.of(desdeNit, "900555777-1"));
+        when(gestionarPrenda.publicar(eq(desdeNit), eq("Chaqueta QA"), any(), any(), any())).thenReturn(prenda);
+
+        mockMvc.perform(post("/garments")
+                        .header("X-User-Role", "STORE_ADMIN")
+                        .header("X-Store-Id", "900555777-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload(null, "Almacén Pruebas QA", "https://cdn.example.com/foto.jpg")
+                                .replace("\"almacenId\":null", "\"almacenId\":\"900555777-1\"")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.storeNit").value("900555777-1"));
     }
 
     @Test

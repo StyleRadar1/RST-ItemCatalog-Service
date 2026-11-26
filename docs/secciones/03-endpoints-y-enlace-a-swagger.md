@@ -77,6 +77,8 @@ Cada prenda en las respuestas trae `almacenId` (UUID del almacén) y `storeNit`,
 | `GET` | `/api/v1/garments/{id}/measurements` | Consultar las medidas registradas por talla; lista vacía si la tienda no las ha registrado | Público | `200`, `400`, `404` |
 | `GET` | `/api/v1/health` | Estado del servicio | Público | `200` |
 
+En `{storeId}` y en el `almacenId` del cuerpo al publicar se puede enviar el UUID del almacén o el NIT de la tienda en ms-tiendas; con el NIT se calcula el mismo UUID que usan geolocalización e inventario.
+
 ---
 
 <p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

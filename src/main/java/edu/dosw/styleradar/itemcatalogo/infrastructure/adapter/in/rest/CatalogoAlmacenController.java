@@ -3,6 +3,7 @@ package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.CatalogoResumenResponse;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.PrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.PrendaMapperIn;
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarCatalogoAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.domain.port.in.ConsultarNitAlmacenUseCase;
 import edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest.doc.CatalogoAlmacenApi;
@@ -28,21 +29,24 @@ public class CatalogoAlmacenController implements CatalogoAlmacenApi {
 
     @Override
     @GetMapping("/stores/{storeId}/catalog")
-    public ResponseEntity<List<PrendaResponse>> catalogo(@PathVariable("storeId") UUID almacenId) {
+    public ResponseEntity<List<PrendaResponse>> catalogo(@PathVariable("storeId") String storeId) {
+        UUID almacenId = IdAlmacen.desdeTexto(storeId);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.catalogo(almacenId),
                 nitAlmacenes.nitsDe(List.of(almacenId))));
     }
 
     @Override
     @GetMapping("/stores/{storeId}/catalog/summary")
-    public ResponseEntity<CatalogoResumenResponse> resumen(@PathVariable("storeId") UUID almacenId) {
+    public ResponseEntity<CatalogoResumenResponse> resumen(@PathVariable("storeId") String storeId) {
+        UUID almacenId = IdAlmacen.desdeTexto(storeId);
         return ResponseEntity.ok(PrendaMapperIn.toResumen(almacenId, consultarCatalogo.catalogo(almacenId),
                 nitAlmacenes.nitsDe(List.of(almacenId))));
     }
 
     @Override
     @GetMapping("/stores/{storeId}/new-arrivals")
-    public ResponseEntity<List<PrendaResponse>> novedades(@PathVariable("storeId") UUID almacenId) {
+    public ResponseEntity<List<PrendaResponse>> novedades(@PathVariable("storeId") String storeId) {
+        UUID almacenId = IdAlmacen.desdeTexto(storeId);
         return ResponseEntity.ok(PrendaMapperIn.toResponse(consultarCatalogo.novedades(almacenId),
                 nitAlmacenes.nitsDe(List.of(almacenId))));
     }

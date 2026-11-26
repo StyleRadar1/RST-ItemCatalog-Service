@@ -29,7 +29,7 @@ public interface ModeracionApi {
     @ApiResponse(responseCode = "404", description = "The store has no pending publications")
     @ApiResponse(responseCode = "422", description = "The rejection reason is missing or the decision is not valid")
     @ApiResponse(responseCode = "403", description = "The user is not a StyleRadar administrator")
-    ResponseEntity<List<PrendaResponse>> moderarGrupo(UUID almacenId, @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol, @Parameter(description = "All the user roles sent by the API Gateway") String roles,
+    ResponseEntity<List<PrendaResponse>> moderarGrupo(@Parameter(description = "Store id or NIT") String storeId, @Parameter(description = "Role sent by the API Gateway; STYLERADAR_ADMIN (or the former ADMIN_STYLERADAR or ADMIN)") String rol, @Parameter(description = "All the user roles sent by the API Gateway") String roles,
                                                       @Parameter(description = "User id sent by the API Gateway; it is the moderator when present") String usuarioId, ModeracionRequest request);
 
     @Operation(summary = "Approve or reject a publication", description = "decision APROBADA or RECHAZADA; a rejection requires a reason (SR-RF-61). The moderator is the authenticated user (X-User-Id); moderadorId (UUID) is only used when calling the service directly.")
