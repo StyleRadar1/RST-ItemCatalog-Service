@@ -5,6 +5,7 @@ import edu.dosw.styleradar.itemcatalogo.domain.exception.ParametroInvalidoExcept
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,5 +53,15 @@ class ValueObjectsTest {
                 .isInstanceOf(ParametroInvalidoException.class);
         assertThatThrownBy(() -> new Fotografia("no-es-url", 1))
                 .isInstanceOf(ParametroInvalidoException.class);
+    }
+
+    @Test
+    void elAlmacenSeIdentificaPorUuidOPorNit() {
+        UUID id = UUID.randomUUID();
+
+        assertThat(IdAlmacen.desdeTexto(" " + id + " ")).isEqualTo(id);
+        assertThat(IdAlmacen.desdeTexto("900555777-1")).isEqualTo(IdAlmacen.desdeNit("900555777-1"));
+        assertThat(IdAlmacen.desdeTexto("  ")).isNull();
+        assertThat(IdAlmacen.desdeTexto(null)).isNull();
     }
 }

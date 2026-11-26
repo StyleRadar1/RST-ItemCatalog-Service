@@ -50,15 +50,7 @@ final class Identidad {
 
     static UUID resolverAlmacenHeader(String storeIdHeader, String almacenIdHeader) {
         String valor = (storeIdHeader != null && !storeIdHeader.isBlank()) ? storeIdHeader : almacenIdHeader;
-        if (valor == null || valor.isBlank()) {
-            return null;
-        }
-        String trimmed = valor.trim();
-        try {
-            return UUID.fromString(trimmed);
-        } catch (IllegalArgumentException e) {
-            return IdAlmacen.desdeNit(trimmed);
-        }
+        return IdAlmacen.desdeTexto(valor);
     }
 
     static Solicitante solicitante(UUID almacenId, String rol, String roles, String usuarioId,

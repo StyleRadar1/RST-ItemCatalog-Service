@@ -1,5 +1,6 @@
 package edu.dosw.styleradar.itemcatalogo.infrastructure.adapter.in.rest;
 
+import edu.dosw.styleradar.itemcatalogo.domain.model.IdAlmacen;
 import edu.dosw.styleradar.itemcatalogo.application.dto.request.MedidasPrendaRequest;
 import edu.dosw.styleradar.itemcatalogo.application.dto.response.MedidasPrendaResponse;
 import edu.dosw.styleradar.itemcatalogo.application.mapper.in.MedidaPrendaMapperIn;
@@ -31,13 +32,13 @@ public class MedidasPrendaController implements MedidasPrendaApi {
     @Override
     @PutMapping("/garments/{id}/measurements")
     public ResponseEntity<MedidasPrendaResponse> registrar(@PathVariable UUID id,
-            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) UUID almacenId,
+            @RequestHeader(value = Identidad.HEADER_ALMACEN, required = false) String almacenId,
             @RequestHeader(value = Identidad.HEADER_ROL, required = false) String rol,
             @RequestHeader(value = Identidad.HEADER_ROLES, required = false) String roles,
             @RequestHeader(value = Identidad.HEADER_USUARIO, required = false) String usuarioId,
             @Valid @RequestBody MedidasPrendaRequest request) {
         return ResponseEntity.ok(MedidaPrendaMapperIn.toResponse(id, gestionarMedidas.registrar(id,
-                Identidad.solicitante(almacenId, rol, roles, usuarioId, almacenes), MedidaPrendaMapperIn.toDomain(request))));
+                Identidad.solicitante(IdAlmacen.desdeTexto(almacenId), rol, roles, usuarioId, almacenes), MedidaPrendaMapperIn.toDomain(request))));
     }
 
     @Override
