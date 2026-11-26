@@ -50,6 +50,11 @@ public final class GuiaMedidas {
     }
 
     public record MedidasTalla(String talla, Double minPecho, Double maxPecho, Double minCintura, Double maxCintura,
-                               Double minCadera, Double maxCadera) {
+                               Double minCadera, Double maxCadera, Double largo) {
+
+        public MedidasTalla(String talla, Double minPecho, Double maxPecho, Double minCintura, Double maxCintura,
+                            Double minCadera, Double maxCadera) {
+            this(talla, minPecho, maxPecho, minCintura, maxCintura, minCadera, maxCadera, null);
+        }
     }
 }

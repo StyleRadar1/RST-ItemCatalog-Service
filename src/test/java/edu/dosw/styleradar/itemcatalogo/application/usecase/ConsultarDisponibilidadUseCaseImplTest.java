@@ -3,6 +3,8 @@ package edu.dosw.styleradar.itemcatalogo.application.usecase;
 import edu.dosw.styleradar.itemcatalogo.domain.exception.ResourceNotFoundException;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Disponibilidad;
 import edu.dosw.styleradar.itemcatalogo.domain.model.Prenda;
+import edu.dosw.styleradar.itemcatalogo.domain.model.MedidaPrenda;
+import edu.dosw.styleradar.itemcatalogo.domain.port.out.MedidaPrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.PrendaRepositoryPort;
 import edu.dosw.styleradar.itemcatalogo.domain.port.out.StockPrendaPort;
 import edu.dosw.styleradar.itemcatalogo.domain.model.AtributosBusqueda;
@@ -24,7 +26,8 @@ class ConsultarDisponibilidadUseCaseImplTest {
 
     private final PrendaRepositoryPort prendas = mock(PrendaRepositoryPort.class);
     private final StockPrendaPort stock = mock(StockPrendaPort.class);
-    private final ConsultarDisponibilidadUseCaseImpl useCase = new ConsultarDisponibilidadUseCaseImpl(prendas, stock);
+    private final MedidaPrendaRepositoryPort medidas = mock(MedidaPrendaRepositoryPort.class);
+    private final ConsultarDisponibilidadUseCaseImpl useCase = new ConsultarDisponibilidadUseCaseImpl(prendas, stock, medidas);
     private final UUID prendaId = UUID.randomUUID();
 
     @Test
@@ -74,5 +77,21 @@ class ConsultarDisponibilidadUseCaseImplTest {
 
         assertThat(tabla.tallas()).isNull();
         assertThat(tabla.medidas()).isEmpty();
+    }
+
+    @Test
+    void usaLasMedidasDeLaTiendaYCompletaConLaGuia() {
+        Prenda prenda = mock(Prenda.class);
+        when(prenda.getAtributos()).thenReturn(new AtributosBusqueda("Camiseta", "Negro", "Luna Store", "CASUAL"));
+        when(prendas.findById(prendaId)).thenReturn(Optional.of(prenda));
+        when(stock.disponibilidad(prendaId)).thenReturn(Optional.of(new Disponibilidad(6, List.of("m", "L"))));
+        when(medidas.findByPrendaId(prendaId)).thenReturn(List.of(
+                new MedidaPrenda("M", 90.0, 96.0, 72.0, 78.0, null, null, 70.0)));
+
+        ConsultarDisponibilidadUseCase.TallasYMedidas tabla = useCase.tallasYMedidas(prendaId);
+
+        assertThat(tabla.medidas()).containsExactly(
+                new GuiaMedidas.MedidasTalla("m", 90.0, 96.0, 72.0, 78.0, null, null, 70.0),
+                GuiaMedidas.de("Camiseta", "L").orElseThrow());
     }
 }

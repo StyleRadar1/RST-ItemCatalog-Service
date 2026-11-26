@@ -29,4 +29,4 @@ Este microservicio encapsula exclusivamente la lógica de negocio de gestión, b
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

@@ -6,6 +6,11 @@ import java.util.List;
 public record TallasMedidasResponse(List<String> availableSizes, List<RangoMedidas> sizes) {
 
     public record RangoMedidas(String size, Double minChestCm, Double maxChestCm, Double minWaistCm,
-                               Double maxWaistCm, Double minHipCm, Double maxHipCm) {
+                               Double maxWaistCm, Double minHipCm, Double maxHipCm, Double lengthCm) {
+
+        public RangoMedidas(String size, Double minChestCm, Double maxChestCm, Double minWaistCm,
+                            Double maxWaistCm, Double minHipCm, Double maxHipCm) {
+            this(size, minChestCm, maxChestCm, minWaistCm, maxWaistCm, minHipCm, maxHipCm, null);
+        }
     }
 }

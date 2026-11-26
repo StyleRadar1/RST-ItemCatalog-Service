@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/09-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 9. PRUEBAS Y COBERTURA (≥ 85%)
+## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. PRUEBAS Y COBERTURA (≥ 85%)
 
 Las pruebas unitarias validan el dominio y los casos de uso, y las de integración validan la persistencia y la mensajería. Se exige una cobertura mínima del **85 %**, verificada con **JaCoCo** en cada ejecución del pipeline.
 
@@ -10,7 +10,8 @@ Las pruebas unitarias validan el dominio y los casos de uso, y las de integraci�
 
 Este comando ejecuta las pruebas, genera el reporte de cobertura y verifica el mínimo del 85 %.
 
-* **Ruta del Reporte HTML:** `target/site/jacoco/index.html`
+* **Ruta del Reporte HTML:** `target/site/jacoco/index.html` (en el pipeline se publica como artefacto `jacoco-report`).
+* **Cobertura actual (25 de noviembre de 2026):** 99,6 % de líneas y 91 % de ramas en JaCoCo (145 pruebas); SonarCloud reporta 97,6 % en `develop`. El mínimo configurado en el `pom.xml` es 85 % de líneas y SonarCloud exige 80 % en código nuevo.
 
 <div align="center">
   <table width="100%" style="margin: 18px 0; border: 2px dashed #5600EF; border-radius: 8px; background-color: #FBFBFE;">
@@ -21,7 +22,7 @@ Este comando ejecuta las pruebas, genera el reporte de cobertura y verifica el m
           <strong><font color="#5600EF" size="3">REPORTE CONSOLIDADO DE COBERTURA JACOCO (≥ 85%)</font></strong>
         </p>
         <p>
-<em>Evidencia pendiente.</em>
+<img src="../evidencias/cobertura-jacoco.png" width="100%" alt="Reporte de cobertura JaCoCo" /><br />
         </p>
       </td>
     </tr>
@@ -37,4 +38,4 @@ Este comando ejecuta las pruebas, genera el reporte de cobertura y verifica el m
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

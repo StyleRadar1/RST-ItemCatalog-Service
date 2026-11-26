@@ -15,4 +15,16 @@ public final class IdAlmacen {
         }
         return UUID.nameUUIDFromBytes(("ms-tiendas:almacen:" + nit.trim()).getBytes(StandardCharsets.UTF_8));
     }
+
+    public static UUID desdeTexto(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        String limpio = valor.trim();
+        try {
+            return UUID.fromString(limpio);
+        } catch (IllegalArgumentException e) {
+            return desdeNit(limpio);
+        }
+    }
 }

@@ -22,9 +22,11 @@ public interface DisponibilidadApi {
 
     @Operation(summary = "Get offered sizes and measurement chart",
             description = "Used by ms-probador-virtual (SR-RF-24). availableSizes lists the sizes with stock in ms-inventario "
-                    + "([] when none, null when ms-inventario has no record for the garment). sizes has the reference "
-                    + "measurements in cm of the catalog size guide for each offered size (chest, waist and hip for letter sizes; "
-                    + "waist for numeric trouser sizes; empty for footwear, accessories and one-size).")
+                    + "([] when none, null when ms-inventario has no record for the garment). For each offered size, sizes has "
+                    + "the measurements in cm saved by the store with PUT /garments/{id}/measurements (chest, waist and hip "
+                    + "ranges and lengthCm); if the store did not save them, the reference catalog size guide is used "
+                    + "(chest, waist and hip for letter sizes; waist for numeric trouser sizes; empty for footwear, "
+                    + "accessories and one-size).")
     @ApiResponse(responseCode = "200", description = "Offered sizes and measurement chart")
     @ApiResponse(responseCode = "400", description = "Invalid garment id")
     @ApiResponse(responseCode = "404", description = "The garment does not exist")

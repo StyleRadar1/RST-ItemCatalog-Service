@@ -39,11 +39,11 @@ public final class PrendaMapperOut {
 
     public static AlmacenResumen toDomain(AlmacenResumenEntity entity) {
         return new AlmacenResumen(entity.getAlmacenId(), entity.getNombre(), entity.getReputacion(), entity.isActivo(),
-                entity.getAdministradorId());
+                entity.getAdministradorId(), entity.getNit());
     }
 
     public static AlmacenResumenEntity toEntity(AlmacenResumen almacen) {
         return new AlmacenResumenEntity(almacen.almacenId(), almacen.nombre(), almacen.reputacion(), almacen.activo(),
-                almacen.administradorId());
+                almacen.administradorId(), almacen.nit());
     }
 }

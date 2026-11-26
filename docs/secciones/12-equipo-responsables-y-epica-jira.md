@@ -1,4 +1,19 @@
-## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. ENLACE A LA ÉPICA EN JIRA
+## <img src="https://img.shields.io/badge/12-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 12. EQUIPO, RESPONSABLES Y ENLACE A LA ÉPICA EN JIRA
+
+### Equipo y responsables
+
+Desarrollado y mantenido por el **Equipo `Restrepo`** (prefijo `RST`) para la asignatura DOSW 2026.
+
+<div align="center">
+
+| Rol | Nombre Completo | Usuario GitHub |
+| :---: | :---: | :---: |
+| **Líder y apoyo** | `Juan Nicolás Álvarez Muñoz` | [@JUANNICOLASA](https://github.com/JUANNICOLASA) |
+| **Backend Developer** | `Daniel Mosquera` | [@Danielmmartinez](https://github.com/Danielmmartinez) |
+| **Backend Developer** | `Sebastián Camilo Granados` | [@Sebastian-Granados1456](https://github.com/Sebastian-Granados1456) |
+| **Frontend Developer** | `Carlos Sánchez` | [@Carlossj8](https://github.com/Carlossj8) |
+
+</div>
 
 ### Enlaces de Gestión, Repositorios y Evidencias
 
@@ -14,7 +29,7 @@
           <strong><font color="#5600EF" size="3">TABLERO SCRUM Y SEGUIMIENTO DE LA ÉPICA EN JIRA</font></strong>
         </p>
         <p>
-<img src="evidencias/jira-tablero-epica.png" width="100%" alt="Tablero Jira" /><br />
+<img src="../evidencias/jira-tablero-epica.png" width="100%" alt="Tablero Jira" /><br />
         </p>
       </td>
     </tr>
@@ -49,4 +64,4 @@
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>

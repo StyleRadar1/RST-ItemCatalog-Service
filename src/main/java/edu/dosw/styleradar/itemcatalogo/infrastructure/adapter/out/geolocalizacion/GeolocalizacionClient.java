@@ -10,7 +10,7 @@ import java.util.UUID;
 @FeignClient(name = "ms-geolocalizacion", url = "${geolocalizacion.url}")
 public interface GeolocalizacionClient {
 
-    @GetMapping("/almacenes/{id}/distancia")
+    @GetMapping("/stores/{id}/distance")
     DistanciaAlmacenResponse distancia(@PathVariable("id") UUID almacenId,
                                        @RequestParam("lat") double latitud,
                                        @RequestParam("lng") double longitud);

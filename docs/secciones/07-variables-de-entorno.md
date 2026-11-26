@@ -1,4 +1,4 @@
-## <img src="https://img.shields.io/badge/08-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 8. VARIABLES DE ENTORNO
+## <img src="https://img.shields.io/badge/07-5600EF?style=for-the-badge" height="20" align="absmiddle" /> 7. VARIABLES DE ENTORNO
 
 Las variables se definen en `.env`, que no se versiona. La plantilla `.env.example` indica cuáles se requieren.
 
@@ -25,4 +25,6 @@ Las variables se definen en `.env`, que no se versiona. La plantilla `.env.examp
 
 ---
 
-<p align="center"><a href="../README.md">⬅ Volver al índice</a></p>
+* **Datos fijos de QA:** con el perfil `qa`, Flyway también carga `db/qa`. Ahí está la prenda `c3bc58c3-e0e2-43cd-a61a-1279a3894fe7` (Camiseta agotada QA notificaciones) del Almacén Pruebas QA, sin inventario para que su disponibilidad responda `stockTotal` 0; la usa la prueba automática de prenda agotada de ms-notificaciones y no se debe usar en otras pruebas.
+
+<p align="center"><a href="../../README.md">⬅ Volver al índice</a></p>
