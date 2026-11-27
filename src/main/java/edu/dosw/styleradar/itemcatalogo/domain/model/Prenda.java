@@ -55,6 +55,22 @@ public class Prenda {
         this.estado = EstadoPublicacion.PENDIENTE;
     }
 
+    // Misma prenda para una tienda: igual nombre, tipo, color y estilo. Las tallas y cantidades van en inventario.
+    // Las retiradas y rechazadas no cuentan: la tienda puede volver a registrar la prenda
+    public boolean repite(String otroNombre, AtributosBusqueda otros) {
+        if (estado != EstadoPublicacion.PENDIENTE && estado != EstadoPublicacion.APROBADA) {
+            return false;
+        }
+        return comparable(nombre).equals(comparable(otroNombre))
+                && comparable(atributos.tipo()).equals(comparable(otros.tipo()))
+                && comparable(atributos.color()).equals(comparable(otros.color()))
+                && comparable(atributos.estilo()).equals(comparable(otros.estilo()));
+    }
+
+    private static String comparable(String texto) {
+        return texto == null ? "" : texto.trim().replaceAll("\\s+", " ").toLowerCase(java.util.Locale.ROOT);
+    }
+
     public void retirar() {
         if (estado == EstadoPublicacion.RETIRADA) {
             throw new DomainException("La prenda ya está retirada", "PRENDA_YA_RETIRADA");
