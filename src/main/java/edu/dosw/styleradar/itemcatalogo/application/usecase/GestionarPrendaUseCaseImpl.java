@@ -45,6 +45,10 @@ public class GestionarPrendaUseCaseImpl implements GestionarPrendaUseCase {
         if (!almacen.activo()) {
             throw new DomainException("El almacén está suspendido y no puede publicar prendas", "ALMACEN_SUSPENDIDO");
         }
+        if (prendaRepository.findByAlmacenId(almacenId).stream().anyMatch(p -> p.repite(nombre, atributos))) {
+            throw new DomainException("Esta tienda ya tiene esa prenda con el mismo nombre, tipo, color y estilo. "
+                    + "Ajusta sus unidades en el inventario", "PRENDA_DUPLICADA");
+        }
         return prendaRepository.save(Prenda.publicar(almacenId, nombre, atributos, precio, fotografias));
     }
 

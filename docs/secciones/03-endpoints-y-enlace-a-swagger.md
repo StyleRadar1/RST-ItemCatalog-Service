@@ -26,6 +26,7 @@ Todos los errores responden `application/problem+json` (RFC 7807) con `type`, `t
 | 404 | `ALMACEN_SIN_PENDIENTES` | El almacén no tiene publicaciones pendientes (moderación por grupos) |
 | 404 | `RUTA_NO_ENCONTRADA` | La ruta no existe |
 | 422 | `ALMACEN_SUSPENDIDO` | El almacén está suspendido y no puede publicar |
+| 422 | `PRENDA_DUPLICADA` | La tienda ya tiene una prenda pendiente o aprobada con el mismo nombre, tipo, color y estilo |
 | 422 | `PRENDA_RETIRADA` | Se intenta editar una prenda retirada |
 | 422 | `PRENDA_YA_RETIRADA` | Se intenta retirar dos veces |
 | 422 | `PRENDA_NO_PENDIENTE` | Se intenta moderar una prenda que no está pendiente |

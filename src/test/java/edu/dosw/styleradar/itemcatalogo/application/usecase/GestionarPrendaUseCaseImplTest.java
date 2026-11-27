@@ -64,6 +64,34 @@ class GestionarPrendaUseCaseImplTest {
     }
 
     @Test
+    void noPermiteRegistrarDosVecesLaMismaPrendaEnLaTienda() {
+        AlmacenResumen almacen = almacen("4.50", true);
+        when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
+        Prenda existente = Prenda.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos);
+        when(prendas.findByAlmacenId(almacen.almacenId())).thenReturn(List.of(existente));
+
+        assertThatThrownBy(() -> useCase.publicar(almacen.almacenId(), "  chaqueta   DENIM ", atributos,
+                new Precio(new BigDecimal("200000")), fotos))
+                .isInstanceOf(DomainException.class)
+                .satisfies(ex -> assertThat(((DomainException) ex).getCodigo()).isEqualTo("PRENDA_DUPLICADA"));
+        verify(prendas, never()).save(any());
+    }
+
+    @Test
+    void siPermiteOtroColorOVolverARegistrarUnaRetirada() {
+        AlmacenResumen almacen = almacen("4.50", true);
+        when(almacenes.findById(almacen.almacenId())).thenReturn(Optional.of(almacen));
+        Prenda retirada = Prenda.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos);
+        retirada.retirar();
+        Prenda otroColor = Prenda.publicar(almacen.almacenId(), "Chaqueta denim",
+                new AtributosBusqueda("Chaqueta", "Negro", "Luna Store", "Urbano"), precio, fotos);
+        when(prendas.findByAlmacenId(almacen.almacenId())).thenReturn(List.of(retirada, otroColor));
+
+        assertThat(useCase.publicar(almacen.almacenId(), "Chaqueta denim", atributos, precio, fotos).getEstado())
+                .isEqualTo(EstadoPublicacion.PENDIENTE);
+    }
+
+    @Test
     void losAtributosDebenSerDeLasListasUnificadas() {
         AtributosBusqueda gorra = new AtributosBusqueda("Gorra", "Rojo", "m".repeat(61), "Elegante");
         UUID almacenId = UUID.randomUUID();
